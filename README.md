@@ -1,6 +1,6 @@
 <div align="center">
 
-# 2do
+# 2DO
 
 ***"To do or not to do? That is the question"***
 
