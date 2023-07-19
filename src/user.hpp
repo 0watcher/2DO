@@ -64,7 +64,8 @@ namespace twodo
         Result<void> modify_data(
             const int& user_id,
             const std::optional<std::string>& nickname,
-            const std::optional<std::string>& password)
+            const std::optional<std::string>& password,
+            const std::optional<Role>& role)
             const;
     };
 

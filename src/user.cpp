@@ -9,14 +9,14 @@ namespace twodo
         std::string nickname{};
         std::getline(std::cin, nickname);
 
-        if(isUserInDb(nickname))
+        if (isUserInDb(nickname))
         {
-            return Result<std::string>(ErrorCode::already_existing_name);
+            return Result<std::string>{.m_err = ErrorCode::already_existing_name };
         }
 
-        if(nickname.length() > 10 || nickname.length() <= 5)
+        if (nickname.length() > 10 || nickname.length() <= 5)
         {
-            return Result<std::string>(ErrorCode::incorrect_nickname);
+            return Result<std::string>{.m_err = ErrorCode::incorrect_nickname};
         }
 
         return Result<std::string>(nickname);
@@ -27,9 +27,9 @@ namespace twodo
         std::string password{};
         std::getline(std::cin, password);
 
-        if(!isPasswordCorrect(password))
+        if (!isPasswordCorrect(password))
         {
-            return Result<std::string>(ErrorCode::incorrect_nickname);
+            return Result<std::string>{.m_err = ErrorCode::incorrect_nickname };
         }
 
         const std::string hashed_password = hash(password);
@@ -47,7 +47,7 @@ namespace twodo
     const bool Login::isPasswordCorrect(const std::string& password) const
     {
         const std::regex regex("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*#?&])[a-zA-Z\\d@$!%*#?&]{8,}$");
-        
+
         return std::regex_match(password, regex);
     }
 
@@ -55,19 +55,25 @@ namespace twodo
     {
         return false;
     }
-    
+
     Result<void> UserManager::add_user() const
     {
-        return Result<void>(ErrorCode::overall_err);
+        return Result<void>{.m_err = ErrorCode::panic };
     }
 
     Result<void> UserManager::delete_user() const
     {
-        return Result<void>(ErrorCode::overall_err);
+        return Result<void>{.m_err = ErrorCode::panic };
     }
 
-    Result<void> UserManager::modify_data(const int& user_id, const std::optional<std::string>& nickname, const std::optional<std::string>& password) const
+    Result<void> UserManager::modify_data(
+        const int& user_id,
+        const std::optional<std::string>& nickname,
+        const std::optional<std::string>& password,
+        const std::optional<Role>& role)
+        const
     {
-        return Result<void>(ErrorCode::overall_err);
+        return Result<void>();
     }
+
 }
