@@ -15,6 +15,7 @@ It's just simple todo list with some additional features. I want to this app as 
 
 ## Dependencies
 - gtest
+- SQLiteCpp
 
 ## Requirements
 1. user
