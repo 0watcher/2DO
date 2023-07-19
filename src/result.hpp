@@ -9,11 +9,11 @@ namespace twodo
     {
         ok,
         panic,
+        invalid_input,
         incorrect_nickname,
         already_existing_name,
         incorrect_password,
         not_match_regex,
-        user_added_successfully
     };
 
     template<typename T>
