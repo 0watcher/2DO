@@ -1,10 +1,5 @@
 #include "app.hpp"
 
-#ifdef max
-#undef max
-#endif
-
-#include <limits>
 #include <chrono>
 #include <thread>
 
@@ -22,7 +17,7 @@ namespace twodo
                 << "[3] Settings\n"
                 << "[0] Exit\n";
 
-            auto main_option = get_valid_input();
+            auto main_option = get_valid_option();
             
 
             switch (main_option)
@@ -44,7 +39,7 @@ namespace twodo
                         << "[5] Add comments\n"
                         << "[0] Back\n";
 
-                    auto task_option = get_valid_input();
+                    auto task_option = get_valid_option();
 
                     switch (task_option)
                     {
@@ -92,7 +87,7 @@ namespace twodo
         #endif
     }
 
-    int App::get_valid_input()
+    int App::get_valid_option()
     {
         while(true)
         {
@@ -103,10 +98,10 @@ namespace twodo
             if (std::cin.fail())
             {
                 std::cin.clear();
-                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                std::cin.ignore(INT_MAX, '\n');
                 return Result<int>{.m_err = ErrorCode::invalid_input };
             }
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            std::cin.ignore(INT_MAX, '\n');
             return Result<int>{.m_value = value};
             }();
 

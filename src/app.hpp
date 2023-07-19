@@ -20,6 +20,6 @@ namespace twodo
         bool m_in_task_menu = true;
 
         void clearConsole();
-        int get_valid_input();
+        int get_valid_option();
     };
 }
