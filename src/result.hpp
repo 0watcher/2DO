@@ -13,8 +13,8 @@ namespace twodo
         incorrect_nickname,
         already_existing_name,
         incorrect_password,
-        not_match_regex,
         cin_failure,
+        hash_error,
     };
 
     template<typename T>
