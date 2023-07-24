@@ -19,22 +19,19 @@ namespace twodo
     struct User
     {
     public:
-        User(const int& id_, const std::string& nickname_, const std::string& password_)
-            : m_id(id_), m_nickname(nickname_), m_password(password_) {}
+        User(const int& id, const std::string& nickname, const Role& role)
+            : m_id(id), m_nickname(nickname), m_role(role) {}
 
         int get_id() const { return m_id; }
         void set_id(const int& id) { m_id = id; }
         std::string get_nickname() const { return m_nickname; }
         void set_nickname(const std::string& nickname) { m_nickname = nickname; }
-        std::string get_password() const { return m_password; }
-        void set_password(const std::string& password) { m_password = password; }
         Role get_role() const { return m_role; }
         Role set_role(const Role& role) { m_role = role; }
 
     private:
         int m_id{};
         std::string m_nickname{};
-        std::string m_password{};
         Role m_role{};
     };
 
@@ -43,14 +40,10 @@ namespace twodo
     public:
         Login() = default;
 
-        const Result<std::string> nickname(const std::string& nickname) const;
-        const Result<std::string> password(const std::string& password);
-
+        Result<const std::string> nickname(const std::string& nickname) const;
+        Result<const std::string> password(const std::string& password);
     private:
-        const std::string hash(const std::string& password);
-
         const bool isPasswordCorrect(const std::string& password) const;
-        const bool isUserInDb(const std::string& nickname) const;
     };
 
     class UserManager
