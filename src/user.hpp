@@ -43,8 +43,8 @@ namespace twodo
     public:
         Login() = default;
 
-        const Result<std::string> nickname() const;
-        const Result<std::string> password();
+        const Result<std::string> nickname(const std::string& nickname) const;
+        const Result<std::string> password(const std::string& password);
 
     private:
         const std::string hash(const std::string& password);

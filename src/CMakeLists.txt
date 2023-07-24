@@ -1,4 +1,5 @@
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
+#target_precompile_headers(main PRIVATE pch.h)
 
 set(SQLITECPP_RUN_CPPCHECK OFF CACHE BOOL "" FORCE)
 set(SQLITECPP_RUN_CPPLINT OFF CACHE BOOL "" FORCE)
@@ -12,7 +13,6 @@ target_include_directories(${PROJECT_NAME}_lib PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/../thirdparty/SQLiteCpp/include
 )
-
 
 target_link_libraries(
     ${PROJECT_NAME}_lib

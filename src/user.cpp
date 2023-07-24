@@ -4,11 +4,8 @@
 
 namespace twodo
 {
-    const Result<std::string> Login::nickname() const
+    const Result<std::string> Login::nickname(const std::string& nickname) const
     {
-        std::string nickname{};
-        std::getline(std::cin, nickname);
-
         if (isUserInDb(nickname))
         {
             return Result<std::string>{.m_err = ErrorCode::already_existing_name };
@@ -22,11 +19,8 @@ namespace twodo
         return Result<std::string>(nickname);
     }
 
-    const Result<std::string> Login::password()
+    const Result<std::string> Login::password(const std::string& password)
     {
-        std::string password{};
-        std::getline(std::cin, password);
-
         if (!isPasswordCorrect(password))
         {
             return Result<std::string>{.m_err = ErrorCode::incorrect_nickname };
