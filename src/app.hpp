@@ -19,7 +19,7 @@ namespace twodo
         bool m_is_running = true;
         bool m_in_task_menu = true;
 
-        void clearConsole();
-        int get_valid_option();
+        void clearConsole() noexcept;
+        Result<int> get_valid_option();
     };
 }
