@@ -2,42 +2,30 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 #include <sqlite3.h>
 
 #include "result.hpp"
 
 namespace twodo
 {
-    class sql_ptr
+    struct sql3_closer
     {
-    public:
-        sql_ptr() : m_db(nullptr, [](sqlite3* ptr) { if (ptr) sqlite3_close_v2(ptr); }) {}
-
-        sqlite3* get() const {
-            return m_db.get();
+        void operator()(sqlite3* p) const
+        {
+            sqlite3_close_v2(p);
         }
-
-        void reset(sqlite3* newPtr = nullptr) {
-            m_db.reset(newPtr, [](sqlite3* ptr) { if (ptr) sqlite3_close_v2(ptr); });
-        }
-
-        sqlite3* operator->() const {
-            return m_db.get();
-        }
-
-        operator bool() const {
-            return m_db.get() != nullptr;
-        }
-
-    private:
-        std::shared_ptr<sqlite3> m_db;
     };
+
+    using sql3_ptr = std::unique_ptr<sqlite3, sql3_closer>;
 
     class Database
     {
     public:
         Database() = default;
 
-        Result<sql_ptr> create_or_open(const char* path) const;
+        Result<sql3_ptr> create_or_open(const char* path) const;
+        Result<void> create_table(const sql3_ptr db, const char* table);
+
     };
 }
