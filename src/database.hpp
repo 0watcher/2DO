@@ -1,9 +1,9 @@
 #pragma once
 
-#include <string>
-#include <vector>
 #include <memory>
 #include <sqlite3.h>
+#include <map>
+#include <string>
 
 #include "result.hpp"
 
@@ -24,8 +24,19 @@ namespace twodo
     public:
         Database() = default;
 
-        Result<sql3_ptr> create_or_open(const char* path) const;
-        Result<void> create_table(const sql3_ptr db, const char* table);
-
+        Result<sql3_ptr> create_or_open(const std::string& path) const;
+        Result<std::string> create_table(const sql3_ptr& db,
+                                  const std::string& table_name,
+                                  const std::map<std::string, std::string>& column_names);
+        Result<std::string> insert_data(const sql3_ptr& db,
+                                 const std::string& table_name,
+                                 const std::map<std::string, std::string>& values);
+        Result<std::string> select_data(const sql3_ptr& db,
+                                 const std::string& table_name,
+                                 const std::pair<std::string, std::string>& where);
+        Result<std::string> update_data(const sql3_ptr& db,
+                                 const std::string& table_name, 
+                                 const std::pair<std::string, std::string>& set, 
+                                 const std::pair<std::string, std::string>& where);
     };
 }

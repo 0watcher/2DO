@@ -16,6 +16,7 @@ namespace twodo
         already_existing_name,
         incorrect_password,
         cin_failure,
+        db_failure
     };
 
     template<typename T>
