@@ -62,14 +62,14 @@ namespace twodo
                             case 5:
                                 break;
                             default:
-                                std::cout << "Invalid option. Try again!\n";
+                                std::cerr << "Invalid option. Try again!\n";
                                 std::this_thread::sleep_for(std::chrono::milliseconds(2000));
                                 break;
                             }
                         }
                         else
                         {
-                            std::cout << "Invalid input. Try again!\n";
+                            std::cerr << "Invalid input. Try again!\n";
                             std::this_thread::sleep_for(std::chrono::milliseconds(2000));
                         }
                     }
@@ -81,14 +81,14 @@ namespace twodo
                     std::cout << "settings";
                     break;
                 default:
-                    std::cout << "Invalid option. Try again!\n";
+                    std::cerr << "Invalid option. Try again!\n";
                     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
                     break;
                 }
             }
             else
             {
-                std::cout << "Invalid input. Try again!\n";
+                std::cerr << "Invalid input. Try again!\n";
                 std::this_thread::sleep_for(std::chrono::milliseconds(2000));
             }
         }

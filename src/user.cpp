@@ -25,7 +25,8 @@ namespace twodo
         auto result = hash(password);
         if(result.m_err == ErrorCode::panic)
         {
-            throw std::runtime_error("Failed while hashing values");
+            std::cerr << "Failed while hashing values";
+            std::exit(1);
         }
 
         const std::string hashed_password = result.value();
