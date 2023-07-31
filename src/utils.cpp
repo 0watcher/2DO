@@ -23,7 +23,7 @@ namespace twodo
         }
         catch (...)
         {
-            return Result<const std::string>{ .m_err = ErrorCode::hash_error };
+            return Result<const std::string>{ .m_err = ErrorCode::panic };
         }
     }
 }

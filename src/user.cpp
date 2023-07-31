@@ -23,12 +23,12 @@ namespace twodo
         }
 
         auto result = hash(password);
-        if(result.m_err == ErrorCode::hash_error)
+        if(result.m_err == ErrorCode::panic)
         {
-            return Result<const std::string>{ .m_err = ErrorCode::panic };
+            throw std::runtime_error("Failed while hashing values");
         }
 
-        const std::string hashed_password = result.m_value.value();
+        const std::string hashed_password = result.value();
 
         return Result<const std::string>{ .m_value = hashed_password };
     }

@@ -22,7 +22,7 @@ namespace twodo
 
             if (main_option.m_err == ErrorCode::ok)
             {
-                switch (main_option.m_value.value())
+                switch (main_option.value())
                 {
                 case 0:
                     m_is_running = false;
@@ -46,7 +46,7 @@ namespace twodo
 
                         if (task_option.m_err == ErrorCode::ok)
                         {
-                            switch (task_option.m_value.value())
+                            switch (task_option.value())
                             {
                             case 0:
                                 m_in_task_menu = false;
@@ -115,6 +115,6 @@ namespace twodo
             return Result<int>{.m_err = ErrorCode::invalid_input};
         }
         std::cin.ignore(INT_MAX, '\n');
-        return Result<int>{.m_value = value};
+        return Result<int>(value);
     }
 }
