@@ -1,25 +1,38 @@
 #include "database.hpp"
 
+#include <memory>
 
-
-std::vector<std::string> twodo::DBFileParser::read_line(const std::string& file_path, const std::string& key)
+namespace twodo
 {
-    return std::vector<std::string>();
-}
+    Result<sql_ptr> Database::create_or_open(const char* path) const
+    {
+        // auto del_sql3 = [](sqlite3* sql3_ptr)
+        // {
+        //     sqlite3_close_v2(sql3_ptr);
+        // };
 
-void twodo::DBFileParser::write_line(const std::string& file_path, const std::string& line)
-{
-}
+        // std::shared_ptr<sqlite3> db(nullptr, del_sql3);
+        // auto db_ptr = db.get();
 
-void twodo::DBFileParser::delete_line(const std::string& file_path, const std::string& key)
-{
-}
+        // int rc = sqlite3_open("db.db", &db_ptr);
+        // if(rc != SQLITE_OK)
+        // {
+        //     return Result<*sqlite3>{ .m_err = ErrorCode::panic };
+        // }
 
-void twodo::DBFileParser::update_line(const std::string& file_path, const std::string& key, const std::string& new_line)
-{
-}
+        // return Result<*sqlite3>(db_ptr);
 
-bool twodo::DBFileParser::is_key_found(const std::string& file_path, const std::string& key)
-{
-    return false;
+        // db.reset(db_ptr);
+
+       // auto db = sql_ptr{};
+
+        sql_ptr db{};
+
+        int rc = sqlite3_open(path, db.get());
+        if (rc != SQLITE_OK)
+        {
+            return Result<sql_ptr>{ .m_err = ErrorCode::panic };
+        }
+
+    }
 }
