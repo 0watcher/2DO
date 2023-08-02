@@ -18,6 +18,7 @@ namespace twodo
     };
 
     using sql3_ptr = std::unique_ptr<sqlite3, sql3_closer>;
+    using db_err = std::string;
 
     class Database
     {
@@ -25,13 +26,13 @@ namespace twodo
         Database() = default;
 
         Result<void> create_or_open(const std::string& path);
-        Result<std::string> create_table(const std::string& table_name,
+        Result<db_err> create_table(const std::string& table_name,
                                          const std::map<std::string, std::string>& column_names);
-        Result<std::string> insert_data(const std::string& table_name,
+        Result<db_err> insert_data(const std::string& table_name,
                                         const std::map<std::string, std::string>& values);
-        Result<std::string> select_data(const std::string& table_name,
+        Result<db_err> select_data(const std::string& table_name,
                                         const std::pair<std::string, std::string>& where);
-        Result<std::string> update_data(const std::string& table_name, 
+        Result<db_err> update_data(const std::string& table_name, 
                                         const std::pair<std::string, std::string>& set, 
                                         const std::pair<std::string, std::string>& where);
 

@@ -16,7 +16,7 @@ namespace twodo
         return Result<void>();
     }
 
-    Result<std::string> Database::create_table(const std::string& table_name, 
+    Result<db_err> Database::create_table(const std::string& table_name, 
                                                const std::map<std::string, std::string> &column_names)
     {
         std::string sql_table = "CREATE TABLE IF NOT EXIST " + table_name + " (";
@@ -48,7 +48,7 @@ namespace twodo
         return Result<std::string>();
     }
 
-    Result<std::string> Database::insert_data(const std::string &table_name, 
+    Result<db_err> Database::insert_data(const std::string &table_name, 
                                               const std::map<std::string, std::string> &values)
     {
         std::string sql_insert = "INSERT INTO " + table_name + + " (";
@@ -81,7 +81,7 @@ namespace twodo
         return Result<std::string>();
     }
 
-    Result<std::string> Database::select_data(const std::string &table_name, 
+    Result<db_err> Database::select_data(const std::string &table_name, 
                                               const std::pair<std::string, std::string>& where)
     {
         std::string sql_select
@@ -101,13 +101,13 @@ namespace twodo
         return Result<std::string>();
     }
 
-    Result<std::string> Database::update_data(const std::string &table_name, 
+    Result<db_err> Database::update_data(const std::string &table_name, 
                                               const std::pair<std::string, std::string>& set, 
                                               const std::pair<std::string, std::string>& where)
     {
         std::string sql_update
         = "UPDATE " + table_name + " SET " + set.first + " = " + set.second 
-        + " WHERE " + where.first + " = " + "'" + where.second + "'" ";";
+        + " WHERE " + where.first + " = " + "'" + where.second + "'" + ";";
         
         char* err_msg = nullptr;
         auto result = sqlite3_exec(m_db.get(), sql_update.c_str(), nullptr, nullptr, &err_msg);
