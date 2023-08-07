@@ -12,7 +12,7 @@
 
 ## About the project
 
-It's just simple todo list with some additional features. I want to this app as one executable file, with only using standard cpp library.
+It's just simple todo list with some additional features.
 
 ## Dependencies
 - gtest
