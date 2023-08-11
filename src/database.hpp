@@ -27,14 +27,14 @@ namespace twodo
 
         Result<void> create_or_open(const std::string& path);
         Result<db_err> create_table(const std::string& table_name,
-                                         const std::map<std::string, std::string>& column_names);
+                                    const std::map<std::string, std::string>& column_names);
         Result<db_err> insert_data(const std::string& table_name,
-                                        const std::map<std::string, std::string>& values);
+                                   const std::map<std::string, std::string>& values);
         Result<db_err> select_data(const std::string& table_name,
-                                        const std::pair<std::string, std::string>& where);
+                                   const std::pair<std::string, std::string>& where);
         Result<db_err> update_data(const std::string& table_name, 
-                                        const std::pair<std::string, std::string>& set, 
-                                        const std::pair<std::string, std::string>& where);
+                                   const std::pair<std::string, std::string>& set, 
+                                   const std::pair<std::string, std::string>& where);
 
         private:
             sql3_ptr m_db{};

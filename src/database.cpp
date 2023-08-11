@@ -8,12 +8,12 @@ namespace twodo
         auto result = sqlite3_open(path.c_str(), &buffer);
         if (!result)
         {
-            return Result<void>{ .m_err = ErrorCode::db_open_failure };
+            return Result<void>::Error(ErrorCode::DbOpenFailure);
         }
 
         m_db = std::move(sql3_ptr(buffer));
 
-        return Result<void>();
+        return Result<void>::Ok();
     }
 
     Result<db_err> Database::create_table(const std::string& table_name, 
@@ -36,16 +36,16 @@ namespace twodo
         char* err_msg = nullptr;
         auto result = sqlite3_exec(m_db.get(), sql_table.c_str(), nullptr, nullptr, &err_msg);
 
-        auto err_msg_str = std::string(err_msg);
+        auto err_msg_str = db_err(err_msg);
 
         sqlite3_free(err_msg);
 
         if(!result)
         {
-            return Result<std::string>{ err_msg_str, ErrorCode::db_err };
+            return Result<db_err>::Error(ErrorCode::DbError);
         }
 
-        return Result<std::string>();
+        return Result<db_err>::Ok(err_msg_str);
     }
 
     Result<db_err> Database::insert_data(const std::string &table_name, 
@@ -71,14 +71,14 @@ namespace twodo
 
         char* err_msg = nullptr;
         auto result = sqlite3_exec(m_db.get(), sql_insert.c_str(), nullptr, nullptr, &err_msg);
-        auto err_msg_str = std::string(err_msg);
+        auto err_msg_str = db_err(err_msg);
         sqlite3_free(err_msg);
 
         if(!result)
         {
-            return Result<std::string>{ err_msg_str, ErrorCode::db_err };
+            return Result<db_err>::Error(ErrorCode::DbError);
         }
-        return Result<std::string>();
+        return Result<db_err>::Ok(err_msg_str);
     }
 
     Result<db_err> Database::select_data(const std::string &table_name, 
@@ -90,15 +90,15 @@ namespace twodo
 
         char* err_msg = nullptr;
         auto result = sqlite3_exec(m_db.get(), sql_select.c_str(), nullptr, nullptr, &err_msg);
-        auto err_msg_str = std::string(err_msg);
+        auto err_msg_str = db_err(err_msg);
         sqlite3_free(err_msg);
 
         if(!result)
         {
-            return Result<std::string>{ err_msg_str, ErrorCode::db_err };
+            return Result<db_err>::Error(ErrorCode::DbError);
         }
 
-        return Result<std::string>();
+        return Result<db_err>::Ok(err_msg_str);
     }
 
     Result<db_err> Database::update_data(const std::string &table_name, 
@@ -111,13 +111,13 @@ namespace twodo
         
         char* err_msg = nullptr;
         auto result = sqlite3_exec(m_db.get(), sql_update.c_str(), nullptr, nullptr, &err_msg);
-        auto err_msg_str = std::string(err_msg);
+        auto err_msg_str = db_err(err_msg);
         sqlite3_free(err_msg);
 
         if(!result)
         {
-            return Result<std::string>{ err_msg_str, ErrorCode::db_err };
+            return Result<db_err>::Error(ErrorCode::DbError);
         }
-        return Result<std::string>();
+        return Result<db_err>::Ok(err_msg_str);
     }
 }

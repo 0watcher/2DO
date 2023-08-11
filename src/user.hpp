@@ -12,8 +12,8 @@ namespace twodo
 {
     enum class Role
     {
-        ADMIN,
-        USER
+        Admin,
+        User
     };
 
     struct User
@@ -40,8 +40,8 @@ namespace twodo
     public:
         Login() = default;
 
-        Result<const std::string> nickname(const std::string& nickname) const;
-        Result<const std::string> password(const std::string& password);
+        Result<std::string> nickname(const std::string& nickname) const;
+        Result<std::string> password(const std::string& password);
     private:
         const bool isPasswordCorrect(const std::string& password) const;
     };

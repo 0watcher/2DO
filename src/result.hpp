@@ -2,58 +2,86 @@
 
 #include <iostream>
 #include <optional>
-#include <stdexcept>
 
 namespace twodo
 {
-
     enum class ErrorCode
     {
-        ok,
-        panic,
-        invalid_input,
-        incorrect_nickname,
-        already_existing_name,
-        incorrect_password,
-        cin_failure,
-        db_err,
-        db_open_failure
+        Ok,
+        Panic,
+        InvalidInput,
+        IncorrectNickname,
+        AlreadyExistingName,
+        IncorrectPassword,
+        CinFailure,
+        DbError,
+        DbOpenFailure
     };
 
     template<typename T>
-    struct Result
+    class Result
     {
     public:
-        std::optional<T> m_value;
-        ErrorCode m_err{ ErrorCode::ok };
-
-        T value() const
+        static Result<T> Ok(T value)
         {
-            if (m_value.has_value() && m_err == ErrorCode::ok)
-            {
-                return m_value.value();
-            }
-            else
-            {
-                throw std::runtime_error("Can't unwrap the value!");
-            }
+            return Result<T>(std::move(value), ErrorCode::Ok);
         }
 
-        ErrorCode err() const
+        static Result<T> Error(ErrorCode error)
+        {
+            return Result<T>(std::nullopt, error);
+        }
+
+        explicit operator bool() const
+        {
+            return m_err == ErrorCode::Ok;
+        }
+
+        T& value()
+        {
+            if (*this)
+            {
+                return *m_value;
+            }
+            throw std::runtime_error("Can't unwrap the value!");
+        }
+
+        ErrorCode error() const
         {
             return m_err;
         }
+
+    private:
+        Result() = delete;
+        Result(std::optional<T> value, ErrorCode err)
+            : m_value(std::move(value)), m_err(err) {}
+
+        std::optional<T> m_value{};
+        ErrorCode m_err{};
     };
 
     template<>
-    struct Result<void>
+    class Result<void>
     {
     public:
-        ErrorCode m_err{ ErrorCode::ok };
-
-        ErrorCode err() const
+        ErrorCode error() const
         {
             return m_err;
         }
+
+        static Result<void> Ok()
+        {
+            return Result<void>(ErrorCode::Ok);
+        }
+
+        static Result<void> Error(ErrorCode error)
+        {
+            return Result<void>(error);
+        }
+
+    private:
+        ErrorCode m_err{ ErrorCode::Ok };
+        explicit Result(ErrorCode err)
+            : m_err(err) {}
     };
 }

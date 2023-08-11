@@ -5,25 +5,25 @@
 
 namespace twodo
 {
-    Result<const std::string> Login::nickname(const std::string& nickname) const
+    Result<std::string> Login::nickname(const std::string& nickname) const
     {
         if (nickname.length() < 1 || nickname.length() > 18)
         {
-            return Result<const std::string>{.m_err = ErrorCode::incorrect_nickname};
+            return Result<std::string>::Error(ErrorCode::IncorrectNickname);
         }
 
-        return Result<const std::string>(nickname);
+        return Result<std::string>::Ok(nickname);
     }
 
-    Result<const std::string> Login::password(const std::string& password)
+    Result<std::string> Login::password(const std::string& password)
     {
         if (!isPasswordCorrect(password))
         {
-            return Result<const std::string>{.m_err = ErrorCode::incorrect_password };
+            return Result<std::string>::Error(ErrorCode::IncorrectPassword);
         }
 
         auto result = hash(password);
-        if(result.m_err == ErrorCode::panic)
+        if(result.error() == ErrorCode::Panic)
         {
             std::cerr << "Failed while hashing values";
             std::exit(1);
@@ -31,7 +31,7 @@ namespace twodo
 
         const std::string hashed_password = result.value();
 
-        return Result<const std::string>{ .m_value = hashed_password };
+        return Result<std::string>::Ok(hashed_password);
     }
 
     const bool Login::isPasswordCorrect(const std::string& password) const
@@ -43,12 +43,12 @@ namespace twodo
 
     Result<void> UserManager::add_user() const
     {
-        return Result<void>{.m_err = ErrorCode::panic };
+        return Result<void>::Ok();
     }
 
     Result<void> UserManager::delete_user() const
     {
-        return Result<void>{.m_err = ErrorCode::panic };
+        return Result<void>::Ok();
     }
 
     Result<void> UserManager::modify_data(
@@ -58,7 +58,7 @@ namespace twodo
         const std::optional<Role>& role)
         const
     {
-        return Result<void>();
+        return Result<void>::Ok();
     }
 
 }
