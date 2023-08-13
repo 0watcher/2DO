@@ -40,8 +40,8 @@ namespace twodo
     public:
         Login() = default;
 
-        Result<std::string> nickname(const std::string& nickname) const;
-        Result<std::string> password(const std::string& password);
+        Result<std::string, LoginError> nickname(const std::string& nickname) const;
+        Result<std::string, LoginError> password(const std::string& password);
     private:
         const bool isPasswordCorrect(const std::string& password) const;
     };
@@ -51,10 +51,10 @@ namespace twodo
     public:
         UserManager() = default;
 
-        Result<void> add_user() const;
-        Result<void> delete_user() const;
+        Result<None, UserError> add_user() const;
+        Result<None, UserError> delete_user() const;
 
-        Result<void> modify_data(
+        Result<None, UserError> modify_data(
             const int& user_id,
             const std::optional<std::string>& nickname,
             const std::optional<std::string>& password,

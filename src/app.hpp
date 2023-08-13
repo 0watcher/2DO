@@ -13,13 +13,13 @@ namespace twodo
     class App
     {
     public:
-        Result<void> run();
+        Result<None, RunError> run();
         
     private:
         bool m_is_running = true;
         bool m_in_task_menu = true;
 
         void clearConsole() noexcept;
-        Result<int> get_valid_option();
+        Result<int, InputError> get_valid_option();
     };
 }

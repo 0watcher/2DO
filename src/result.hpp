@@ -1,87 +1,122 @@
 #pragma once
 
 #include <iostream>
-#include <optional>
+#include <variant>
 
 namespace twodo
 {
-    enum class ErrorCode
+
+    enum class RunError
     {
-        Ok,
-        Panic,
-        InvalidInput,
-        IncorrectNickname,
-        AlreadyExistingName,
-        IncorrectPassword,
-        CinFailure,
-        DbError,
-        DbOpenFailure
+        ExitFailure
     };
 
-    template<typename T>
+    enum class StdError
+    {
+        HashError,
+        CinError
+    };
+
+    enum class UserError
+    {
+
+    };
+
+    enum class LoginError
+    {
+        IncorrectNickname,
+        AlreadyExistingName,
+        IncorrectPassword
+    };
+
+    enum class InputError
+    {
+        InvalidInput,
+    };
+
+    enum class DbError
+    {
+        DbError,
+        OpenFailure,
+        TableCreateFailure,
+        InsertFailure,
+        SelectFailure,
+        UpdateFailure
+    };
+
+    struct None {};
+
+    template <typename T, typename E>
     class Result
     {
     public:
-        static Result<T> Ok(T value)
+        const T& value() const
         {
-            return Result<T>(std::move(value), ErrorCode::Ok);
+            return std::get<T>(m_storage);
         }
 
-        static Result<T> Error(ErrorCode error)
+        const E& error() const
         {
-            return Result<T>(std::nullopt, error);
+            return std::get<E>(m_storage);
         }
 
         explicit operator bool() const
         {
-            return m_err == ErrorCode::Ok;
-        }
-
-        T& value()
-        {
-            if (*this)
-            {
-                return *m_value;
-            }
-            throw std::runtime_error("Can't unwrap the value!");
-        }
-
-        ErrorCode error() const
-        {
-            return m_err;
+            return !std::holds_alternative<E>(m_storage);
         }
 
     private:
-        Result() = delete;
-        Result(std::optional<T> value, ErrorCode err)
-            : m_value(std::move(value)), m_err(err) {}
+        template <typename U, typename V>
+        friend Result<U, V> Ok(const U& value);
 
-        std::optional<T> m_value{};
-        ErrorCode m_err{};
+        template <typename U, typename V>
+        friend Result<U, V> Ok(U&& value);
+
+        template <typename V>
+        friend Result<None, V> Ok();
+
+        template <typename U, typename V>
+        friend Result<U, V> Error(const V& error);
+
+        template <typename U, typename V>
+        friend Result<U, V> Error(V&& error);
+
+        Result(const T& value) : m_storage(value) {}
+        Result(T&& value) : m_storage(std::move(value)) {}
+        Result(const E& error) : m_storage(error) {}
+        Result(E&& error) : m_storage(std::move(error)) {}
+        Result(None&) {}
+
+        std::variant<T, E> m_storage{};
     };
 
-    template<>
-    class Result<void>
+    template <typename T, typename E>
+    Result<T, E> Ok(const T& value)
     {
-    public:
-        ErrorCode error() const
-        {
-            return m_err;
-        }
+        return Result<T, E>(value);
+    }
 
-        static Result<void> Ok()
-        {
-            return Result<void>(ErrorCode::Ok);
-        }
+    template <typename T, typename E>
+    Result<T, E> Ok(T&& value)
+    {
+        return Result<T, E>(std::move(value));
+    }
 
-        static Result<void> Error(ErrorCode error)
-        {
-            return Result<void>(error);
-        }
+    template <typename E>
+    Result<None, E> Ok()
+    {
+        return Result<None, E>(None{});
+    }
 
-    private:
-        ErrorCode m_err{ ErrorCode::Ok };
-        explicit Result(ErrorCode err)
-            : m_err(err) {}
-    };
+    template <typename T, typename E>
+    Result<T, E> Error(const E& error)
+    {
+        return Result<T, E>(error);
+    }
+
+    template <typename T, typename E>
+    Result<T, E> Error(E&& error)
+    {
+        return Result<T, E>(std::move(error));
+    }
 }

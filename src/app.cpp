@@ -5,7 +5,7 @@
 
 namespace twodo
 {
-    Result<void> App::run()
+    Result<None, RunError> App::run()
     {
         while (m_is_running)
         {
@@ -20,7 +20,7 @@ namespace twodo
 
             auto main_option = get_valid_option();
 
-            if (main_option.error() == ErrorCode::Ok)
+            if (main_option.error() == InputError::InvalidInput)
             {
                 switch (main_option.value())
                 {
@@ -44,7 +44,7 @@ namespace twodo
 
                         auto task_option = get_valid_option();
 
-                        if (task_option.error() == ErrorCode::Ok)
+                        if (task_option.error() == InputError::InvalidInput)
                         {
                             switch (task_option.value())
                             {
@@ -92,7 +92,7 @@ namespace twodo
                 std::this_thread::sleep_for(std::chrono::milliseconds(2000));
             }
         }
-        return Result<void>::Ok();
+        return Ok<RunError>();
     }
 
     void App::clearConsole() noexcept
@@ -104,7 +104,7 @@ namespace twodo
 #endif
     }
 
-    Result<int> App::get_valid_option()
+    Result<int, InputError> App::get_valid_option()
     {
         int value = 0;
         std::cin >> value;
@@ -112,9 +112,9 @@ namespace twodo
         {
             std::cin.clear();
             std::cin.ignore(INT_MAX, '\n');
-            return Result<int>::Error(ErrorCode::InvalidInput);
+            return Error<int, InputError>(InputError::InvalidInput);
         }
         std::cin.ignore(INT_MAX, '\n');
-        return Result<int>::Ok(value);
+        return Ok<int, InputError>(value);
     }
 }

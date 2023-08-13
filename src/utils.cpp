@@ -2,28 +2,28 @@
 
 namespace twodo
 {
-    Result<std::string> input()
+    Result<std::string, StdError> input()
     {
         std::string input{};
         std::getline(std::cin, input);
         if(std::cin.fail())
         {
-            return Result<std::string>::Error(ErrorCode::CinFailure);
+            return Error<std::string, StdError>(StdError::CinError);
         }
-        return Result<std::string>::Ok(input);
+        return Ok<std::string, StdError>(input);
     }
 
-    Result <const std::string> hash(const std::string& password)
+    Result<const std::string, StdError> hash(const std::string& password)
     {
         try
         {
             std::hash<std::string> hasher{};
             size_t hash = hasher(password);
-            return Result<const std::string>::Ok(std::to_string(hash));
+            return Ok<const std::string, StdError>(std::to_string(hash));
         }
         catch (...)
         {
-            return Result<const std::string>::Error(ErrorCode::Panic);
+            return Error<const std::string, StdError>(StdError::HashError);
         }
     }
 }

@@ -5,25 +5,25 @@
 
 namespace twodo
 {
-    Result<std::string> Login::nickname(const std::string& nickname) const
+    Result<std::string, LoginError> Login::nickname(const std::string& nickname) const
     {
         if (nickname.length() < 1 || nickname.length() > 18)
         {
-            return Result<std::string>::Error(ErrorCode::IncorrectNickname);
+            return Error<std::string, LoginError>(LoginError::IncorrectNickname);
         }
 
-        return Result<std::string>::Ok(nickname);
+        return Ok<std::string, LoginError>(nickname);
     }
 
-    Result<std::string> Login::password(const std::string& password)
+    Result<std::string, LoginError> Login::password(const std::string& password)
     {
         if (!isPasswordCorrect(password))
         {
-            return Result<std::string>::Error(ErrorCode::IncorrectPassword);
+            return Error<std::string, LoginError>(LoginError::IncorrectPassword);
         }
 
         auto result = hash(password);
-        if(result.error() == ErrorCode::Panic)
+        if(result.error() == StdError::HashError)
         {
             std::cerr << "Failed while hashing values";
             std::exit(1);
@@ -31,7 +31,7 @@ namespace twodo
 
         const std::string hashed_password = result.value();
 
-        return Result<std::string>::Ok(hashed_password);
+        return Ok<std::string, LoginError>(hashed_password);
     }
 
     const bool Login::isPasswordCorrect(const std::string& password) const
@@ -41,24 +41,24 @@ namespace twodo
         return std::regex_match(password, regex);
     }
 
-    Result<void> UserManager::add_user() const
+    Result<None, UserError> UserManager::add_user() const
     {
-        return Result<void>::Ok();
+        return Ok<UserError>();
     }
 
-    Result<void> UserManager::delete_user() const
+    Result<None, UserError> UserManager::delete_user() const
     {
-        return Result<void>::Ok();
+        return Ok<UserError>();
     }
 
-    Result<void> UserManager::modify_data(
+    Result<None, UserError> UserManager::modify_data(
         const int& user_id,
         const std::optional<std::string>& nickname,
         const std::optional<std::string>& password,
         const std::optional<Role>& role)
         const
     {
-        return Result<void>::Ok();
+        return Ok<UserError>();
     }
 
 }

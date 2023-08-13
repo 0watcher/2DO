@@ -22,11 +22,11 @@ TEST_F(LoginTest, NicknameTest)
 
     auto result1 = l.nickname(nicknm1);
 
-    EXPECT_EQ(result1.error(), ErrorCode::IncorrectNickname);
+    EXPECT_EQ(result1.error(), LoginError::IncorrectNickname);
 
     auto result2 = l.nickname(nicknm2);
 
-    EXPECT_EQ(result2.error(), ErrorCode::Ok);
+    EXPECT_TRUE(result2);
 }
 
 TEST_F(LoginTest, PasswordTest)
@@ -37,15 +37,15 @@ TEST_F(LoginTest, PasswordTest)
 
     auto result1 = l.password(passwd1);
 
-    EXPECT_EQ(result1.error(), ErrorCode::IncorrectPassword);
+    EXPECT_EQ(result1.error(), LoginError::IncorrectPassword);
 
     auto result2 = l.password(passwd2);
 
-    EXPECT_EQ(result2.error(), ErrorCode::IncorrectPassword);
+    EXPECT_EQ(result2.error(), LoginError::IncorrectPassword);
 
     auto result3 = l.password(passwd3);
 
-    EXPECT_EQ(result3.error(), ErrorCode::Ok);
+    EXPECT_TRUE(result3);
     EXPECT_EQ(result3.value(), hash(passwd3).value());
 }   
 

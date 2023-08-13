@@ -4,15 +4,24 @@
 using namespace twodo;
 
 #include <string>
+#include "result.hpp"
 
 using namespace twodo;
 
+int foo(int&& x)
+{
+    return x;
+} 
+
 int main()
 {
+
+
+
     App app{};
 
     auto result = app.run();
-    if(result.error() != ErrorCode::Ok)
+    if(!result)
     {
         return 1;   
     }
