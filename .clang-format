@@ -1,0 +1,17 @@
+---
+Language: Cpp
+BasedOnStyle: Google
+IndentWidth: 4
+UseTab: Never
+BreakBeforeBraces: Allman
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+AlignTrailingComments: true
+SpaceBeforeAssignmentOperators: true
+SpaceAfterCStyleCast: true
+SpaceAfterTemplateKeyword: true
+SpaceBeforeCpp11BracedList: true
+PointerAlignment: Right
+AlignOperands: true
+ColumnLimit: 100
+ConstructorInitializerAllOnOneLineOrOnePerLine: true

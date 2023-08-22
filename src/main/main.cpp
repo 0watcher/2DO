@@ -1,23 +1,13 @@
 #include "app.hpp"
 #include "db.hpp"
-
-using namespace twodo;
-
-#include <string>
 #include "result.hpp"
 
-using namespace twodo;
+#include <string>
 
-int foo(int&& x)
-{
-    return x;
-} 
+using namespace twodo;
 
 int main()
 {
-
-
-
     App app{};
 
     auto result = app.run();

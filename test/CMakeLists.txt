@@ -1,5 +1,3 @@
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
-
 include(GoogleTest)
 
 add_subdirectory(../thirdparty/googletest ${CMAKE_BINARY_DIR}/googletest)

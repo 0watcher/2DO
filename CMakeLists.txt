@@ -4,6 +4,8 @@ project(twodo
     LANGUAGES CXX
 )
 
+set(CMAKE_CXX_COMPILER "C:/LLVM/bin/clang++.exe")
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -11,7 +13,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
 
 enable_testing()
 
-add_subdirectory(main)
-add_subdirectory(src)
+add_subdirectory(src/lib)
+add_subdirectory(src/main)
 add_subdirectory(test)
 
