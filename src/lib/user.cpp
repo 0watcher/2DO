@@ -6,21 +6,21 @@
 
 namespace twodo
 {
-Result<std::string, LoginError> Login::nickname(const std::string& nickname) const
+Result<String, LoginError> Login::nickname(const String& nickname) const
 {
     if (nickname.length() < 1 || nickname.length() > 18)
     {
-        return Err<std::string, LoginError>(LoginError::IncorrectNickname);
+        return Err<String, LoginError>(LoginError::IncorrectNickname);
     }
 
-    return Ok<std::string, LoginError>(nickname);
+    return Ok<String, LoginError>(nickname);
 }
 
-Result<std::string, LoginError> Login::password(const std::string& password)
+Result<String, LoginError> Login::password(const String& password)
 {
     if (!isPasswordCorrect(password))
     {
-        return Err<std::string, LoginError>(LoginError::IncorrectPassword);
+        return Err<String, LoginError>(LoginError::IncorrectPassword);
     }
 
     auto result = hash(password);
@@ -30,12 +30,12 @@ Result<std::string, LoginError> Login::password(const std::string& password)
         std::exit(1);
     }
 
-    std::string hashed_password = result.value();
+    String hashed_password = result.value();
 
-    return Ok<std::string, LoginError>(hashed_password);
+    return Ok<String, LoginError>(hashed_password);
 }
 
-const bool Login::isPasswordCorrect(const std::string& password) const
+const bool Login::isPasswordCorrect(const String& password) const
 {
     const std::regex regex(
         "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*#?&_])[a-zA-Z\\d@$!%*#?&_]{8,}$");

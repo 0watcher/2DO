@@ -6,6 +6,9 @@
 
 #include "result.hpp"
 #include "task.hpp"
+#include "ISerializable.hpp"
+
+using String = std::string;
 
 namespace twodo
 {
@@ -27,24 +30,24 @@ namespace twodo
         User
     };
 
-    struct User
+    class User
     {
     public:
-        User(const int& id, const std::string& nickname, const Role& role)
+        User(const int& id, const String nickname, const Role& role)
             : m_id(id), m_nickname(nickname), m_role(role)
         {
         }
 
         int get_id() const { return m_id; }
         void set_id(const int& id) { m_id = id; }
-        std::string get_nickname() const { return m_nickname; }
-        void set_nickname(const std::string& nickname) { m_nickname = nickname; }
+        String get_nickname() const { return m_nickname; }
+        void set_nickname(const String& nickname) { m_nickname = nickname; }
         Role get_role() const { return m_role; }
         Role set_role(const Role& role) { m_role = role; }
 
     private:
         int m_id{};
-        std::string m_nickname{};
+        String m_nickname{};
         Role m_role{};
     };
 
@@ -53,11 +56,11 @@ namespace twodo
     public:
         Login() = default;
 
-        Result<std::string, LoginError> nickname(const std::string& nickname) const;
-        Result<std::string, LoginError> password(const std::string& password);
+        Result<std::string, LoginError> nickname(const String& nickname) const;
+        Result<std::string, LoginError> password(const String& password);
 
     private:
-        const bool isPasswordCorrect(const std::string& password) const;
+        const bool isPasswordCorrect(const String& password) const;
     };
 
     class UserManager

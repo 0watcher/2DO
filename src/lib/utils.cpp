@@ -2,7 +2,7 @@
 
 namespace twodo
 {
-Result<std::string, StdError> input()
+Result<std::string, StdError> input() noexcept
 {
     std::string input {};
     std::getline(std::cin, input);
@@ -13,17 +13,14 @@ Result<std::string, StdError> input()
     return Ok<std::string, StdError>(std::move(input));
 }
 
-Result<std::string, StdError> hash(const std::string& password)
+Result<std::string, StdError> hash(const std::string& password) noexcept
 {
-    try
-    {
-        std::hash<std::string> hasher {};
-        size_t hash = hasher(password);
-        return Ok<std::string, StdError>(std::to_string(hash));
-    }
-    catch (...)
+    std::hash<std::string> hasher {};
+    auto hash = std::to_string(hasher(password));
+    if (hash.empty())
     {
         return Err<std::string, StdError>(StdError::HashError);
     }
+    return Ok<std::string, StdError>(hash);
 }
 }  // namespace twodo
