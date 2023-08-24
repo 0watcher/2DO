@@ -5,7 +5,13 @@
 
 namespace twodo
 {
-Result<std::string, StdError> input();
+    enum class StdError
+    {
+        HashError,
+        CinError
+    };
 
-Result<const std::string, StdError> hash(const std::string& password);
+    Result<std::string, StdError> input();
+
+    Result<std::string, StdError> hash(const std::string& password);
 }  // namespace twodo

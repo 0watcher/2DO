@@ -10,7 +10,7 @@ Result<std::string, LoginError> Login::nickname(const std::string& nickname) con
 {
     if (nickname.length() < 1 || nickname.length() > 18)
     {
-        return Error<std::string, LoginError>(LoginError::IncorrectNickname);
+        return Err<std::string, LoginError>(LoginError::IncorrectNickname);
     }
 
     return Ok<std::string, LoginError>(nickname);
@@ -20,7 +20,7 @@ Result<std::string, LoginError> Login::password(const std::string& password)
 {
     if (!isPasswordCorrect(password))
     {
-        return Error<std::string, LoginError>(LoginError::IncorrectPassword);
+        return Err<std::string, LoginError>(LoginError::IncorrectPassword);
     }
 
     auto result = hash(password);
@@ -30,7 +30,7 @@ Result<std::string, LoginError> Login::password(const std::string& password)
         std::exit(1);
     }
 
-    const std::string hashed_password = result.value();
+    std::string hashed_password = result.value();
 
     return Ok<std::string, LoginError>(hashed_password);
 }
@@ -43,16 +43,9 @@ const bool Login::isPasswordCorrect(const std::string& password) const
     return std::regex_match(password, regex);
 }
 
-Result<None, UserError> UserManager::add_user() const { return Ok<UserError>(); }
+Result<None, UserError> UserManager::add_user() const { return Ok<None, UserError>({}); }
 
-Result<None, UserError> UserManager::delete_user() const { return Ok<UserError>(); }
+Result<None, UserError> UserManager::delete_user() const { return Ok<None, UserError>({}); }
 
-Result<None, UserError> UserManager::modify_data(const int& user_id,
-                                                 const std::optional<std::string>& nickname,
-                                                 const std::optional<std::string>& password,
-                                                 const std::optional<Role>& role) const
-{
-    return Ok<UserError>();
-}
-
+Result<None, UserError> UserManager::modify_data() { return Ok<None, UserError>({}); }
 }  // namespace twodo

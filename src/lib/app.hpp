@@ -12,16 +12,26 @@
 
 namespace twodo
 {
-class App
-{
-   public:
-    Result<None, RunError> run();
+    enum class RunError
+    {
+        ExitFailure
+    };
 
-   private:
-    bool m_is_running = true;
-    bool m_in_task_menu = true;
+    enum class InputError
+    {
+        InvalidInput,
+    };
 
-    void clearConsole() noexcept;
-    Result<std::uint8_t, InputError> get_valid_option();
-};
+    class App
+    {
+    public:
+        Result<None, RunError> run();
+
+    private:
+        bool m_is_running = true;
+        bool m_in_task_menu = true;
+
+        void clearConsole() noexcept;
+        Result<std::uint8_t, InputError> get_valid_option();
+    };
 }  // namespace twodo

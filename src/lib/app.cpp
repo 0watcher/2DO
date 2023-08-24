@@ -92,7 +92,7 @@ Result<None, RunError> App::run()
             std::this_thread::sleep_for(std::chrono::milliseconds(2000));
         }
     }
-    return Ok<RunError>();
+    return Ok<None, RunError>({});
 }
 
 void App::clearConsole() noexcept
@@ -112,7 +112,7 @@ Result<std::uint8_t, InputError> App::get_valid_option()
     {
         std::cin.clear();
         std::cin.ignore(INT_MAX, '\n');
-        return Error<std::uint8_t, InputError>(InputError::InvalidInput);
+        return Err<std::uint8_t, InputError>(InputError::InvalidInput);
     }
     std::cin.ignore(INT_MAX, '\n');
     return Ok<std::uint8_t, InputError>(value);
