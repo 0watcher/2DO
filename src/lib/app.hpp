@@ -32,6 +32,6 @@ namespace twodo
         bool m_in_task_menu = true;
 
         void clearConsole() noexcept;
-        Result<std::uint8_t, InputError> get_valid_option();
+        Result<std::uint8_t, InputError> get_valid_option() noexcept;
     };
 }  // namespace twodo

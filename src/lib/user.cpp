@@ -37,8 +37,8 @@ Result<String, LoginError> Login::password(const String& password)
 
 const bool Login::isPasswordCorrect(const String& password) const
 {
-    const std::regex regex(
-        "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*#?&_])[a-zA-Z\\d@$!%*#?&_]{8,}$");
+    const std::regex regex{
+        "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*#?&_])[a-zA-Z\\d@$!%*#?&_]{8,}$"};
 
     return std::regex_match(password, regex);
 }

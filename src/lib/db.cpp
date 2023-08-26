@@ -1,7 +1,5 @@
 #include "db.hpp"
 
-#include <cstdlib>
-
 namespace twodo
 {
 Result<None, DbError> Db::create_table(const String& table_name, const stringmap& column_names) noexcept

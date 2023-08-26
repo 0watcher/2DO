@@ -104,7 +104,7 @@ void App::clearConsole() noexcept
 #endif
 }
 
-Result<std::uint8_t, InputError> App::get_valid_option()
+Result<std::uint8_t, InputError> App::get_valid_option() noexcept
 {
     int value = 0;
     std::cin >> value;
