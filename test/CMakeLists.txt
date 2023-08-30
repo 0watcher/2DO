@@ -1,5 +1,6 @@
 include(GoogleTest)
 
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 add_subdirectory(../thirdparty/googletest ${CMAKE_BINARY_DIR}/googletest)
 
 file(GLOB TEST_SRC *.cpp)
