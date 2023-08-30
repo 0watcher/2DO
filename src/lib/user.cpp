@@ -18,13 +18,13 @@ Result<String, LoginError> Login::nickname(const String& nickname) const
 
 Result<String, LoginError> Login::password(const String& password)
 {
-    if (!isPasswordCorrect(password))
+    if (!is_password_correct(password))
     {
         return Err<String, LoginError>(LoginError::IncorrectPassword);
     }
 
     auto result = hash(password);
-    if (result.error() == StdError::HashError)
+    if (!result)
     {
         std::cerr << "Failed while hashing values";
         std::exit(1);
@@ -35,12 +35,20 @@ Result<String, LoginError> Login::password(const String& password)
     return Ok<String, LoginError>(hashed_password);
 }
 
-const bool Login::isPasswordCorrect(const String& password) const
+const bool Login::is_password_correct(const String& password) const
 {
-    const std::regex regex{
-        "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*#?&_])[a-zA-Z\\d@$!%*#?&_]{8,}$"};
+    std::regex upper_case_expression{ "[A-Z]+" };
+    std::regex lower_case_expression{ "[a-z]+" };
+    std::regex number_expression{ "[0-9]+" };
+    std::regex special_char_expression{ "[!@#$%^&*()_+\\-=\\[\\]{};:\\\",<.>/?]+" };
 
-    return std::regex_match(password, regex);
+    bool has_upper = std::regex_search(password, upper_case_expression);
+    bool has_lower = std::regex_search(password, lower_case_expression);
+    bool has_number = std::regex_search(password, number_expression);
+    bool has_special = std::regex_search(password, special_char_expression);
+    bool has_required_legth = password.length() >= 8;
+
+    return has_upper && has_lower && has_number && has_special && has_required_legth;
 }
 
 Result<None, UserError> UserManager::add_user() const { return Ok<None, UserError>({}); }

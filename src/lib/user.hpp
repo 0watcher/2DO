@@ -62,7 +62,7 @@ namespace twodo
         Result<std::string, LoginError> password(const String& password);
 
     private:
-        const bool isPasswordCorrect(const String& password) const;
+        const bool is_password_correct(const String& password) const;
     };
 
     class UserManager
