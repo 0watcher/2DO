@@ -2,9 +2,9 @@
 
 namespace twodo
 {
-Result<None, DbError> Db::create_table(const String& table_name, const stringmap& column_names) noexcept
+Result<None, DbError> Db::create_table(const String& table_name, const stringmap& column_names) 
 {
-    std::string query = "CREATE TABLE IF NOT EXIST " + table_name + " (";
+    std::string query = "CREATE TABLE IF NOT EXISTS " + table_name + " (";
 
     for (const auto& column : column_names)
     {
@@ -13,32 +13,41 @@ Result<None, DbError> Db::create_table(const String& table_name, const stringmap
 
     if (!column_names.empty())
     {
-        query.pop_back();
+        query.pop_back(); // Remove the last comma
+        query.pop_back(); // Remove the extra space
     }
 
-    query += ");";
-
-    auto result = m_db.exec(query);
-    if (!result)
+    query += ")";
+    
+    try
     {
-        return Err<None, DbError>(DbError::TableCreateFailure);
+        auto result = m_db.exec(query);
+    }
+    catch(const std::exception& e)
+    {
+        return Err<None, DbError>(String(e.what()));
     }
 
     return Ok<None, DbError>({});
 }
 
-Result<None, DbError> Db::drop_table(const String& table_name) noexcept
+Result<None, DbError> Db::drop_table(const String& table_name) 
 {
-    std::string drop = "DROP " + table_name;
-    auto result = m_db.exec(drop);
-    if (!result)
+    std::string drop = "DROP TABLE " + table_name;
+
+    try
     {
-        return Err<None, DbError>(DbError::TableDropFailure);
+        auto result = m_db.exec(drop);
     }
+    catch(const std::exception& e)
+    {
+        return Err<None, DbError>(String(e.what()));
+    }
+
     return Ok<None, DbError>({});
 }
 
-Result<None, DbError> Db::insert_data(const String& table_name, const stringmap& values) noexcept
+Result<None, DbError> Db::insert_data(const String& table_name, const stringmap& values) 
 {
     std::string query = "INSERT INTO " + table_name + " (";
 
@@ -57,57 +66,83 @@ Result<None, DbError> Db::insert_data(const String& table_name, const stringmap&
     query.pop_back();
     query += ");";
 
-    auto result = m_db.exec(query);
-    if (!result)
+
+    try
     {
-        return Err<None, DbError>(DbError::InsertFailure);
+        auto result = m_db.exec(query);
+    }
+    catch(const std::exception& e)
+    {
+        return Err<None, DbError>(String(e.what()));
     }
 
     return Ok<None, DbError>({});
 }
 
 Result<None, DbError> Db::update_data(const String& table_name, const stringpair& set,
-                                      const stringpair& where) noexcept
+                                      const stringpair& where)
 {
-    std::string query = "UPDATE " + table_name + " SET " + set.first + " = " + set.second +
-                        " WHERE " + where.first + " = " + "'" + where.second + "'" + ";";
+    std::string query = "UPDATE " + table_name + " SET " + set.first + " = '" + set.second +
+                        "' WHERE " + where.first + " = " + where.second + ";";
 
-    auto result = m_db.exec(query);
-    if (!result)
+    try
     {
-        return Err<None, DbError>(DbError::UpdateFailure);
+        auto result = m_db.exec(query);
+    }
+    catch(const std::exception& e)
+    {
+        return Err<None, DbError>(String(e.what()));
     }
 
     return Ok<None, DbError>({});
 }
 
-Result<stringvec, DbError> Db::select_data(const String& table_name, const stringvec& who,
-                                           const stringpair& where) noexcept
+Result<stringvec, DbError> Db::select_data(const String& table_name, const stringvec& what,
+                                           const stringpair& where)
 {
     std::string query = "SELECT ";
-    for (auto& name : who)
+    for (const auto& name : what)
     {
         query += name + ", ";
     }
-    query.pop_back();
+    query.pop_back(); // Remove the last comma
+    query.pop_back(); // Remove the extra space
 
-    query += " FROM " + table_name + "WHERE " + where.first + " = " + where.second + ";";
-
-    SQLite::Statement query_(m_db, query);
-    if (query_.getColumnCount() == 0)
+    query += " FROM " + table_name;
+    
+    if(where.first.empty() || where.second.empty())
     {
-        return Err<stringvec, DbError>(DbError::SelectFailure);
+        query += ';';
+    }
+    else
+    {
+        query += " WHERE " + where.first + " = '" + where.second + "';";
     }
 
     std::vector<std::string> values {};
 
-    std::uint8_t i = 0;
-    while (query_.executeStep())
+    try
     {
-        values.push_back(query_.getColumn(i));
-        i++;
-    }
+        SQLite::Statement query_(m_db, query);
+        if (query_.getColumnCount() != what.size())
+        {
+            return Err<stringvec, DbError>(DbErr::IncompatibleNumberOfColumns);
+        }
 
+
+        while (query_.executeStep())
+        {
+            for (std::size_t i = 0; i < what.size(); ++i)
+            {
+                values.push_back(query_.getColumn(i));
+            }
+        }
+    }
+    catch(const std::exception& e)
+    {
+        return Err<stringvec, DbError>(String(e.what()));
+    }
+    
     return Ok<stringvec, DbError>(values);
 }
 }  // namespace twodo

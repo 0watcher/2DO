@@ -15,31 +15,35 @@ using String = std::string;
 
 namespace twodo
 {
-    enum class DbError
+    enum class DbErr
     {
-        DbError,
-        OpenFailure,
-        TableCreateFailure,
-        InsertFailure,
-        SelectFailure,
-        UpdateFailure,
-        TableDropFailure,
+        Error = 1,
+        EmptyProps,
+        IncompatibleNumberOfColumns
+    };
+
+    struct DbError
+    {
+        DbError(String sq_err_) : sq_err{sq_err_} {}
+        DbError(DbErr db_err_) : cdb_err{db_err_} {}
+
+        String sql_err() {  return sq_err; }
+        DbErr db_err() {  return cdb_err; }
+    private:
+        String sq_err{};
+        DbErr cdb_err{};
     };
 
     class Db
     {
     public:
-        Db(const std::string& path) noexcept : m_db(path, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE) {}
+        Db(const std::string& path) noexcept : m_db{path, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE} {}
 
-        Result<None, DbError> create_table(const String& table_name, const stringmap& column_names) noexcept;
-
-        Result<None, DbError> drop_table(const String& table_name) noexcept;
-
-        Result<None, DbError> insert_data(const String& table_name, const stringmap& values) noexcept;
-
-        Result<None, DbError> update_data(const String& table_name, const stringpair& set, const stringpair& where) noexcept;
-
-        Result<stringvec, DbError> select_data(const String& table_name, const stringvec& who, const stringpair& where) noexcept;
+        Result<None, DbError> create_table(const String& table_name, const stringmap& column_names);
+        Result<None, DbError> drop_table(const String& table_name);
+        Result<None, DbError> insert_data(const String& table_name, const stringmap& values);
+        Result<None, DbError> update_data(const String& table_name, const stringpair& set, const stringpair& where);
+        Result<stringvec, DbError> select_data(const String& table_name, const stringvec& who, const stringpair& where);
 
     private:
         SQLite::Database m_db;
