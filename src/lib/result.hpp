@@ -2,6 +2,8 @@
 
 #include <iostream>
 #include <variant>
+#include <cstdint>
+
 
 namespace twodo
 {

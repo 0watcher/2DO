@@ -1,5 +1,4 @@
 #include "app.hpp"
-#include "db.hpp"
 #include "result.hpp"
 
 #include <string>
@@ -13,7 +12,6 @@ int main()
     auto result = app.run();
     if(!result)
     {
-        return 1;   
+        return EXIT_FAILURE;   
     }
-    return 0;
 }
