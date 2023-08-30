@@ -20,7 +20,7 @@ Result<None, RunError> App::run()
 
         auto main_option = get_valid_option();
 
-        if (main_option.error() == InputError::InvalidInput)
+        if (main_option)
         {
             switch (main_option.value())
             {
@@ -44,7 +44,7 @@ Result<None, RunError> App::run()
 
                         auto task_option = get_valid_option();
 
-                        if (task_option.error() == InputError::InvalidInput)
+                        if (task_option)
                         {
                             switch (task_option.value())
                             {
@@ -104,7 +104,7 @@ void App::clearConsole() noexcept
 #endif
 }
 
-Result<std::uint8_t, InputError> App::get_valid_option() noexcept
+Result<int, InputError> App::get_valid_option() noexcept
 {
     int value = 0;
     std::cin >> value;
@@ -112,9 +112,10 @@ Result<std::uint8_t, InputError> App::get_valid_option() noexcept
     {
         std::cin.clear();
         std::cin.ignore(INT_MAX, '\n');
-        return Err<std::uint8_t, InputError>(InputError::InvalidInput);
+        
+        return Err<int, InputError>(InputError::InvalidInput);
     }
     std::cin.ignore(INT_MAX, '\n');
-    return Ok<std::uint8_t, InputError>(value);
+    return Ok<int, InputError>(value);
 }
 }  // namespace twodo

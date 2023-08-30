@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cstdint>
-
 #include "result.hpp"
 
 #ifdef _WIN32
@@ -32,6 +30,6 @@ namespace twodo
         bool m_in_task_menu = true;
 
         void clearConsole() noexcept;
-        Result<std::uint8_t, InputError> get_valid_option() noexcept;
+        Result<int, InputError> get_valid_option() noexcept;
     };
 }  // namespace twodo
