@@ -1,11 +1,8 @@
 #pragma once
 
 #include <SQLiteCpp/SQLiteCpp.h>
-
 #include <string>
-#include <type_traits>
 #include <vector>
-
 #include "result.hpp"
 
 using stringmap = std::map<std::string, std::string>;

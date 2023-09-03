@@ -1,5 +1,4 @@
 #include "app.hpp"
-
 #include <chrono>
 #include <thread>
 
@@ -116,6 +115,6 @@ Result<int, InputError> App::get_valid_option() noexcept
         return Err<int, InputError>(InputError::InvalidInput);
     }
     std::cin.ignore(INT_MAX, '\n');
-    return Ok<int, InputError>(value);
+    return Ok<int, InputError>(std::move(value));
 }
 }  // namespace twodo

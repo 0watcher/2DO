@@ -21,6 +21,6 @@ Result<std::string, StdError> hash(const std::string& password) noexcept
     {
         return Err<std::string, StdError>(StdError::HashError);
     }
-    return Ok<std::string, StdError>(hash);
+    return Ok<std::string, StdError>(std::move(hash));
 }
 }  // namespace twodo

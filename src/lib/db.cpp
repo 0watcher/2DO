@@ -143,6 +143,6 @@ Result<stringvec, DbError> Db::select_data(const String& table_name, const strin
         return Err<stringvec, DbError>(String(e.what()));
     }
     
-    return Ok<stringvec, DbError>(values);
+    return Ok<stringvec, DbError>(std::move(values));
 }
 }  // namespace twodo

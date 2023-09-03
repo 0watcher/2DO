@@ -1,7 +1,5 @@
 #include "user.hpp"
-
 #include <algorithm>
-
 #include "utils.hpp"
 
 namespace twodo
@@ -32,7 +30,7 @@ Result<String, LoginError> Login::password(const String& password)
 
     String hashed_password = result.value();
 
-    return Ok<String, LoginError>(hashed_password);
+    return Ok<String, LoginError>(std::move(hashed_password));
 }
 
 const bool Login::is_password_correct(const String& password) const

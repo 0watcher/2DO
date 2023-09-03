@@ -1,7 +1,6 @@
 #pragma once
 
 #include "result.hpp"
-
 #ifdef _WIN32
 #include <windows.h>
 #else
