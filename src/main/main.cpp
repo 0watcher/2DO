@@ -1,8 +1,6 @@
 #include "app.hpp"
 #include "result.hpp"
 
-#include <string>
-
 using namespace twodo;
 
 int main()
@@ -12,6 +10,6 @@ int main()
     auto result = app.run();
     if(!result)
     {
-        return EXIT_FAILURE;   
+        return EXIT_FAILURE;
     }
 }

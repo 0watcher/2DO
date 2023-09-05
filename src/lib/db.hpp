@@ -34,7 +34,7 @@ namespace twodo
     class Db
     {
     public:
-        Db(const std::string& path) noexcept : m_db{path, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE} {}
+        Db(const std::string& path) noexcept : m_db{path + ".db3", SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE} {}
 
         Result<None, DbError> create_table(const String& table_name, const stringmap& column_names);
         Result<None, DbError> drop_table(const String& table_name);
