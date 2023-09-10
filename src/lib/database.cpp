@@ -1,8 +1,8 @@
-#include "db.hpp"
+#include "database.hpp"
 
 namespace twodo
 {
-Result<None, DbError> Db::create_table(const String& table_name, const stringmap& column_names) 
+Result<None, DbError> Database::create_table(const String& table_name, const stringmap& column_names) 
 {
     std::string query = "CREATE TABLE IF NOT EXISTS " + table_name + " (";
 
@@ -31,7 +31,7 @@ Result<None, DbError> Db::create_table(const String& table_name, const stringmap
     return Ok<None, DbError>({});
 }
 
-Result<None, DbError> Db::drop_table(const String& table_name) 
+Result<None, DbError> Database::drop_table(const String& table_name) 
 {
     std::string drop = "DROP TABLE " + table_name;
 
@@ -47,7 +47,7 @@ Result<None, DbError> Db::drop_table(const String& table_name)
     return Ok<None, DbError>({});
 }
 
-Result<None, DbError> Db::insert_data(const String& table_name, const stringmap& values) 
+Result<None, DbError> Database::insert_data(const String& table_name, const stringmap& values) 
 {
     std::string query = "INSERT INTO " + table_name + " (";
 
@@ -79,7 +79,7 @@ Result<None, DbError> Db::insert_data(const String& table_name, const stringmap&
     return Ok<None, DbError>({});
 }
 
-Result<None, DbError> Db::update_data(const String& table_name, const stringpair& set,
+Result<None, DbError> Database::update_data(const String& table_name, const stringpair& set,
                                       const stringpair& where)
 {
     std::string query = "UPDATE " + table_name + " SET " + set.first + " = '" + set.second +
@@ -97,7 +97,7 @@ Result<None, DbError> Db::update_data(const String& table_name, const stringpair
     return Ok<None, DbError>({});
 }
 
-Result<stringvec, DbError> Db::select_data(const String& table_name, const stringvec& what,
+Result<stringvec, DbError> Database::select_data(const String& table_name, const stringvec& what,
                                            const stringpair& where)
 {
     std::string query = "SELECT ";

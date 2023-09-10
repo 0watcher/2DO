@@ -4,7 +4,7 @@
 #include <filesystem>
 #include <string>
 
-#include "db.hpp"
+#include "database.hpp"
 #include "result.hpp"
 #include "user.hpp"
 #include "utils.hpp"
@@ -15,7 +15,7 @@ namespace fs = std::filesystem;
 
 struct LoginTest : Test
 {
-    Login cut {};
+    AuthenticationManager cut {};
 };
 
 TEST_F(LoginTest, NicknameTest)
@@ -23,11 +23,11 @@ TEST_F(LoginTest, NicknameTest)
     std::string nicknm1 = "";
     std::string nicknm2 = "nickname";
 
-    auto result1 = cut.nickname(nicknm1);
+    auto result1 = cut.auth_nickname(nicknm1);
 
-    EXPECT_EQ(result1.error(), LoginError::IncorrectNickname);
+    EXPECT_EQ(result1.error(), AuthErr::IncorrectNickname);
 
-    auto result2 = cut.nickname(nicknm2);
+    auto result2 = cut.auth_nickname(nicknm2);
 
     EXPECT_TRUE(result2);
 }
@@ -38,15 +38,15 @@ TEST_F(LoginTest, PasswordTest)
     std::string passwd2 = "password";
     std::string passwd3 = "Pass_word1234";
 
-    auto result1 = cut.password(passwd1);
+    auto result1 = cut.auth_password(passwd1);
 
-    EXPECT_EQ(result1.error(), LoginError::IncorrectPassword);
+    EXPECT_EQ(result1.error(), AuthErr::IncorrectPassword);
 
-    auto result2 = cut.password(passwd2);
+    auto result2 = cut.auth_password(passwd2);
 
-    EXPECT_EQ(result2.error(), LoginError::IncorrectPassword);
+    EXPECT_EQ(result2.error(), AuthErr::IncorrectPassword);
 
-    auto result3 = cut.password(passwd3);
+    auto result3 = cut.auth_password(passwd3);
 
     EXPECT_TRUE(result3);
     EXPECT_EQ(result3.value(), hash(passwd3).value());
@@ -59,11 +59,11 @@ struct DbTest : Test
     const std::string db_path = "../../test/";
     const std::string db_name = "db";
     
-    std::unique_ptr<Db> cut;
+    std::unique_ptr<Database> cut;
 
     void SetUp() override
     {
-        cut = std::make_unique<Db>(db_path+db_name);
+        cut = std::make_unique<Database>(db_path+db_name);
     }
 
     void TearDown() override
@@ -74,7 +74,7 @@ struct DbTest : Test
         {
             perror("Error deleting file");
         }
-    }
+    }   
 };
 
 TEST_F(DbTest, CheckDbFunctionalities)
