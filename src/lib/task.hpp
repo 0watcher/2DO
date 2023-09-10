@@ -38,8 +38,8 @@ class Task
     String m_content {};
     TimePoint m_start_date {};
     TimePoint m_deadline {};
-    std::uint16_t m_executor_id {};
-    std::uint16_t m_owner_id {};
+    int m_executor_id {};
+    int m_owner_id {};
     stringmap m_discussion {};
     bool m_is_done {};
 };
