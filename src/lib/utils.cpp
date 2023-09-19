@@ -13,10 +13,10 @@ Result<std::string, StdError> input() noexcept
     return Ok<std::string, StdError>(std::move(input));
 }
 
-Result<std::string, StdError> hash(const std::string& password) noexcept
+Result<std::string, StdError> hash(const std::string& str) noexcept
 {
     std::hash<std::string> hasher {};
-    auto hash = std::to_string(hasher(password));
+    auto hash = std::to_string(hasher(str));
     if (hash.empty())
     {
         return Err<std::string, StdError>(StdError::HashError);

@@ -13,5 +13,5 @@ namespace twodo
 
     Result<std::string, StdError> input() noexcept;
 
-    Result<std::string, StdError> hash(const std::string& password) noexcept;
+    Result<std::string, StdError> hash(const std::string& str) noexcept;
 }  // namespace twodo

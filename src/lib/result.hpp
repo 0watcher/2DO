@@ -15,7 +15,7 @@ class Result
    public:
     const T& value() const noexcept { return std::get<T>(m_storage); }
 
-    const E& error() const noexcept { return std::get<E>(m_storage); }
+    const E& err() const noexcept { return std::get<E>(m_storage); }
 
     explicit operator bool() const noexcept { return !std::holds_alternative<E>(m_storage); }
 

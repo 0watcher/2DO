@@ -3,27 +3,50 @@
 #include <chrono>
 #include <map>
 #include <string>
+
+#include "database.hpp"
 #include "result.hpp"
 
+using TimePoint = std::chrono::system_clock::time_point;
 using stringmap = std::map<std::string, std::string>;
 using String = std::string;
 
+enum class TaskErr
+{
+    GetTaskFailure,
+    AddTaskFailure,
+    DeleteTaskFailure,
+    UpdateTaskFailure
+};
+
 namespace twodo
 {
-using TimePoint = std::chrono::system_clock::time_point;
-
+struct Discussion{};
+    
 class Task
 {
    public:
-    Task(const int&, const String&, const String&, const TimePoint&, const bool&);
-    Task(const int&, const bool&);
+    Task(const String& topic, const String& content, const TimePoint& start_date,
+         const TimePoint& deadline, int eid, int oid, const Discussion& discus, bool is_done)
+        : m_topic {topic},
+          m_content {content},
+          m_start_date {start_date},
+          m_deadline {deadline},
+          m_executor_id {eid},
+          m_owner_id {oid},
+          m_discussion {discus},
+          m_is_done {is_done}
+    {
+    }
 
     int get_id() const { return m_id; }
     String get_topic() const { return m_topic; }
     String get_content() const { return m_content; }
+    TimePoint get_start_date() const { return m_start_date; }
     TimePoint get_deadline() const { return m_deadline; }
     int get_executor_id() const { return m_executor_id; }
     int get_owner_id() const { return m_owner_id; }
+    Discussion get_discussion() const { return m_discussion; }
     bool get_is_done() const { return m_is_done; }
 
     void set_topic(const String& topic) { m_topic = topic; }
@@ -40,7 +63,22 @@ class Task
     TimePoint m_deadline {};
     int m_executor_id {};
     int m_owner_id {};
-    stringmap m_discussion {};
+    Discussion m_discussion {};
     bool m_is_done {};
 };
+
+class TaskDb
+{
+   public:
+    TaskDb();
+
+    Result<Task, TaskErr> get_task(const String& topic);
+    Result<None, TaskErr> add_task(const Task& task);
+    Result<None, TaskErr> delete_task(int id);
+    Result<None, TaskErr> udpate_data();
+
+   private:
+    Database m_db {"tasks"};
+};
+
 }  // namespace twodo

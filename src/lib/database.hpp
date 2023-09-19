@@ -39,8 +39,11 @@ namespace twodo
         Result<None, DbError> create_table(const String& table_name, const stringmap& column_names);
         Result<None, DbError> drop_table(const String& table_name);
         Result<None, DbError> insert_data(const String& table_name, const stringmap& values);
+        Result<None, DbError> delete_data(const String& table_name, const stringpair& where);
         Result<None, DbError> update_data(const String& table_name, const stringpair& set, const stringpair& where);
         Result<stringvec, DbError> select_data(const String& table_name, const stringvec& who, const stringpair& where);
+        bool is_table_empty(const String& table_name);
+        
 
     private:
         SQLite::Database m_db;
