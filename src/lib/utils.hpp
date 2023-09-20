@@ -1,17 +1,24 @@
+#pragma once
+
 #include <iostream>
 #include <string>
 
 #include "result.hpp"
 
+using String = std::string;
+
 namespace twodo
 {
-    enum class StdError
-    {
-        HashError,
-        CinError
-    };
+String input() noexcept;
 
-    Result<std::string, StdError> input() noexcept;
+String hash(const String& str) noexcept;
 
-    Result<std::string, StdError> hash(const std::string& str) noexcept;
+class IUserInputHandler
+{
+   public:
+    virtual String getInput() = 0;
+
+   private:
+    ~IUserInputHandler() {};
+};
 }  // namespace twodo

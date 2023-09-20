@@ -5,21 +5,72 @@
 
 #include "database.hpp"
 #include "result.hpp"
-#include "utils.hpp"
 
 namespace twodo
 {
-Result<User, AuthErr> AuthManager::login() {}
+Result<User, AuthErr> AuthManager::login()
+{
+    std::optional<User> user {};
 
-Result<User, AuthErr> AuthManager::singup()
+    while (true)
+    {
+        String username = m_ihandler.getInput();
+        auto result = m_udb.get_user(username);
+        if (result)
+        {
+            user = result.value();
+        }
+        std::cerr << "User not found!";
+    }
+
+    while (true)
+    {
+        String password = m_ihandler.getInput();
+        if (password == user->get_password())
+        {
+            return Ok<User, AuthErr>(user.value());
+        }
+        std::cerr << "Invalid password!";
+    }
+}
+
+Result<None, AuthErr> AuthManager::auth_username()
+{
+    String username = m_ihandler.getInput();
+    auto result = m_udb.get_user(username);
+    if(!result)
+    {
+        return Err<None, AuthErr>(AuthErr::UserNotFound);
+    }
+    return Ok<None, AuthErr>({});
+}
+
+Result<User, AuthErr> AuthManager::auth_password(const String& username)
+{
+    auto result = m_udb.get_user(username);
+    if (!result)
+    {
+        return Err<User, AuthErr>(AuthErr::UserNotFound);
+    }
+    while (true)
+    {
+        String password = m_ihandler.getInput();
+        if(password == result.value().get_password())
+        {
+            return Ok<User, AuthErr>(result.value());
+        }
+        std::cerr << "Invalid password!";
+    }
+}
+
+Result<User, AuthErr> RegisterManager::singup()
 {
     String username_ {};
 
     while (true)
     {
-        String username {};
-        std::getline(std::cin, username);
-
+        std::cout << "username: ";
+        String username = m_ihandler.getInput();
         auto usrnm_result = username_validation(username);
         if (!usrnm_result)
         {
@@ -27,7 +78,7 @@ Result<User, AuthErr> AuthManager::singup()
         }
         else
         {
-            auto name_exists = m_db.select_data("users", {"username"}, {"username", username});
+            auto name_exists = m_udb.get_user(username);
             if (!name_exists)
             {
                 username_ = username;
@@ -39,8 +90,8 @@ Result<User, AuthErr> AuthManager::singup()
 
     while (true)
     {
-        String password {};
-        std::getline(std::cin, password);
+        std::cout << "password: ";
+        String password = m_ihandler.getInput();
 
         auto passwd_result = password_validation(password);
         if (!passwd_result)
@@ -76,10 +127,10 @@ Result<User, AuthErr> AuthManager::singup()
         }
         else
         {
-            auto hashed_passwd = hash(password).value();
+            auto hashed_passwd = hash(password);
             Role usr_role {};
-            
-            if (m_db.is_table_empty("users"))
+
+            if (m_udb.is_empty())
             {
                 usr_role = Role::Admin;
             }
@@ -87,17 +138,15 @@ Result<User, AuthErr> AuthManager::singup()
             {
                 usr_role = Role::User;
             }
-            m_db.insert_data(
-                "users",
-                {{"username", username_}, {"role", rtos(usr_role)}, {"password", hashed_passwd}});
-            auto uid = m_db.select_data("users", {"id"}, {"username", username_});
+            m_udb.add_user(User{username_, usr_role, hashed_passwd});
+            auto user = m_udb.get_user(username_);
             return Ok<User, AuthErr>(
-                User {stoi(uid.value()[0]), username_, usr_role, hashed_passwd});
+                User {user.value().get_id(), username_, usr_role, hashed_passwd});
         }
     }
 }
 
-Result<None, AuthErr> AuthManager::username_validation(const String& username) const
+Result<None, AuthErr> RegisterManager::username_validation(const String& username) const
 {
     if (username.length() < 1 || username.length() > 20)
     {
@@ -106,7 +155,7 @@ Result<None, AuthErr> AuthManager::username_validation(const String& username) c
     return Ok<None, AuthErr>({});
 }
 
-Result<None, AuthErr> AuthManager::password_validation(const String& password) const
+Result<None, AuthErr> RegisterManager::password_validation(const String& password) const
 {
     std::regex upper_case_expression {"[A-Z]+"};
     std::regex lower_case_expression {"[a-z]+"};
@@ -183,6 +232,11 @@ Result<None, UsrDbErr> UserDb::delete_user(const String& username)
 
 Result<None, UsrDbErr> UserDb::update_data(const User& user) {}
 
+bool UserDb::is_empty()
+{
+    return m_db.is_table_empty("users");
+}
+
 String rtos(Role role)
 {
     switch (role)
@@ -199,13 +253,13 @@ String rtos(Role role)
     }
 }
 
-Role stor(const String& roleStr)
+Role stor(const String& role_str)
 {
-    static const std::map<std::string, Role> roleMap = {{"User", Role::User},
-                                                        {"Admin", Role::Admin}};
+    static const std::map<std::string, Role> role_map = {{"User", Role::User},
+                                                         {"Admin", Role::Admin}};
 
-    auto it = roleMap.find(roleStr);
-    if (it != roleMap.end())
+    auto it = role_map.find(role_str);
+    if (it != role_map.end())
     {
         return it->second;
     }

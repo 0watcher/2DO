@@ -2,25 +2,25 @@
 
 namespace twodo
 {
-Result<std::string, StdError> input() noexcept
+String input() noexcept
 {
-    std::string input {};
+    String input {};
     std::getline(std::cin, input);
     if (std::cin.fail())
     {
-        return Err<std::string, StdError>(StdError::CinError);
+        throw;
     }
-    return Ok<std::string, StdError>(std::move(input));
+    return input;
 }
 
-Result<std::string, StdError> hash(const std::string& str) noexcept
+String hash(const String& str) noexcept
 {
-    std::hash<std::string> hasher {};
-    auto hash = std::to_string(hasher(str));
-    if (hash.empty())
+    std::hash<String> hasher {};
+    auto hashed_value = std::to_string(hasher(str));
+    if (hashed_value.empty())
     {
-        return Err<std::string, StdError>(StdError::HashError);
+        throw;
     }
-    return Ok<std::string, StdError>(std::move(hash));
+    return hashed_value;
 }
 }  // namespace twodo
