@@ -19,6 +19,16 @@ class IUserInputHandler
     virtual String getInput() = 0;
 
    private:
-    ~IUserInputHandler() {};
+    ~IUserInputHandler() = default;
+};
+
+class IDisplayer
+{
+   public:
+    virtual void msg_display(const String& msg) = 0;
+    virtual void err_display(const String& msg) = 0;
+
+   private:
+    ~IDisplayer() = default;
 };
 }  // namespace twodo

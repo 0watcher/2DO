@@ -28,12 +28,13 @@ enum class AuthErr
     MissingNumber,
     MissingSpecialCharacter,
     UserNotFound,
-    AllTriesExhausted
+    AllTriesExhausted,
+    DbErr,
 };
 
 enum class UsrDbErr
 {
-    GetUserErr,
+    GetUserDataErr,
     AddUserErr,
     DeleteUserErr,
     UpdateDataErr
@@ -52,11 +53,14 @@ class User
 {
    public:
     User(int id, const String& username, Role role, const String& password)
-        : m_id {id}, m_username {username}, m_role {role}, m_password {password} {}
+        : m_id {id}, m_username {username}, m_role {role}, m_password {password}
+    {
+    }
 
     User(const String& username, Role role, const String& password)
-        : m_username {username}, m_role {role}, m_password {password} {}
-
+        : m_username {username}, m_role {role}, m_password {password}
+    {
+    }
 
     int get_id() const { return m_id.value(); }
     String get_username() const { return m_username; }
@@ -80,6 +84,7 @@ class UserDb
    public:
     UserDb();
     Result<User, UsrDbErr> get_user(const String& username) noexcept;
+    Result<int, UsrDbErr> get_user_id(const String& username);
     Result<None, UsrDbErr> add_user(const User& user);
     Result<None, UsrDbErr> delete_user(const String& username);
     Result<None, UsrDbErr> update_data(const User& user);
@@ -92,12 +97,14 @@ class UserDb
 class RegisterManager
 {
    public:
-    RegisterManager(IUserInputHandler& ihandler) : m_ihandler {ihandler} {}
+    RegisterManager(IUserInputHandler& ihandler, IDisplayer& idisplayer)
+        : m_ihandler {ihandler}, m_idisplayer {idisplayer} {}
     Result<User, AuthErr> singup();
 
    private:
     UserDb m_udb {};
     IUserInputHandler& m_ihandler;
+    IDisplayer& m_idisplayer;
 
     Result<None, AuthErr> username_validation(const String& username) const;
     Result<None, AuthErr> password_validation(const String& password) const;
@@ -107,7 +114,8 @@ class AuthManager
 {
    public:
     AuthManager() = delete;
-    AuthManager(IUserInputHandler& ihandler) : m_ihandler {ihandler} {}
+    AuthManager(IUserInputHandler& ihandler, IDisplayer& idisplayer)
+        : m_ihandler {ihandler}, m_idisplayer {idisplayer} {}
     Result<User, AuthErr> login();
     Result<None, AuthErr> auth_username();
     Result<User, AuthErr> auth_password(const String& username);
@@ -115,5 +123,6 @@ class AuthManager
    private:
     UserDb m_udb {};
     IUserInputHandler& m_ihandler;
+    IDisplayer& m_idisplayer;
 };
 }  // namespace twodo
