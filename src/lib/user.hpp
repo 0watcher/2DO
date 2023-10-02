@@ -5,11 +5,9 @@
 #include <string>
 #include <vector>
 
-#include "database.hpp"
 #include "result.hpp"
 #include "utils.hpp"
 
-using String = std::string;
 
 namespace twodo
 {
@@ -20,7 +18,7 @@ enum class UserErr
 
 enum class AuthErr
 {
-    InvalidNameLength,
+    InvalidNameLength = 1,
     AlreadyExistingName,
     PasswordTooShort,
     MissingUpperCase,
@@ -46,8 +44,8 @@ enum class Role
     Admin
 };
 
-Role stor(const String& role_str);
-String rtos(Role role);
+[[nodiscard]] Role stor(const String& role_str);
+[[nodiscard]] String rtos(Role role);
 
 class User
 {
@@ -62,10 +60,10 @@ class User
     {
     }
 
-    int get_id() const { return m_id.value(); }
-    String get_username() const { return m_username; }
-    Role get_role() const { return m_role; }
-    String get_password() const { return m_password; }
+    [[nodiscard]] int get_id() const { return m_id.value(); }
+    [[nodiscard]] String get_username() const { return m_username; }
+    [[nodiscard]] Role get_role() const { return m_role; }
+    [[nodiscard]] String get_password() const { return m_password; }
 
     void set_id(int id) { m_id = id; }
     void set_username(const String& username) { m_username = username; }
@@ -82,46 +80,57 @@ class User
 class UserDb
 {
    public:
-    UserDb();
-    Result<User, UsrDbErr> get_user(const String& username) noexcept;
-    Result<int, UsrDbErr> get_user_id(const String& username);
+    UserDb(const String& path);
+
+    UserDb(const UserDb&) = delete;
+    UserDb& operator=(const UserDb&) = delete;
+    UserDb(UserDb&& other) = default;
+    UserDb& operator=(UserDb&& other) = default;
+
+    [[nodiscard]] Result<User, UsrDbErr> get_user(const String& username) noexcept;
+    [[nodiscard]] Result<int, UsrDbErr> get_user_id(const String& username);
+    [[nodiscard]] bool is_empty();
     Result<None, UsrDbErr> add_user(const User& user);
     Result<None, UsrDbErr> delete_user(const String& username);
     Result<None, UsrDbErr> update_data(const User& user);
-    bool is_empty();
 
    private:
-    Database m_db {"user"};
+    Database m_db;
 };
 
 class RegisterManager
 {
    public:
-    RegisterManager(IUserInputHandler& ihandler, IDisplayer& idisplayer)
-        : m_ihandler {ihandler}, m_idisplayer {idisplayer} {}
-    Result<User, AuthErr> singup();
+    RegisterManager(UserDb&& udb, IUserInputHandler& ihandler, IDisplayer& idisplayer)
+        : m_udb {std::move(udb)}, m_ihandler {ihandler}, m_idisplayer {idisplayer}
+    {
+    }
+
+    [[nodiscard]] Result<User, AuthErr> singup();
+    [[nodiscard]] Result<None, AuthErr> username_validation(const String& username) const;
+    [[nodiscard]] Result<None, AuthErr> password_validation(const String& password) const;
 
    private:
-    UserDb m_udb {};
+    UserDb m_udb;
     IUserInputHandler& m_ihandler;
     IDisplayer& m_idisplayer;
 
-    Result<None, AuthErr> username_validation(const String& username) const;
-    Result<None, AuthErr> password_validation(const String& password) const;
 };
 
 class AuthManager
 {
    public:
-    AuthManager() = delete;
-    AuthManager(IUserInputHandler& ihandler, IDisplayer& idisplayer)
-        : m_ihandler {ihandler}, m_idisplayer {idisplayer} {}
-    Result<User, AuthErr> login();
-    Result<None, AuthErr> auth_username();
-    Result<User, AuthErr> auth_password(const String& username);
+    AuthManager(UserDb&& udb, IUserInputHandler& ihandler, IDisplayer& idisplayer)
+        : m_udb {std::move(udb)}, m_ihandler {ihandler}, m_idisplayer {idisplayer}
+    {
+    }
+
+    [[nodiscard]] Result<User, AuthErr> login();
+    [[nodiscard]] Result<None, AuthErr> auth_username();
+    [[nodiscard]] Result<User, AuthErr> auth_password(const String& username);
 
    private:
-    UserDb m_udb {};
+    UserDb m_udb;
     IUserInputHandler& m_ihandler;
     IDisplayer& m_idisplayer;
 };

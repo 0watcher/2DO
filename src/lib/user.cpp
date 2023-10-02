@@ -2,15 +2,12 @@
 
 #include <algorithm>
 #include <stdexcept>
-#include <string>
-
-#include "database.hpp"
-#include "result.hpp"
+#include "utils.hpp"
 
 namespace twodo
 {
 
-UserDb::UserDb()
+UserDb::UserDb(const String& path) : m_db{path}
 {
     m_db.create_table("users", {{"id", "INT PRIMARY KEY AUTOINCREMENT"},
                                 {"username", "TEXT"},
@@ -18,7 +15,7 @@ UserDb::UserDb()
                                 {"password", "TEXT"}});
 }
 
-Result<User, UsrDbErr> UserDb::get_user(const String& username) noexcept
+[[nodiscard]] Result<User, UsrDbErr> UserDb::get_user(const String& username) noexcept
 {
     auto data =
         m_db.select_data("users", {"id", "username", "role", "password"}, {"username", username});
@@ -26,13 +23,13 @@ Result<User, UsrDbErr> UserDb::get_user(const String& username) noexcept
     {
         return Err<User, UsrDbErr>(UsrDbErr::GetUserDataErr);
     }
-    stringvec usr_data = data.value();
+    ColumnValues usr_data = data.value();
 
     return Ok<User, UsrDbErr>(
         User {std::stoi(usr_data[0]), usr_data[1], stor(usr_data[2]), usr_data[3]});
 }
 
-Result<int, UsrDbErr> UserDb::get_user_id(const String& username)
+[[nodiscard]] Result<int, UsrDbErr> UserDb::get_user_id(const String& username)
 {
     auto id = m_db.select_data("users", {"id"}, {"username", username});
     if(!id)
@@ -111,9 +108,9 @@ Result<None, UsrDbErr> UserDb::update_data(const User& user)
     return Ok<None, UsrDbErr>({});
 }   
 
-bool UserDb::is_empty() { return m_db.is_table_empty("users"); }
+[[nodiscard]] bool UserDb::is_empty() { return m_db.is_table_empty("users"); }
 
-String rtos(Role role)
+[[nodiscard]] String rtos(Role role)
 {
     switch (role)
     {
@@ -129,7 +126,7 @@ String rtos(Role role)
     }
 }
 
-Role stor(const String& role_str)
+[[nodiscard]] Role stor(const String& role_str)
 {
     static const std::map<std::string, Role> role_map = {{"User", Role::User},
                                                          {"Admin", Role::Admin}};
@@ -145,14 +142,14 @@ Role stor(const String& role_str)
     }
 }
 
-Result<User, AuthErr> RegisterManager::singup()
+[[nodiscard]] Result<User, AuthErr> RegisterManager::singup()
 {
     String username_ {};
 
     while (true)
     {
         m_idisplayer.msg_display("username: ");
-        String username = m_ihandler.getInput();
+        String username = m_ihandler.get_input();
         auto usrnm_result = username_validation(username);
         if (!usrnm_result)
         {
@@ -173,7 +170,7 @@ Result<User, AuthErr> RegisterManager::singup()
     while (true)
     {
         m_idisplayer.msg_display("password: ");
-        String password = m_ihandler.getInput();
+        String password = m_ihandler.get_input();
 
         auto passwd_result = password_validation(password);
         if (!passwd_result)
@@ -235,7 +232,7 @@ Result<User, AuthErr> RegisterManager::singup()
     }
 }
 
-Result<None, AuthErr> RegisterManager::username_validation(const String& username) const
+[[nodiscard]] Result<None, AuthErr> RegisterManager::username_validation(const String& username) const
 {
     if (username.length() < 1 || username.length() > 20)
     {
@@ -244,30 +241,30 @@ Result<None, AuthErr> RegisterManager::username_validation(const String& usernam
     return Ok<None, AuthErr>({});
 }
 
-Result<None, AuthErr> RegisterManager::password_validation(const String& password) const
+[[nodiscard]] Result<None, AuthErr> RegisterManager::password_validation(const String& password) const
 {
     std::regex upper_case_expression {"[A-Z]+"};
     std::regex lower_case_expression {"[a-z]+"};
     std::regex number_expression {"[0-9]+"};
     std::regex special_char_expression {"[!@#$%^&*()_+\\-=\\[\\]{};:\\\",<.>/?]+"};
 
-    if (password.length() >= 8)
+    if (password.length() < 8)
     {
         return Err<None, AuthErr>(AuthErr::PasswordTooShort);
     }
-    if (std::regex_search(password, upper_case_expression))
+    if (!std::regex_search(password, upper_case_expression))
     {
         return Err<None, AuthErr>(AuthErr::MissingUpperCase);
     }
-    if (std::regex_search(password, lower_case_expression))
+    if (!std::regex_search(password, lower_case_expression))
     {
         return Err<None, AuthErr>(AuthErr::MissingLowerCase);
     }
-    if (std::regex_search(password, number_expression))
+    if (!std::regex_search(password, number_expression))
     {
         return Err<None, AuthErr>(AuthErr::MissingNumber);
     }
-    if (std::regex_search(password, special_char_expression))
+    if (!std::regex_search(password, special_char_expression))
     {
         return Err<None, AuthErr>(AuthErr::MissingSpecialCharacter);
     }
@@ -275,13 +272,13 @@ Result<None, AuthErr> RegisterManager::password_validation(const String& passwor
     return Ok<None, AuthErr>({});
 }
 
-Result<User, AuthErr> AuthManager::login()
+[[nodiscard]] Result<User, AuthErr> AuthManager::login()
 {
     std::optional<User> user {};
 
     while (true)
     {
-        String username = m_ihandler.getInput();
+        String username = m_ihandler.get_input();
         auto result = m_udb.get_user(username);
         if (result)
         {
@@ -292,18 +289,18 @@ Result<User, AuthErr> AuthManager::login()
 
     while (true)
     {
-        String password = m_ihandler.getInput();
+        String password = m_ihandler.get_input();
         if (password == user->get_password())
         {
-            return Ok<User, AuthErr>(user.value());
+            return Ok<User, AuthErr>(std::move(user.value()));
         }
         m_idisplayer.err_display("Invalid password!");
     }
 }
 
-Result<None, AuthErr> AuthManager::auth_username()
+[[nodiscard]] Result<None, AuthErr> AuthManager::auth_username()
 {
-    String username = m_ihandler.getInput();
+    String username = m_ihandler.get_input();
     auto result = m_udb.get_user(username);
     if (!result)
     {
@@ -312,7 +309,7 @@ Result<None, AuthErr> AuthManager::auth_username()
     return Ok<None, AuthErr>({});
 }
 
-Result<User, AuthErr> AuthManager::auth_password(const String& username)
+[[nodiscard]] Result<User, AuthErr> AuthManager::auth_password(const String& username)
 {
     auto result = m_udb.get_user(username);
     if (!result)
@@ -321,10 +318,10 @@ Result<User, AuthErr> AuthManager::auth_password(const String& username)
     }
     while (true)
     {
-        String password = m_ihandler.getInput();
+        String password = m_ihandler.get_input();
         if (password == result.value().get_password())
         {
-            return Ok<User, AuthErr>(result.value());
+            return Ok<User, AuthErr>(std::move(result.value()));
         }
         m_idisplayer.err_display("Invalid password!");
     }
