@@ -3,18 +3,17 @@
 #include <gtest/gtest.h>
 
 #include <filesystem>
+#include <memory>
 #include <string>
 
-#include "database.hpp"
+#include "gmock/gmock.h"
 #include "result.hpp"
 #include "user.hpp"
 #include "utils.hpp"
 
-using namespace testing;
 using namespace twodo;
+using namespace testing;
 namespace fs = std::filesystem;
-
-#include <memory>
 
 struct DbTest : Test
 {
@@ -84,41 +83,32 @@ TEST_F(DbTest, CheckDbFunctionalities)
         ASSERT_EQ(updated_name, new_name);
     }
 }
-// struct LoginTest : Test
-// {
-//     AuthManager cut {};
-// };
 
-// TEST_F(LoginTest, NicknameTest)
-// {
-//     std::string nicknm1 = "";
-//     std::string nicknm2 = "nickname";
+class MockUserInputHandler : public IUserInputHandler
+{
+   public:
+    MOCK_METHOD(String, get_input, (), (override));
+};
 
-//     auto result1 = cut.auth_nickname(nicknm1);
+class MockDisplayer : public IDisplayer
+{
+   public:
+    MOCK_METHOD(void, msg_display, (const String& msg), (override));
+    MOCK_METHOD(void, err_display, (const String& err), (override));
+};
 
-//     EXPECT_EQ(result1.error(), AuthErr::IncorrectNickname);
+struct RegisterTest : Test
+{
+    MockUserInputHandler ih;
+    MockDisplayer d;
+    UserDb udb{"../../test/db"};
+    RegisterManager cut{std::move(udb), ih, d};
+};
 
-//     auto result2 = cut.auth_nickname(nicknm2);
-
-//     EXPECT_TRUE(result2);
-// }
-
-// TEST_F(LoginTest, PasswordTest)
-// {
-//     std::string passwd1 = "passwd";
-//     std::string passwd2 = "password";
-//     std::string passwd3 = "Pass_word1234";
-
-//     auto result1 = cut.auth_password(passwd1);
-
-//     EXPECT_EQ(result1.error(), AuthErr::IncorrectPassword);
-
-//     auto result2 = cut.auth_password(passwd2);
-
-//     EXPECT_EQ(result2.error(), AuthErr::IncorrectPassword);
-
-//     auto result3 = cut.auth_password(passwd3);
-
-//     EXPECT_TRUE(result3);
-//     EXPECT_EQ(result3.value(), hash(passwd3).value());
-// }
+TEST_F(RegisterTest, Some)
+{
+    auto result = cut.username_validation("Patryk");
+    EXPECT_TRUE(result);
+    auto user = cut.password_validation("Patryk123!");
+    EXPECT_TRUE(user);
+}
