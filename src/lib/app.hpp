@@ -31,7 +31,7 @@ class App
     bool m_is_running = true;
     bool m_in_task_menu = true;
 
-    void clearConsole() noexcept;
+    inline void clearConsole() noexcept;
     Result<int, InputError> get_valid_option() noexcept;
 };
 

@@ -5,17 +5,15 @@
 
 namespace twodo
 {
-struct None
-{
-};
+struct None{};
 
 template <typename T, typename E>
 class Result
 {
    public:
-    const T& value() const noexcept { return std::get<T>(m_storage); }
+    [[nodiscard]] const T& value() const noexcept { return std::get<T>(m_storage); }
 
-    const E& err() const noexcept { return std::get<E>(m_storage); }
+    [[nodiscard]] const E& err() const noexcept { return std::get<E>(m_storage); }
 
     explicit operator bool() const noexcept { return !std::holds_alternative<E>(m_storage); }
 
@@ -37,19 +35,19 @@ class Result
 };
 
 template <typename T, typename E>
-Result<T, E> Ok(T&& value) noexcept
+[[nodiscard]] Result<T, E> Ok(T&& value) noexcept
 {
     return Result<T, E> {std::move(value)};
 }
 
 template <typename T, typename E>
-Result<T, E> Ok(const T& value) noexcept
+[[nodiscard]] Result<T, E> Ok(const T& value) noexcept
 {
     return Result<T, E> {value};
 }
 
 template <typename T, typename E>
-Result<T, E> Err(E error) noexcept
+[[nodiscard]] Result<T, E> Err(E error) noexcept
 {
     return Result<T, E> {std::move(error)};
 }

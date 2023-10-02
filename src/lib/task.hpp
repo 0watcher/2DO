@@ -4,7 +4,7 @@
 #include <map>
 #include <string>
 
-#include "database.hpp"
+#include "utils.hpp"
 #include "result.hpp"
 
 using TimePoint = std::chrono::system_clock::time_point;

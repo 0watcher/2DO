@@ -94,7 +94,7 @@ Result<None, RunError> App::run()
     return Ok<None, RunError>({});
 }
 
-void App::clearConsole() noexcept
+inline void App::clearConsole() noexcept
 {
 #ifdef _WIN32
     system("cls");
