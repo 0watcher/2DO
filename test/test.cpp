@@ -7,6 +7,7 @@
 #include <string>
 
 #include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "result.hpp"
 #include "user.hpp"
 #include "utils.hpp"
@@ -84,6 +85,43 @@ TEST_F(DbTest, CheckDbFunctionalities)
     }
 }
 
+TEST(UserDbTest, ChecksOverallUserDbFunctionality)
+{
+    String db_path = "../../test/db";
+    auto udb = std::make_unique<UserDb>(db_path);
+
+    EXPECT_TRUE(udb->is_empty());
+
+    String username = "Papryk";
+    auto user = User {username, Role::User, hash("Patryk!123")};
+    auto result = udb->add_user(user);
+    EXPECT_TRUE(result);
+
+    auto user_from_db = udb->get_user(username);
+    EXPECT_TRUE(user_from_db);
+
+    user.set_id(user_from_db.value().get_id());
+    EXPECT_EQ(user_from_db.value(), user);
+
+    user.set_username("Dupa");
+    user.set_role(Role::Admin);
+    user.set_password(hash("Dupa123!"));
+    auto result2 = udb->update_data(user);
+    EXPECT_TRUE(result2);
+    auto user_from_db2 = udb->get_user(user.get_id());
+    EXPECT_TRUE(user_from_db2);
+    EXPECT_EQ(user_from_db2.value(), user);
+
+    auto result3 = udb->delete_user(user.get_id());
+    EXPECT_TRUE(result3);
+
+    udb.reset();
+    if (!fs::remove(db_path + ".db3"))
+    {
+        perror("Error deleting file");
+    }
+}
+
 class MockUserInputHandler : public IUserInputHandler
 {
    public:
@@ -99,16 +137,46 @@ class MockDisplayer : public IDisplayer
 
 struct RegisterTest : Test
 {
+    String db_path = "../../test/db";
     MockUserInputHandler ih;
     MockDisplayer d;
-    UserDb udb{"../../test/db"};
-    RegisterManager cut{std::move(udb), ih, d};
+    UserDb udb {db_path};
+    std::unique_ptr<RegisterManager> cut;
+
+    void SetUp() override { cut = std::make_unique<RegisterManager>(std::move(udb), ih, d); }
+
+    void TearDown() override
+    {
+        cut.reset();
+
+        if (!fs::remove(db_path + ".db3"))
+        {
+            perror("Error deleting file");
+        }
+    }
 };
 
-TEST_F(RegisterTest, Some)
+TEST_F(RegisterTest, ValidationTest)
 {
-    auto result = cut.username_validation("Patryk");
+    auto result = cut->username_validation("Patryk");
     EXPECT_TRUE(result);
-    auto user = cut.password_validation("Patryk123!");
+    auto user = cut->password_validation("Patryk123!");
     EXPECT_TRUE(user);
+}
+
+TEST_F(RegisterTest, ChecksSingupOverallFunctionality)
+{
+    // int id = 1;
+    // String username = "Patryk";
+    // String hashed_password = hash("Patryk123!");
+    // Role role = Role::Admin;
+    // Ok<User, AuthErr>(User{id, username, role, hashed_password});
+
+    // Expectation dplay1 = EXPECT_CALL(d, msg_display(_)).WillOnce(Return());
+    // Expectation dplay2 = EXPECT_CALL(d, msg_display(_)).WillOnce(Return());
+
+    // EXPECT_CALL(ih, get_input()).After(dplay1).WillOnce(Return("Patryk"));
+    // EXPECT_CALL(ih, get_input()).After(dplay2).WillOnce(Return("Patryk123!"));
+    // auto user_ = cut->singup();
+    // EXPECT_TRUE(user_);
 }
