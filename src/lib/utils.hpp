@@ -49,8 +49,8 @@ struct DbError
     DbError(String sq_err_) : sq_err {sq_err_} {}
     DbError(DbErr db_err_) : cdb_err {db_err_} {}
 
-    String sql_err() { return sq_err; }
-    DbErr db_err() { return cdb_err; }
+    String sql_err() const { return sq_err; }
+    DbErr db_err() const { return cdb_err; }
 
    private:
     String sq_err {};

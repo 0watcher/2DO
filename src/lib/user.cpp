@@ -1,21 +1,32 @@
 #include "user.hpp"
 
 #include <algorithm>
+#include <exception>
 #include <stdexcept>
+#include <string>
+
+#include "result.hpp"
 #include "utils.hpp"
 
 namespace twodo
 {
 
-UserDb::UserDb(const String& path) : m_db{path}
+UserDb::UserDb(const String& path) : m_db {path}
 {
-    m_db.create_table("users", {{"id", "INT PRIMARY KEY AUTOINCREMENT"},
-                                {"username", "TEXT"},
-                                {"role", "TEXT"},
-                                {"password", "TEXT"}});
+    if (!m_db.is_table_empty("users"))
+    {
+        auto result = m_db.create_table("users", {{"id", "INTEGER PRIMARY KEY AUTOINCREMENT"},
+                                                  {"username", "TEXT"},
+                                                  {"role", "TEXT"},
+                                                  {"password", "TEXT"}});
+        if (!result)
+        {
+            throw std::runtime_error("Failed create the table: " + result.err().sql_err());
+        }
+    }
 }
 
-[[nodiscard]] Result<User, UsrDbErr> UserDb::get_user(const String& username) noexcept
+[[nodiscard]] Result<User, UsrDbErr> UserDb::get_user(const String& username)
 {
     auto data =
         m_db.select_data("users", {"id", "username", "role", "password"}, {"username", username});
@@ -29,10 +40,24 @@ UserDb::UserDb(const String& path) : m_db{path}
         User {std::stoi(usr_data[0]), usr_data[1], stor(usr_data[2]), usr_data[3]});
 }
 
+[[nodiscard]] Result<User, UsrDbErr> UserDb::get_user(int id)
+{
+    auto data =
+        m_db.select_data("users", {"username", "role", "password"}, {"id", std::to_string(id)});
+    if (!data)
+    {
+        return Err<User, UsrDbErr>(UsrDbErr::GetUserDataErr);
+    }
+    ColumnValues usr_data = data.value();
+
+    return Ok<User, UsrDbErr>(
+        User {id, usr_data[0], stor(usr_data[1]), usr_data[2]});
+}
+
 [[nodiscard]] Result<int, UsrDbErr> UserDb::get_user_id(const String& username)
 {
     auto id = m_db.select_data("users", {"id"}, {"username", username});
-    if(!id)
+    if (!id)
     {
         return Err<int, UsrDbErr>(UsrDbErr::GetUserDataErr);
     }
@@ -61,10 +86,21 @@ Result<None, UsrDbErr> UserDb::delete_user(const String& username)
     return Ok<None, UsrDbErr>({});
 }
 
+Result<None, UsrDbErr> UserDb::delete_user(int id)
+{
+    auto result = m_db.delete_data("users", {"id", std::to_string(id)});
+    if (!result)
+    {
+        return Err<None, UsrDbErr>(UsrDbErr::DeleteUserErr);
+    }
+    return Ok<None, UsrDbErr>({});
+}
+
 Result<None, UsrDbErr> UserDb::update_data(const User& user)
 {
-    auto data = m_db.select_data("users", {"username", "role", "password"}, {"id", std::to_string(user.get_id())});
-    if(!data)
+    auto data = m_db.select_data("users", {"username", "role", "password"},
+                                 {"id", std::to_string(user.get_id())});
+    if (!data)
     {
         return Err<None, UsrDbErr>(UsrDbErr::GetUserDataErr);
     }
@@ -78,35 +114,35 @@ Result<None, UsrDbErr> UserDb::update_data(const User& user)
     String role = rtos(user.get_role());
     String password = user.get_password();
 
-    if(username != db_username)
+    if (username != db_username)
     {
         auto result = m_db.update_data("users", {"username", username}, {"id", id});
-        if(!result)
+        if (!result)
         {
             return Err<None, UsrDbErr>(UsrDbErr::UpdateDataErr);
         }
     }
 
-    if(role != db_role)
+    if (role != db_role)
     {
         auto result = m_db.update_data("users", {"role", role}, {"id", id});
-        if(!result)
+        if (!result)
         {
             return Err<None, UsrDbErr>(UsrDbErr::UpdateDataErr);
         }
     }
 
-    if(password != db_password)
+    if (password != db_password)
     {
         auto result = m_db.update_data("users", {"password", password}, {"id", id});
-        if(!result)
+        if (!result)
         {
             return Err<None, UsrDbErr>(UsrDbErr::UpdateDataErr);
         }
     }
 
     return Ok<None, UsrDbErr>({});
-}   
+}
 
 [[nodiscard]] bool UserDb::is_empty() { return m_db.is_table_empty("users"); }
 
@@ -167,14 +203,19 @@ Result<None, UsrDbErr> UserDb::update_data(const User& user)
         }
     }
 
+    int tries = 3;
+
     while (true)
     {
+        if(tries == 0) return Err<User, AuthErr>(AuthErr::AllTriesExhausted);
+
         m_idisplayer.msg_display("password: ");
         String password = m_ihandler.get_input();
 
         auto passwd_result = password_validation(password);
         if (!passwd_result)
         {
+            tries--;
             switch (passwd_result.err())
             {
                 case AuthErr::PasswordTooShort:
@@ -222,17 +263,17 @@ Result<None, UsrDbErr> UserDb::update_data(const User& user)
             }
             m_udb.add_user(User {username_, usr_role, hashed_passwd});
             auto id = m_udb.get_user_id(username_);
-            if(!id)
+            if (!id)
             {
                 return Err<User, AuthErr>(AuthErr::DbErr);
             }
-            return Ok<User, AuthErr>(
-                User {id.value(), username_, usr_role, hashed_passwd});
+            return Ok<User, AuthErr>(User {id.value(), username_, usr_role, hashed_passwd});
         }
     }
 }
 
-[[nodiscard]] Result<None, AuthErr> RegisterManager::username_validation(const String& username) const
+[[nodiscard]] Result<None, AuthErr> RegisterManager::username_validation(
+    const String& username) const
 {
     if (username.length() < 1 || username.length() > 20)
     {
@@ -241,7 +282,8 @@ Result<None, UsrDbErr> UserDb::update_data(const User& user)
     return Ok<None, AuthErr>({});
 }
 
-[[nodiscard]] Result<None, AuthErr> RegisterManager::password_validation(const String& password) const
+[[nodiscard]] Result<None, AuthErr> RegisterManager::password_validation(
+    const String& password) const
 {
     std::regex upper_case_expression {"[A-Z]+"};
     std::regex lower_case_expression {"[a-z]+"};
@@ -326,6 +368,5 @@ Result<None, UsrDbErr> UserDb::update_data(const User& user)
         m_idisplayer.err_display("Invalid password!");
     }
 }
-
 
 }  // namespace twodo

@@ -1,5 +1,7 @@
 #include "utils.hpp"
 
+#include <filesystem>
+
 namespace twodo
 {
 [[nodiscard]] String input()
@@ -48,7 +50,7 @@ Result<None, DbError> Database::create_table(const String& table_name,
     }
     catch (const std::exception& e)
     {
-        return Err<None, DbError>(String(e.what()));
+        return Err<None, DbError>(DbError{e.what()});
     }
 
     return Ok<None, DbError>({});
@@ -64,7 +66,7 @@ Result<None, DbError> Database::drop_table(const String& table_name)
     }
     catch (const std::exception& e)
     {
-        return Err<None, DbError>(String(e.what()));
+        return Err<None, DbError>(DbError{e.what()});
     }
 
     return Ok<None, DbError>({});
@@ -95,7 +97,7 @@ Result<None, DbError> Database::insert_data(const String& table_name, const Colu
     }
     catch (const std::exception& e)
     {
-        return Err<None, DbError>(String(e.what()));
+        return Err<None, DbError>(DbError{e.what()});
     }
 
     return Ok<None, DbError>({});
@@ -112,7 +114,7 @@ Result<None, DbError> Database::delete_data(const String& table_name, const Cond
     }
     catch (const std::exception& e)
     {
-        return Err<None, DbError>(String(e.what()));
+        return Err<None, DbError>(DbError{e.what()});
     }
     return Ok<None, DbError>({});
 }
@@ -129,14 +131,15 @@ Result<None, DbError> Database::update_data(const String& table_name, const Colu
     }
     catch (const std::exception& e)
     {
-        return Err<None, DbError>(String(e.what()));
+        return Err<None, DbError>(DbError{e.what()});
     }
 
     return Ok<None, DbError>({});
 }
 
 [[nodiscard]] Result<ColumnValues, DbError> Database::select_data(const String& table_name,
-                                                    const ColumnNames& what, const Condition& where)
+                                                                  const ColumnNames& what,
+                                                                  const Condition& where)
 {
     String query = "SELECT ";
     for (const auto& name : what)
@@ -164,7 +167,7 @@ Result<None, DbError> Database::update_data(const String& table_name, const Colu
         SQLite::Statement query_(m_db, query);
         if (query_.getColumnCount() != what.size())
         {
-            return Err<ColumnValues, DbError>(DbErr::IncompatibleNumberOfColumns);
+            return Err<ColumnValues, DbError>(DbError(DbErr::IncompatibleNumberOfColumns));
         }
 
         while (query_.executeStep())
@@ -177,7 +180,7 @@ Result<None, DbError> Database::update_data(const String& table_name, const Colu
     }
     catch (const std::exception& e)
     {
-        return Err<ColumnValues, DbError>(String(e.what()));
+        return Err<ColumnValues, DbError>(DbError{e.what()});
     }
 
     return Ok<ColumnValues, DbError>(std::move(values));
@@ -185,13 +188,19 @@ Result<None, DbError> Database::update_data(const String& table_name, const Colu
 
 [[nodiscard]] bool Database::is_table_empty(const String& table_name)
 {
-    SQLite::Statement query(m_db, "SELECT COUNT(*) FROM " + table_name);
-
-    if (query.executeStep())
+    try
     {
-        int rowCount = query.getColumn(0).getInt();
-        return rowCount == 0;
+        SQLite::Statement query(m_db, "SELECT COUNT(*) FROM " + table_name);
+
+        if (query.executeStep())
+        {
+            int rowCount = query.getColumn(0).getInt();
+            return rowCount == 0;
+        }
     }
-    return true;
+    catch (const std::exception&)
+    {
+        return false;
+    }
 }
 }  // namespace twodo
