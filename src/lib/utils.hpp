@@ -32,8 +32,8 @@ class IUserInputHandler
 class IDisplayer
 {
    public:
-    virtual void msg_display(const String& msg) = 0;
-    virtual void err_display(const String& err) = 0;
+    virtual void msg_display(std::string_view msg) = 0;
+    virtual void err_display(std::string_view err) = 0;
     ~IDisplayer() {}
 };
 

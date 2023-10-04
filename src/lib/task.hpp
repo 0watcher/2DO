@@ -3,6 +3,7 @@
 #include <chrono>
 #include <map>
 #include <string>
+#include <string_view>
 
 #include "utils.hpp"
 #include "result.hpp"
@@ -26,7 +27,7 @@ struct Discussion{};
 class Task
 {
    public:
-    Task(const String& topic, const String& content, const TimePoint& start_date,
+    Task(std::string_view topic, std::string_view content, const TimePoint& start_date,
          const TimePoint& deadline, int eid, int oid, const Discussion& discus, bool is_done)
         : m_topic {topic},
           m_content {content},
@@ -49,11 +50,11 @@ class Task
     Discussion get_discussion() const { return m_discussion; }
     bool get_is_done() const { return m_is_done; }
 
-    void set_topic(const String& topic) { m_topic = topic; }
-    void set_content(const String& content) { m_content = content; }
-    void set_executor(const int& id) { m_executor_id = id; }
-    void set_owner(const int& id) { m_owner_id = id; }
-    void set_is_done(const bool& done) { m_is_done = done; }
+    void set_topic(std::string_view topic) { m_topic = topic; }
+    void set_content(std::string_view content) { m_content = content; }
+    void set_executor(int id) { m_executor_id = id; }
+    void set_owner(int id) { m_owner_id = id; }
+    void set_is_done(bool done) { m_is_done = done; }
 
    private:
     int m_id {};
@@ -72,8 +73,8 @@ class TaskDb
    public:
     TaskDb();
 
-    Result<Task, TaskErr> get_task(const String& topic);
-    Result<None, TaskErr> add_task(const Task& task);
+    Result<Task, TaskErr> get_task(std::string_view topic);
+    Result<None, TaskErr> add_task(std::string_view task);
     Result<None, TaskErr> delete_task(int id);
     Result<None, TaskErr> udpate_data();
 

@@ -273,7 +273,7 @@ Result<None, UsrDbErr> UserDb::update_data(const User& user)
 }
 
 [[nodiscard]] Result<None, AuthErr> RegisterManager::username_validation(
-    const String& username) const
+    std::string_view username) const
 {
     if (username.length() < 1 || username.length() > 20)
     {

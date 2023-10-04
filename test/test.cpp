@@ -1,13 +1,11 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-
 #include <filesystem>
 #include <memory>
 #include <string>
+#include <string_view>
 
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
 #include "result.hpp"
 #include "user.hpp"
 #include "utils.hpp"
@@ -100,7 +98,9 @@ TEST(UserDbTest, ChecksOverallUserDbFunctionality)
     auto user_from_db = udb->get_user(username);
     EXPECT_TRUE(user_from_db);
 
-    user.set_id(user_from_db.value().get_id());
+    auto id = udb->get_user_id(user.get_username());
+    EXPECT_TRUE(id);
+    user.set_id(id.value());
     EXPECT_EQ(user_from_db.value(), user);
 
     user.set_username("Dupa");
@@ -131,8 +131,8 @@ class MockUserInputHandler : public IUserInputHandler
 class MockDisplayer : public IDisplayer
 {
    public:
-    MOCK_METHOD(void, msg_display, (const String& msg), (override));
-    MOCK_METHOD(void, err_display, (const String& err), (override));
+    MOCK_METHOD(void, msg_display, (std::string_view msg), (override));
+    MOCK_METHOD(void, err_display, (std::string_view err), (override));
 };
 
 struct RegisterTest : Test
@@ -160,23 +160,30 @@ TEST_F(RegisterTest, ValidationTest)
 {
     auto result = cut->username_validation("Patryk");
     EXPECT_TRUE(result);
+
+    auto result2 = cut->username_validation("");
+    EXPECT_FALSE(result2);
+
     auto user = cut->password_validation("Patryk123!");
     EXPECT_TRUE(user);
+    
+    auto user2 = cut->password_validation("patryk");
+    EXPECT_FALSE(user2);
 }
 
 TEST_F(RegisterTest, ChecksSingupOverallFunctionality)
 {
-    // int id = 1;
-    // String username = "Patryk";
-    // String hashed_password = hash("Patryk123!");
-    // Role role = Role::Admin;
-    // Ok<User, AuthErr>(User{id, username, role, hashed_password});
+    int id = 1;
+    String username = "Patryk";
+    String hashed_password = hash("Patryk123!");
+    Role role = Role::Admin;
+    //Ok<User, AuthErr>(User{id, username, role, hashed_password});
 
-    // Expectation dplay1 = EXPECT_CALL(d, msg_display(_)).WillOnce(Return());
-    // Expectation dplay2 = EXPECT_CALL(d, msg_display(_)).WillOnce(Return());
+    Expectation dplay1 = EXPECT_CALL(d, msg_display(_)).WillOnce(Return());
+    Expectation dplay2 = EXPECT_CALL(d, msg_display(_)).WillOnce(Return());
 
-    // EXPECT_CALL(ih, get_input()).After(dplay1).WillOnce(Return("Patryk"));
-    // EXPECT_CALL(ih, get_input()).After(dplay2).WillOnce(Return("Patryk123!"));
-    // auto user_ = cut->singup();
-    // EXPECT_TRUE(user_);
+    EXPECT_CALL(ih, get_input()).After(dplay1).WillOnce(Return("Patryk"));
+    EXPECT_CALL(ih, get_input()).After(dplay2).WillOnce(Return("Patryk123!"));
+    auto user_ = cut->singup();
+    EXPECT_TRUE(user_);
 }

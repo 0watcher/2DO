@@ -4,6 +4,7 @@
 #include <regex>
 #include <string>
 #include <vector>
+#include <string_view>
 
 #include "result.hpp"
 #include "utils.hpp"
@@ -49,12 +50,12 @@ enum class Role
 class User
 {
    public:
-    User(int id, const String& username, Role role, const String& password)
+    User(int id, std::string_view username, Role role, std::string_view password)
         : m_id {id}, m_username {username}, m_role {role}, m_password {password}
     {
     }
 
-    User(const String& username, Role role, const String& password)
+    User(std::string_view username, Role role, std::string_view password)
         : m_username {username}, m_role {role}, m_password {password}
     {
     }
@@ -71,9 +72,9 @@ class User
     [[nodiscard]] String get_password() const { return m_password; }
 
     void set_id(int id) { m_id = id; }
-    void set_username(const String& username) { m_username = username; }
+    void set_username(std::string_view username) { m_username = username; }
     void set_role(Role role) { m_role = role; }
-    void set_password(const String& passwd) { m_password = passwd; }
+    void set_password(std::string_view passwd) { m_password = passwd; }
 
    private:
     std::optional<int> m_id {std::nullopt};
@@ -114,7 +115,7 @@ class RegisterManager
     }
 
     [[nodiscard]] Result<User, AuthErr> singup();
-    [[nodiscard]] Result<None, AuthErr> username_validation(const String& username) const;
+    [[nodiscard]] Result<None, AuthErr> username_validation(std::string_view username) const;
     [[nodiscard]] Result<None, AuthErr> password_validation(const String& password) const;
 
    private:
