@@ -26,7 +26,7 @@ class IUserInputHandler
 {
    public:
     virtual String get_input() = 0;
-    ~IUserInputHandler() {}
+    virtual ~IUserInputHandler() = default;
 };
 
 class IDisplayer
@@ -34,14 +34,15 @@ class IDisplayer
    public:
     virtual void msg_display(std::string_view msg) = 0;
     virtual void err_display(std::string_view err) = 0;
-    ~IDisplayer() {}
+    virtual ~IDisplayer() = default;
 };
 
 enum class DbErr
 {
     Error = 1,
     EmptyProps,
-    IncompatibleNumberOfColumns
+    IncompatibleNumberOfColumns,
+    EmptyResult
 };
 
 struct DbError

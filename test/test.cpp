@@ -1,6 +1,7 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+
 #include <filesystem>
 #include <memory>
 #include <string>
@@ -138,12 +139,12 @@ class MockDisplayer : public IDisplayer
 struct RegisterTest : Test
 {
     String db_path = "../../test/db";
-    MockUserInputHandler ih;
-    MockDisplayer d;
-    UserDb udb {db_path};
+    std::shared_ptr<UserDb> udb = std::make_shared<UserDb>(db_path);
+    std::shared_ptr<MockUserInputHandler> ih = std::make_shared<MockUserInputHandler>();
+    std::shared_ptr<MockDisplayer> d = std::make_shared<MockDisplayer>();
     std::unique_ptr<RegisterManager> cut;
 
-    void SetUp() override { cut = std::make_unique<RegisterManager>(std::move(udb), ih, d); }
+    void SetUp() override { cut = std::make_unique<RegisterManager>(udb, ih, d); }
 
     void TearDown() override
     {
@@ -166,24 +167,25 @@ TEST_F(RegisterTest, ValidationTest)
 
     auto user = cut->password_validation("Patryk123!");
     EXPECT_TRUE(user);
-    
+
     auto user2 = cut->password_validation("patryk");
     EXPECT_FALSE(user2);
 }
 
 TEST_F(RegisterTest, ChecksSingupOverallFunctionality)
 {
-    int id = 1;
-    String username = "Patryk";
-    String hashed_password = hash("Patryk123!");
-    Role role = Role::Admin;
-    //Ok<User, AuthErr>(User{id, username, role, hashed_password});
+    EXPECT_CALL(*ih, get_input())
+        .WillOnce(Return("Patryk"))
+        .WillOnce(Return("Patryk123!"));
 
-    Expectation dplay1 = EXPECT_CALL(d, msg_display(_)).WillOnce(Return());
-    Expectation dplay2 = EXPECT_CALL(d, msg_display(_)).WillOnce(Return());
+    User expectedUser{
+        1,
+        "Patryk",
+        Role::Admin,
+        hash("Patryk123!")
+    };
 
-    EXPECT_CALL(ih, get_input()).After(dplay1).WillOnce(Return("Patryk"));
-    EXPECT_CALL(ih, get_input()).After(dplay2).WillOnce(Return("Patryk123!"));
     auto user_ = cut->singup();
     EXPECT_TRUE(user_);
+    EXPECT_EQ(user_.value(), expectedUser);
 }

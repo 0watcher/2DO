@@ -109,8 +109,8 @@ class UserDb
 class RegisterManager
 {
    public:
-    RegisterManager(UserDb&& udb, IUserInputHandler& ihandler, IDisplayer& idisplayer)
-        : m_udb {std::move(udb)}, m_ihandler {ihandler}, m_idisplayer {idisplayer}
+    RegisterManager(std::shared_ptr<UserDb> udb, std::shared_ptr<IUserInputHandler> ihandler, std::shared_ptr<IDisplayer> idisplayer)
+        : m_udb {udb}, m_ihandler {ihandler}, m_idisplayer {idisplayer}
     {
     }
 
@@ -119,9 +119,9 @@ class RegisterManager
     [[nodiscard]] Result<None, AuthErr> password_validation(const String& password) const;
 
    private:
-    UserDb m_udb;
-    IUserInputHandler& m_ihandler;
-    IDisplayer& m_idisplayer;
+    std::shared_ptr<UserDb> m_udb;
+    std::shared_ptr<IUserInputHandler> m_ihandler;
+    std::shared_ptr<IDisplayer> m_idisplayer;
 };
 
 class AuthManager

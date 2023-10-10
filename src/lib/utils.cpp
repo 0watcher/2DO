@@ -177,6 +177,11 @@ Result<None, DbError> Database::update_data(const String& table_name, const Colu
                 values.push_back(query_.getColumn(i));
             }
         }
+
+        if (values.empty())
+        {
+            return Err<ColumnValues, DbError>(DbError(DbErr::EmptyResult));
+        }
     }
     catch (const std::exception& e)
     {
