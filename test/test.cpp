@@ -27,11 +27,7 @@ struct DbTest : Test
     void TearDown() override
     {
         cut.reset();
-
-        if (!fs::remove(db_path + db_name + ".db3"))
-        {
-            perror("Error deleting file");
-        }
+        fs::remove(db_path + db_name + ".db3");
     }
 };
 
@@ -117,10 +113,7 @@ TEST(UserDbTest, ChecksOverallUserDbFunctionality)
     EXPECT_TRUE(result3);
 
     udb.reset();
-    if (!fs::remove(db_path + ".db3"))
-    {
-        perror("Error deleting file");
-    }
+    fs::remove(db_path + ".db3");
 }
 
 class MockUserInputHandler : public IUserInputHandler
@@ -149,11 +142,10 @@ struct RegisterTest : Test
     void TearDown() override
     {
         cut.reset();
-
-        if (!fs::remove(db_path + ".db3"))
-        {
-            perror("Error deleting file");
-        }
+        udb.reset();
+        ih.reset();
+        d.reset();
+        fs::remove(db_path + ".db3");
     }
 };
 
