@@ -190,7 +190,7 @@ Result<None, UsrDbErr> UserDb::update_data(const User& user)
 
         if (!usrnm_result)
         {
-            m_idisplayer->err_display("Invalid name length!");
+            m_idisplayer->err_display("Invalid name length!\n");
         }
         else
         {
@@ -200,7 +200,7 @@ Result<None, UsrDbErr> UserDb::update_data(const User& user)
                 username_ = username;
                 break;
             }
-            m_idisplayer->err_display("User with this name already exists!");
+            m_idisplayer->err_display("User with this name already exists!\n");
         }
     }
 
@@ -217,30 +217,30 @@ Result<None, UsrDbErr> UserDb::update_data(const User& user)
             {
                 case AuthErr::PasswordTooShort:
                 {
-                    m_idisplayer->err_display("Password is too short!");
+                    m_idisplayer->err_display("Password is too short!\n");
                     break;
                 }
                 case AuthErr::MissingLowerCase:
                 {
                     m_idisplayer->err_display(
-                        "Password must contain at least one lowercase letter!");
+                        "Password must contain at least one lowercase letter!\n");
                     break;
                 }
                 case AuthErr::MissingUpperCase:
                 {
                     m_idisplayer->err_display(
-                        "Password must contain at least one uppercase letter!");
+                        "Password must contain at least one uppercase letter!\n");
                     break;
                 }
                 case AuthErr::MissingNumber:
                 {
-                    m_idisplayer->err_display("Password must contain at least one number letter!");
+                    m_idisplayer->err_display("Password must contain at least one number letter!\n");
                     break;
                 }
                 case AuthErr::MissingSpecialCharacter:
                 {
                     m_idisplayer->err_display(
-                        "Password must contain at least one special character!");
+                        "Password must contain at least one special character!\n");
                     break;
                 }
             }
@@ -317,30 +317,33 @@ Result<None, UsrDbErr> UserDb::update_data(const User& user)
 
     while (true)
     {
-        String username = m_ihandler.get_input();
-        auto result = m_udb.get_user(username);
+        m_idisplayer->msg_display("username: ");
+        String username = m_ihandler->get_input();
+        auto result = m_udb->get_user(username);
         if (result)
         {
             user = result.value();
         }
-        m_idisplayer.err_display("User not found!");
+        m_idisplayer->err_display("User not found!\n");
     }
 
     while (true)
     {
-        String password = m_ihandler.get_input();
+        m_idisplayer->msg_display("password: ");
+        String password = m_ihandler->get_input();
         if (password == user->get_password())
         {
             return Ok<User, AuthErr>(std::move(user.value()));
         }
-        m_idisplayer.err_display("Invalid password!");
+        m_idisplayer->err_display("Invalid password!\n");
     }
 }
 
 [[nodiscard]] Result<None, AuthErr> AuthManager::auth_username()
 {
-    String username = m_ihandler.get_input();
-    auto result = m_udb.get_user(username);
+    m_idisplayer->msg_display("username: ");
+    String username = m_ihandler->get_input();
+    auto result = m_udb->get_user(username);
     if (!result)
     {
         return Err<None, AuthErr>(AuthErr::UserNotFound);
@@ -350,19 +353,20 @@ Result<None, UsrDbErr> UserDb::update_data(const User& user)
 
 [[nodiscard]] Result<User, AuthErr> AuthManager::auth_password(const String& username)
 {
-    auto result = m_udb.get_user(username);
+    auto result = m_udb->get_user(username);
     if (!result)
     {
         return Err<User, AuthErr>(AuthErr::UserNotFound);
     }
     while (true)
     {
-        String password = m_ihandler.get_input();
+        m_idisplayer->msg_display("password: ");
+        String password = m_ihandler->get_input();
         if (password == result.value().get_password())
         {
             return Ok<User, AuthErr>(std::move(result.value()));
         }
-        m_idisplayer.err_display("Invalid password!");
+        m_idisplayer->err_display("Invalid password!\n");
     }
 }
 

@@ -28,9 +28,9 @@ class MockUserInputHandler : public IUserInputHandler
 class MockDisplayer : public IDisplayer
 {
    public:
-    void msg_display(std::string_view msg) override { std::cout << msg << std::endl; }
+    void msg_display(std::string_view msg) override { std::cout << msg; }
 
-    void err_display(std::string_view err) override { std::cerr << err << std::endl; }
+    void err_display(std::string_view err) override { std::cerr << err; }
 };
 
 int main()

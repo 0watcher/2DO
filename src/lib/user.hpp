@@ -13,7 +13,6 @@ namespace twodo
 {
 enum class UserErr
 {
-
 };
 
 enum class AuthErr
@@ -127,8 +126,8 @@ class RegisterManager
 class AuthManager
 {
    public:
-    AuthManager(UserDb&& udb, IUserInputHandler& ihandler, IDisplayer& idisplayer)
-        : m_udb {std::move(udb)}, m_ihandler {ihandler}, m_idisplayer {idisplayer}
+    AuthManager(std::shared_ptr<UserDb> udb, std::shared_ptr<IUserInputHandler> ihandler, std::shared_ptr<IDisplayer> idisplayer)
+        : m_udb {udb}, m_ihandler {ihandler}, m_idisplayer {idisplayer}
     {
     }
 
@@ -137,8 +136,8 @@ class AuthManager
     [[nodiscard]] Result<User, AuthErr> auth_password(const String& username);
 
    private:
-    UserDb m_udb;
-    IUserInputHandler& m_ihandler;
-    IDisplayer& m_idisplayer;
+    std::shared_ptr<UserDb> m_udb;
+    std::shared_ptr<IUserInputHandler> m_ihandler;
+    std::shared_ptr<IDisplayer> m_idisplayer;
 };
 }  // namespace twodo
