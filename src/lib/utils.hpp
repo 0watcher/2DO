@@ -9,12 +9,12 @@
 #include "result.hpp"
 
 using String = std::string;
-using ColumnDef = std::map<std::string, std::string>;
-using ColumnNames = std::vector<std::string>;
-using ColumnInsert = std::map<std::string, std::string>;
-using ColumnUpdate = std::pair<std::string, std::string>;
-using Condition = std::pair<std::string, std::string>;
-using ColumnValues = std::vector<std::string>;
+
+using Attribute = String;
+using UpdatedValue = String;
+using AttributeType = String;
+using Value = String;
+using Condition = std::pair<Attribute, Value>;
 
 namespace twodo
 {
@@ -45,8 +45,9 @@ enum class DbErr
     EmptyResult
 };
 
-struct DbError
+class DbError
 {
+   public:
     DbError(String sq_err_) : sq_err {sq_err_} {}
     DbError(DbErr db_err_) : cdb_err {db_err_} {}
 
@@ -62,16 +63,22 @@ class Database
 {
    public:
     Database(const String& path) noexcept
-        : m_db {path + ".db3", SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE} {}
+        : m_db {path + ".db3", SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE}
+    {
+    }
 
-    Result<None, DbError> create_table(const String& table_name, const ColumnDef& column_names);
+    Result<None, DbError> create_table(const String& table_name,
+                                       const std::map<Attribute, AttributeType>& column_def);
     Result<None, DbError> drop_table(const String& table_name);
-    Result<None, DbError> insert_data(const String& table_name, const ColumnInsert& values);
+    Result<None, DbError> insert_data(const String& table_name,
+                                      const std::map<Attribute, Value>& values);
     Result<None, DbError> delete_data(const String& table_name, const Condition& where);
-    Result<None, DbError> update_data(const String& table_name, const ColumnUpdate& set,
+    Result<None, DbError> update_data(const String& table_name,
+                                      const std::pair<Attribute, UpdatedValue>& set,
                                       const Condition& where);
-    [[nodiscard]] Result<ColumnValues, DbError> select_data(const String& table_name, const ColumnNames& who,
-                                              const Condition& where);
+    [[nodiscard]] Result<std::vector<Value>, DbError> select_data(const String& table_name,
+                                                                  const std::vector<Attribute>& who,
+                                                                  const Condition& where);
     [[nodiscard]] bool is_table_empty(const String& table_name);
 
    private:

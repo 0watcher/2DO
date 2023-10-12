@@ -135,9 +135,7 @@ struct RegisterTest : Test
     std::shared_ptr<UserDb> udb = std::make_shared<UserDb>(db_path);
     std::shared_ptr<MockUserInputHandler> ih = std::make_shared<MockUserInputHandler>();
     std::shared_ptr<MockDisplayer> d = std::make_shared<MockDisplayer>();
-    std::unique_ptr<RegisterManager> cut;
-
-    void SetUp() override { cut = std::make_unique<RegisterManager>(udb, ih, d); }
+    std::unique_ptr<RegisterManager> cut = std::make_unique<RegisterManager>(udb, ih, d);
 
     void TearDown() override
     {
@@ -180,4 +178,48 @@ TEST_F(RegisterTest, ChecksSingupOverallFunctionality)
     auto user_ = cut->singup();
     EXPECT_TRUE(user_);
     EXPECT_EQ(user_.value(), expectedUser);
+}
+
+struct LoginTest : Test
+{
+    String db_path = "../../test/db";
+    std::shared_ptr<UserDb> udb = std::make_shared<UserDb>(db_path);
+    std::shared_ptr<MockUserInputHandler> ih = std::make_shared<MockUserInputHandler>();
+    std::shared_ptr<MockDisplayer> d = std::make_shared<MockDisplayer>();
+    std::unique_ptr<AuthManager> am = std::make_unique<AuthManager>(udb, ih, d);
+    String username = "SomeUser";
+    String password = "VeryStrongPassword123!";
+    User added_user = User{username, Role::User, hash(password)};
+
+    void SetUp() override
+    {
+        udb->add_user(added_user);
+        auto id = udb->get_user_id(username);
+        added_user.set_id(id.value());
+    }
+
+    void TearDown() override
+    {
+        am.reset();
+        udb.reset();
+        ih.reset();
+        d.reset();
+        fs::remove(db_path + ".db3");
+    }
+};
+
+TEST_F(LoginTest, LoginCorrectness)
+{
+    EXPECT_CALL(*ih, get_input())
+        .WillOnce(Return(username))
+        .WillOnce(Return(password));
+
+    auto user = am->login();
+    EXPECT_TRUE(user);
+    EXPECT_EQ(user.value(), added_user);
+}
+
+TEST_F(LoginTest, AuthCorrectness)
+{
+    
 }

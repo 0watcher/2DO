@@ -2,8 +2,10 @@
 
 #include <algorithm>
 #include <exception>
+#include <optional>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 #include "result.hpp"
 #include "utils.hpp"
@@ -34,7 +36,7 @@ UserDb::UserDb(const String& path) : m_db {path}
     {
         return Err<User, UsrDbErr>(UsrDbErr::GetUserDataErr);
     }
-    ColumnValues usr_data = data.value();
+    std::vector<Value> usr_data = data.value();
 
     return Ok<User, UsrDbErr>(
         User {std::stoi(usr_data[0]), usr_data[1], stor(usr_data[2]), usr_data[3]});
@@ -48,7 +50,7 @@ UserDb::UserDb(const String& path) : m_db {path}
     {
         return Err<User, UsrDbErr>(UsrDbErr::GetUserDataErr);
     }
-    ColumnValues usr_data = data.value();
+    std::vector<Value> usr_data = data.value();
 
     return Ok<User, UsrDbErr>(
         User {id, usr_data[0], stor(usr_data[1]), usr_data[2]});
@@ -313,29 +315,49 @@ Result<None, UsrDbErr> UserDb::update_data(const User& user)
 
 [[nodiscard]] Result<User, AuthErr> AuthManager::login()
 {
-    std::optional<User> user {};
+    std::optional<User> user {std::nullopt};
+
+    int tries = 3;
 
     while (true)
     {
+        if(tries <= 0)
+        {
+            return Err<User, AuthErr>(AuthErr::AllTriesExhausted);
+        }
+
         m_idisplayer->msg_display("username: ");
         String username = m_ihandler->get_input();
         auto result = m_udb->get_user(username);
-        if (result)
+        if (!result)
+        {
+            m_idisplayer->err_display("User not found!\n");
+            tries--;
+        }
+        else
         {
             user = result.value();
+            break;
         }
-        m_idisplayer->err_display("User not found!\n");
     }
+
+    tries = 3;
 
     while (true)
     {
+        if(tries <= 0)
+        {
+            return Err<User, AuthErr>(AuthErr::AllTriesExhausted);
+        }
+
         m_idisplayer->msg_display("password: ");
         String password = m_ihandler->get_input();
-        if (password == user->get_password())
+        if (hash(password) == user->get_password())
         {
             return Ok<User, AuthErr>(std::move(user.value()));
         }
         m_idisplayer->err_display("Invalid password!\n");
+        tries--;
     }
 }
 
