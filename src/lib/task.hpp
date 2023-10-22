@@ -5,12 +5,11 @@
 #include <string>
 #include <string_view>
 
-#include "utils.hpp"
 #include "result.hpp"
+#include "utils.hpp"
 
 using TimePoint = std::chrono::system_clock::time_point;
 using stringmap = std::map<std::string, std::string>;
-using String = std::string;
 
 enum class TaskErr
 {
@@ -22,11 +21,30 @@ enum class TaskErr
 
 namespace twodo
 {
-struct Discussion{};
-    
+String tptos(const TimePoint&);
+TimePoint stotp(const String&);
+
+struct Discussion
+{
+};
+
 class Task
 {
    public:
+    Task(int id, std::string_view topic, std::string_view content, const TimePoint& start_date,
+         const TimePoint& deadline, int eid, int oid, const Discussion& discus, bool is_done)
+        : m_id {id},
+          m_topic {topic},
+          m_content {content},
+          m_start_date {start_date},
+          m_deadline {deadline},
+          m_executor_id {eid},
+          m_owner_id {oid},
+          m_discussion {discus},
+          m_is_done {is_done}
+    {
+    }
+
     Task(std::string_view topic, std::string_view content, const TimePoint& start_date,
          const TimePoint& deadline, int eid, int oid, const Discussion& discus, bool is_done)
         : m_topic {topic},
@@ -40,7 +58,7 @@ class Task
     {
     }
 
-    int get_id() const { return m_id; }
+    int get_id() const { return m_id.value(); }
     String get_topic() const { return m_topic; }
     String get_content() const { return m_content; }
     TimePoint get_start_date() const { return m_start_date; }
@@ -57,7 +75,7 @@ class Task
     void set_is_done(bool done) { m_is_done = done; }
 
    private:
-    int m_id {};
+    std::optional<int> m_id {std::nullopt};
     String m_topic {};
     String m_content {};
     TimePoint m_start_date {};
@@ -71,15 +89,17 @@ class Task
 class TaskDb
 {
    public:
-    TaskDb();
+    TaskDb(const String& path);
 
-    Result<Task, TaskErr> get_task(std::string_view topic);
-    Result<None, TaskErr> add_task(std::string_view task);
+    [[nodiscard]] Result<Task, TaskErr> get_task(const String& topic);
+    [[nodiscard]] Result<Task, TaskErr> get_task(int id);
+    [[nodiscard]] Result<Id, TaskErr> get_task_id(const String& topic);
+    Result<None, TaskErr> add_task(const Task& task);
     Result<None, TaskErr> delete_task(int id);
-    Result<None, TaskErr> udpate_data();
+    Result<None, TaskErr> update_data(const Task& task);
 
    private:
-    Database m_db {"tasks"};
+    Database m_db;
 };
 
 }  // namespace twodo

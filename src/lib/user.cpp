@@ -56,7 +56,7 @@ UserDb::UserDb(const String& path) : m_db {path}
         User {id, usr_data[0], stor(usr_data[1]), usr_data[2]});
 }
 
-[[nodiscard]] Result<int, UsrDbErr> UserDb::get_user_id(const String& username)
+[[nodiscard]] Result<Id, UsrDbErr> UserDb::get_user_id(const String& username)
 {
     auto id = m_db.select_data("users", {"id"}, {"username", username});
     if (!id)

@@ -10,6 +10,8 @@
 
 using String = std::string;
 
+using Id = int;
+
 using Attribute = String;
 using UpdatedValue = String;
 using AttributeType = String;

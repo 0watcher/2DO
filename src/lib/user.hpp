@@ -94,7 +94,7 @@ class UserDb
 
     [[nodiscard]] Result<User, UsrDbErr> get_user(const String& username);
     [[nodiscard]] Result<User, UsrDbErr> get_user(int id);
-    [[nodiscard]] Result<int, UsrDbErr> get_user_id(const String& username);
+    [[nodiscard]] Result<Id, UsrDbErr> get_user_id(const String& username);
     [[nodiscard]] bool is_empty();
     Result<None, UsrDbErr> add_user(const User& user);
     Result<None, UsrDbErr> delete_user(const String& username);
