@@ -2,12 +2,14 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <chrono>
 #include <filesystem>
 #include <memory>
 #include <string>
 #include <string_view>
 
 #include "result.hpp"
+#include "task.hpp"
 #include "user.hpp"
 #include "utils.hpp"
 
@@ -164,16 +166,9 @@ TEST_F(RegisterTest, ValidationTest)
 
 TEST_F(RegisterTest, ChecksSingupOverallFunctionality)
 {
-    EXPECT_CALL(*ih, get_input())
-        .WillOnce(Return("Patryk"))
-        .WillOnce(Return("Patryk123!"));
+    EXPECT_CALL(*ih, get_input()).WillOnce(Return("Patryk")).WillOnce(Return("Patryk123!"));
 
-    User expectedUser{
-        1,
-        "Patryk",
-        Role::Admin,
-        hash("Patryk123!")
-    };
+    User expectedUser {1, "Patryk", Role::Admin, hash("Patryk123!")};
 
     auto user_ = cut->singup();
     EXPECT_TRUE(user_);
@@ -189,7 +184,7 @@ struct LoginTest : Test
     std::unique_ptr<AuthManager> am = std::make_unique<AuthManager>(udb, ih, d);
     String username = "SomeUser";
     String password = "VeryStrongPassword123!";
-    User added_user = User{username, Role::User, hash(password)};
+    User added_user = User {username, Role::User, hash(password)};
 
     void SetUp() override
     {
@@ -210,16 +205,33 @@ struct LoginTest : Test
 
 TEST_F(LoginTest, LoginCorrectness)
 {
-    EXPECT_CALL(*ih, get_input())
-        .WillOnce(Return(username))
-        .WillOnce(Return(password));
+    EXPECT_CALL(*ih, get_input()).WillOnce(Return(username)).WillOnce(Return(password));
 
     auto user = am->login();
     EXPECT_TRUE(user);
     EXPECT_EQ(user.value(), added_user);
 }
 
-TEST_F(LoginTest, AuthCorrectness)
+TEST_F(LoginTest, AuthCorrectness) {}
+
+TEST(TaskDbTest, CheckTaskDbOverallCorrectness)
 {
-    
+    auto db_path = String{"../../test/db"};
+    std::unique_ptr<TaskDb> tdb = std::make_unique<TaskDb>(db_path);
+    auto task = Task {"sometopic",
+                      "somecontent",
+                      std::chrono::system_clock::now(),
+                      std::chrono::system_clock::now() + std::chrono::hours {5},
+                      1,
+                      2,
+                      Discussion{},
+                      false};
+                      
+    EXPECT_TRUE(tdb->add_task(task));
+    auto db_task = tdb->get_task(task.get_id());
+    EXPECT_TRUE(db_task);
+    throw std::runtime_error("gowno");
+    EXPECT_EQ(db_task.value(), task);
+    tdb.reset();
+    fs::remove(db_path + ".db3");
 }

@@ -26,6 +26,11 @@ TimePoint stotp(const String&);
 
 struct Discussion
 {
+  String d = "";
+  bool operator==(const Discussion& other) const
+  {
+    return d == other.d;
+  }
 };
 
 class Task
@@ -58,6 +63,14 @@ class Task
     {
     }
 
+    bool operator==(const Task& other) const
+    {
+        return m_id == other.m_id && m_topic == other.m_topic && m_content == other.m_content &&
+               m_start_date == other.m_start_date && m_deadline == other.m_deadline &&
+               m_executor_id == other.m_executor_id && m_owner_id == other.m_owner_id &&
+               m_discussion == other.m_discussion && m_is_done == other.m_is_done;
+    }
+
     int get_id() const { return m_id.value(); }
     String get_topic() const { return m_topic; }
     String get_content() const { return m_content; }
@@ -68,6 +81,7 @@ class Task
     Discussion get_discussion() const { return m_discussion; }
     bool get_is_done() const { return m_is_done; }
 
+    void set_id(int id) { m_id = id; };
     void set_topic(std::string_view topic) { m_topic = topic; }
     void set_content(std::string_view content) { m_content = content; }
     void set_executor(int id) { m_executor_id = id; }
@@ -94,7 +108,7 @@ class TaskDb
     [[nodiscard]] Result<Task, TaskErr> get_task(const String& topic);
     [[nodiscard]] Result<Task, TaskErr> get_task(int id);
     [[nodiscard]] Result<Id, TaskErr> get_task_id(const String& topic);
-    Result<None, TaskErr> add_task(const Task& task);
+    Result<None, TaskErr> add_task(Task& task);
     Result<None, TaskErr> delete_task(int id);
     Result<None, TaskErr> update_data(const Task& task);
 
