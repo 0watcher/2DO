@@ -17,6 +17,8 @@ using namespace twodo;
 using namespace testing;
 namespace fs = std::filesystem;
 
+#define TEST_DB_PATH "../../test/";
+
 struct DbTest : Test
 {
     const std::string db_path = "../../test/";
@@ -24,7 +26,7 @@ struct DbTest : Test
 
     std::unique_ptr<Database> cut;
 
-    void SetUp() override { cut = std::make_unique<Database>(db_path + db_name); }
+    void SetUp() override { cut = std::make_unique<Database>(TEST_DB_PATH + db_name); }
 
     void TearDown() override
     {
