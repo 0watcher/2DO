@@ -4,13 +4,15 @@
 
 #include "result.hpp"
 
+#define TASKS_TABLE "tasks"
+
 namespace twodo
 {
 TaskDb::TaskDb(const String& path) : m_db {path}
 {
-    if (!m_db.is_table_empty("tasks"))
+    if (!m_db.is_table_empty(TASKS_TABLE))
     {
-        auto result = m_db.create_table("tasks", {{"id", "INTEGER PRIMARY KEY AUTOINCREMENT"},
+        auto result = m_db.create_table(TASKS_TABLE, {{"id", "INTEGER PRIMARY KEY AUTOINCREMENT"},
                                                   {"topic", "TEXT"},
                                                   {"content", "TEXT"},
                                                   {"start_date", "TEXT"},
@@ -29,7 +31,7 @@ TaskDb::TaskDb(const String& path) : m_db {path}
 Result<Task, TaskErr> TaskDb::get_task(const String& topic)
 {
     auto task = m_db.select_data(
-        "tasks",
+        TASKS_TABLE,
         {"id", "topic", "content", "start_date", "deadline", "eid", "oid", "discussion", "done"},
         {"topic", topic});
     if (!task)
@@ -46,7 +48,7 @@ Result<Task, TaskErr> TaskDb::get_task(const String& topic)
 Result<Task, TaskErr> TaskDb::get_task(int id)
 {
     auto task = m_db.select_data(
-        "tasks", {"topic", "content", "start_date", "deadline", "eid", "oid", "discussion", "done"},
+        TASKS_TABLE, {"topic", "content", "start_date", "deadline", "eid", "oid", "discussion", "done"},
         {"id", std::to_string(id)});
     if (!task)
     {
@@ -58,7 +60,6 @@ Result<Task, TaskErr> TaskDb::get_task(int id)
     String content = task_data[1];
     TimePoint start_date = stotp(task_data[2]);
     TimePoint deadline = stotp(task_data[3]);
-    throw std::runtime_error(task_data[6]);
     int eid = std::stoi(task_data[4]);
     int oid = std::stoi(task_data[5]);
     bool done = (std::stoi(task_data[7]) != 0) ? true : false;
@@ -69,7 +70,7 @@ Result<Task, TaskErr> TaskDb::get_task(int id)
 
 [[nodiscard]] Result<Id, TaskErr> TaskDb::get_task_id(const String& topic)
 {
-    auto id = m_db.select_data("tasks", {"id"}, {"topic", topic});
+    auto id = m_db.select_data(TASKS_TABLE, {"id"}, {"topic", topic});
     if (!id)
     {
         return Err<int, TaskErr>(TaskErr::GetTaskFailure);
@@ -87,7 +88,7 @@ Result<None, TaskErr> TaskDb::add_task(Task& task)
     const auto oid = std::to_string(task.get_owner_id());
     const auto done = std::to_string((task.get_is_done())? 1 : 0);
 
-    auto result = m_db.insert_data("tasks", {{"topic", topic},
+    auto result = m_db.insert_data(TASKS_TABLE, {{"topic", topic},
                                              {"content", content},
                                              {"start_date", start_date},
                                              {"deadline", deadline},
@@ -112,7 +113,7 @@ Result<None, TaskErr> TaskDb::add_task(Task& task)
 
 Result<None, TaskErr> TaskDb::delete_task(int id)
 {
-    auto result = m_db.delete_data("tasks", {"id", std::to_string(id)});
+    auto result = m_db.delete_data(TASKS_TABLE, {"id", std::to_string(id)});
     if (!result)
     {
         return Err<None, TaskErr>(TaskErr::DeleteTaskFailure);
@@ -123,7 +124,7 @@ Result<None, TaskErr> TaskDb::delete_task(int id)
 Result<None, TaskErr> TaskDb::update_data(const Task& task)
 {
     auto data = m_db.select_data(
-        "tasks",
+        TASKS_TABLE,
         {"id", "topic", "content", "start_date", "deadline", "eid", "oid", "discussion", "done"},
         {"id", std::to_string(task.get_id())});
 
@@ -234,23 +235,5 @@ Result<None, TaskErr> TaskDb::update_data(const Task& task)
     }
 
     return Ok<None, TaskErr>({});
-}
-
-String tptos(const TimePoint& tp)
-{
-    std::time_t time = std::chrono::system_clock::to_time_t(tp);
-
-    std::string timeString = std::to_string(time);
-
-    return timeString;
-}
-
-TimePoint stotp(const String& stringified_tp)
-{
-    std::time_t time = std::stoll(stringified_tp);
-
-    TimePoint tp = std::chrono::system_clock::from_time_t(time);
-
-    return tp;
 }
 }  // namespace twodo

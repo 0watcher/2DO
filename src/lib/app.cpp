@@ -2,13 +2,22 @@
 #include <chrono>
 #include <thread>
 
+#define SLEEP(t) std::this_thread::sleep_for(std::chrono::milliseconds(t))
+
+#ifdef _WIN32
+#define CLEAR_TERM() system("cls")
+#else
+#define CLEAR_TERM system("clear")
+#endif
+
+
 namespace twodo
 {
 Result<None, RunError> App::run()
 {
     while (m_is_running)
     {
-        clearConsole();
+        CLEAR_TERM();
 
         std::cout << "Main Menu:\n"
                   << "[1] Tasks\n"
@@ -30,7 +39,7 @@ Result<None, RunError> App::run()
                     m_in_task_menu = true;
                     while (m_in_task_menu)
                     {
-                        clearConsole();
+                        CLEAR_TERM();
 
                         std::cout << "Task Menu:\n"
                                   << "[1] Task List\n"
@@ -62,14 +71,14 @@ Result<None, RunError> App::run()
                                     break;
                                 default:
                                     std::cerr << "Invalid option. Try again!\n";
-                                    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+                                    SLEEP(2000);
                                     break;
                             }
                         }
                         else
                         {
                             std::cerr << "Invalid input. Try again!\n";
-                            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+                            SLEEP(2000);
                         }
                     }
                     break;
@@ -81,26 +90,17 @@ Result<None, RunError> App::run()
                     break;
                 default:
                     std::cerr << "Invalid option. Try again!\n";
-                    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+                    SLEEP(2000);
                     break;
             }
         }
         else
         {
             std::cerr << "Invalid input. Try again!\n";
-            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+            SLEEP(2000);
         }
     }
     return Ok<None, RunError>({});
-}
-
-inline void App::clearConsole() noexcept
-{
-#ifdef _WIN32
-    system("cls");
-#else
-    system("clear");
-#endif
 }
 
 Result<int, InputError> App::get_valid_option() noexcept

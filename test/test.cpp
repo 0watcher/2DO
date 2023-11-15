@@ -1,10 +1,10 @@
-
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <chrono>
 #include <filesystem>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 
@@ -17,21 +17,16 @@ using namespace twodo;
 using namespace testing;
 namespace fs = std::filesystem;
 
-#define TEST_DB_PATH "../../test/";
+#define TEST_DB_PATH "../../test/db"
 
 struct DbTest : Test
 {
-    const std::string db_path = "../../test/";
-    const std::string db_name = "db";
-
-    std::unique_ptr<Database> cut;
-
-    void SetUp() override { cut = std::make_unique<Database>(TEST_DB_PATH + db_name); }
+    std::unique_ptr<Database> cut = std::make_unique<Database>(TEST_DB_PATH);
 
     void TearDown() override
     {
         cut.reset();
-        fs::remove(db_path + db_name + ".db3");
+        fs::remove(TEST_DB_PATH ".db3");
     }
 };
 
@@ -86,8 +81,7 @@ TEST_F(DbTest, CheckDbFunctionalities)
 
 TEST(UserDbTest, ChecksOverallUserDbFunctionality)
 {
-    String db_path = "../../test/db";
-    auto udb = std::make_unique<UserDb>(db_path);
+    auto udb = std::make_unique<UserDb>(TEST_DB_PATH);
 
     EXPECT_TRUE(udb->is_empty());
 
@@ -117,7 +111,7 @@ TEST(UserDbTest, ChecksOverallUserDbFunctionality)
     EXPECT_TRUE(result3);
 
     udb.reset();
-    fs::remove(db_path + ".db3");
+    fs::remove(TEST_DB_PATH ".db3");
 }
 
 class MockUserInputHandler : public IUserInputHandler
@@ -135,8 +129,7 @@ class MockDisplayer : public IDisplayer
 
 struct RegisterTest : Test
 {
-    String db_path = "../../test/db";
-    std::shared_ptr<UserDb> udb = std::make_shared<UserDb>(db_path);
+    std::shared_ptr<UserDb> udb = std::make_shared<UserDb>(TEST_DB_PATH);
     std::shared_ptr<MockUserInputHandler> ih = std::make_shared<MockUserInputHandler>();
     std::shared_ptr<MockDisplayer> d = std::make_shared<MockDisplayer>();
     std::unique_ptr<RegisterManager> cut = std::make_unique<RegisterManager>(udb, ih, d);
@@ -147,7 +140,7 @@ struct RegisterTest : Test
         udb.reset();
         ih.reset();
         d.reset();
-        fs::remove(db_path + ".db3");
+        fs::remove(TEST_DB_PATH ".db3");
     }
 };
 
@@ -179,8 +172,7 @@ TEST_F(RegisterTest, ChecksSingupOverallFunctionality)
 
 struct LoginTest : Test
 {
-    String db_path = "../../test/db";
-    std::shared_ptr<UserDb> udb = std::make_shared<UserDb>(db_path);
+    std::shared_ptr<UserDb> udb = std::make_shared<UserDb>(TEST_DB_PATH);
     std::shared_ptr<MockUserInputHandler> ih = std::make_shared<MockUserInputHandler>();
     std::shared_ptr<MockDisplayer> d = std::make_shared<MockDisplayer>();
     std::unique_ptr<AuthManager> am = std::make_unique<AuthManager>(udb, ih, d);
@@ -201,7 +193,7 @@ struct LoginTest : Test
         udb.reset();
         ih.reset();
         d.reset();
-        fs::remove(db_path + ".db3");
+        fs::remove(TEST_DB_PATH ".db3");
     }
 };
 
@@ -222,8 +214,8 @@ TEST(TaskDbTest, CheckTaskDbOverallCorrectness)
     std::unique_ptr<TaskDb> tdb = std::make_unique<TaskDb>(db_path);
     auto task = Task {"sometopic",
                       "somecontent",
-                      std::chrono::system_clock::now(),
-                      std::chrono::system_clock::now() + std::chrono::hours {5},
+                      TP_NOW(),
+                      TP_NOW(5),
                       1,
                       2,
                       Discussion{},
@@ -232,7 +224,6 @@ TEST(TaskDbTest, CheckTaskDbOverallCorrectness)
     EXPECT_TRUE(tdb->add_task(task));
     auto db_task = tdb->get_task(task.get_id());
     EXPECT_TRUE(db_task);
-    throw std::runtime_error("gowno");
     EXPECT_EQ(db_task.value(), task);
     tdb.reset();
     fs::remove(db_path + ".db3");

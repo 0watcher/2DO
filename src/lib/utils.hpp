@@ -9,17 +9,21 @@
 #include "result.hpp"
 
 using String = std::string;
-
 using Id = int;
-
 using Attribute = String;
 using UpdatedValue = String;
 using AttributeType = String;
 using Value = String;
 using Condition = std::pair<Attribute, Value>;
+using TimePoint = std::chrono::time_point<std::chrono::system_clock, std::chrono::minutes>;
+
+#define TP_NOW(x) std::chrono::time_point_cast<std::chrono::minutes>(std::chrono::system_clock::now() + std::chrono::hours {x})
 
 namespace twodo
 {
+[[nodiscard]] String tptos(const TimePoint&);
+[[nodiscard]] TimePoint stotp(const String&);
+
 [[nodiscard]] String input();
 
 [[nodiscard]] String hash(const String& str);

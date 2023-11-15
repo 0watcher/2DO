@@ -7,6 +7,28 @@
 
 namespace twodo
 {
+[[nodiscard]] String tptos(const TimePoint& tp)
+{
+    std::time_t time = std::chrono::system_clock::to_time_t(tp);
+
+    std::chrono::minutes minutes = std::chrono::duration_cast<std::chrono::minutes>(tp.time_since_epoch());
+
+    auto minutes_count = minutes.count();
+
+    String timeString = std::to_string(minutes_count);
+
+    return timeString;
+}
+
+[[nodiscard]] TimePoint stotp(const String& stringified_tp)
+{
+    auto minutes_count = std::stoll(stringified_tp);
+
+    TimePoint tp = std::chrono::time_point<std::chrono::system_clock, std::chrono::minutes>(std::chrono::minutes(minutes_count));
+
+    return tp;
+}
+
 [[nodiscard]] String input()
 {
     String input {};
