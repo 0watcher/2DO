@@ -11,10 +11,6 @@
 
 namespace twodo
 {
-enum class UserErr
-{
-};
-
 enum class AuthErr
 {
     InvalidNameLength = 1,

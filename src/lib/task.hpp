@@ -8,9 +8,6 @@
 #include "result.hpp"
 #include "utils.hpp"
 
-using TimePoint = std::chrono::system_clock::time_point;
-using stringmap = std::map<std::string, std::string>;
-
 enum class TaskErr
 {
     GetTaskFailure,
@@ -21,9 +18,6 @@ enum class TaskErr
 
 namespace twodo
 {
-String tptos(const TimePoint&);
-TimePoint stotp(const String&);
-
 struct Discussion
 {
   String d = "";

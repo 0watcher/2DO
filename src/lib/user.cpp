@@ -10,6 +10,8 @@
 #include "result.hpp"
 #include "utils.hpp"
 
+#define USERS_TABLE "users"
+
 namespace twodo
 {
 
@@ -17,7 +19,7 @@ UserDb::UserDb(const String& path) : m_db {path}
 {
     if (!m_db.is_table_empty("users"))
     {
-        auto result = m_db.create_table("users", {{"id", "INTEGER PRIMARY KEY AUTOINCREMENT"},
+        auto result = m_db.create_table(USERS_TABLE, {{"id", "INTEGER PRIMARY KEY AUTOINCREMENT"},
                                                   {"username", "TEXT"},
                                                   {"role", "TEXT"},
                                                   {"password", "TEXT"}});
@@ -31,7 +33,7 @@ UserDb::UserDb(const String& path) : m_db {path}
 [[nodiscard]] Result<User, UsrDbErr> UserDb::get_user(const String& username)
 {
     auto data =
-        m_db.select_data("users", {"id", "username", "role", "password"}, {"username", username});
+        m_db.select_data(USERS_TABLE, {"id", "username", "role", "password"}, {"username", username});
     if (!data)
     {
         return Err<User, UsrDbErr>(UsrDbErr::GetUserDataErr);
@@ -45,7 +47,7 @@ UserDb::UserDb(const String& path) : m_db {path}
 [[nodiscard]] Result<User, UsrDbErr> UserDb::get_user(int id)
 {
     auto data =
-        m_db.select_data("users", {"username", "role", "password"}, {"id", std::to_string(id)});
+        m_db.select_data(USERS_TABLE, {"username", "role", "password"}, {"id", std::to_string(id)});
     if (!data)
     {
         return Err<User, UsrDbErr>(UsrDbErr::GetUserDataErr);
@@ -58,7 +60,7 @@ UserDb::UserDb(const String& path) : m_db {path}
 
 [[nodiscard]] Result<Id, UsrDbErr> UserDb::get_user_id(const String& username)
 {
-    auto id = m_db.select_data("users", {"id"}, {"username", username});
+    auto id = m_db.select_data(USERS_TABLE, {"id"}, {"username", username});
     if (!id)
     {
         return Err<int, UsrDbErr>(UsrDbErr::GetUserDataErr);
@@ -68,7 +70,7 @@ UserDb::UserDb(const String& path) : m_db {path}
 
 Result<None, UsrDbErr> UserDb::add_user(const User& user)
 {
-    auto result = m_db.insert_data("users", {{"username", user.get_username()},
+    auto result = m_db.insert_data(USERS_TABLE, {{"username", user.get_username()},
                                              {"role", rtos(user.get_role())},
                                              {"password", user.get_password()}});
     if (!result)
@@ -80,7 +82,7 @@ Result<None, UsrDbErr> UserDb::add_user(const User& user)
 
 Result<None, UsrDbErr> UserDb::delete_user(const String& username)
 {
-    auto result = m_db.delete_data("users", {"username", username});
+    auto result = m_db.delete_data(USERS_TABLE, {"username", username});
     if (!result)
     {
         return Err<None, UsrDbErr>(UsrDbErr::DeleteUserErr);
@@ -90,7 +92,7 @@ Result<None, UsrDbErr> UserDb::delete_user(const String& username)
 
 Result<None, UsrDbErr> UserDb::delete_user(int id)
 {
-    auto result = m_db.delete_data("users", {"id", std::to_string(id)});
+    auto result = m_db.delete_data(USERS_TABLE, {"id", std::to_string(id)});
     if (!result)
     {
         return Err<None, UsrDbErr>(UsrDbErr::DeleteUserErr);
@@ -100,7 +102,7 @@ Result<None, UsrDbErr> UserDb::delete_user(int id)
 
 Result<None, UsrDbErr> UserDb::update_data(const User& user)
 {
-    auto data = m_db.select_data("users", {"username", "role", "password"},
+    auto data = m_db.select_data(USERS_TABLE, {"username", "role", "password"},
                                  {"id", std::to_string(user.get_id())});
     if (!data)
     {
@@ -118,7 +120,7 @@ Result<None, UsrDbErr> UserDb::update_data(const User& user)
 
     if (username != db_username)
     {
-        auto result = m_db.update_data("users", {"username", username}, {"id", id});
+        auto result = m_db.update_data(USERS_TABLE, {"username", username}, {"id", id});
         if (!result)
         {
             return Err<None, UsrDbErr>(UsrDbErr::UpdateDataErr);
@@ -127,7 +129,7 @@ Result<None, UsrDbErr> UserDb::update_data(const User& user)
 
     if (role != db_role)
     {
-        auto result = m_db.update_data("users", {"role", role}, {"id", id});
+        auto result = m_db.update_data(USERS_TABLE, {"role", role}, {"id", id});
         if (!result)
         {
             return Err<None, UsrDbErr>(UsrDbErr::UpdateDataErr);
@@ -136,7 +138,7 @@ Result<None, UsrDbErr> UserDb::update_data(const User& user)
 
     if (password != db_password)
     {
-        auto result = m_db.update_data("users", {"password", password}, {"id", id});
+        auto result = m_db.update_data(USERS_TABLE, {"password", password}, {"id", id});
         if (!result)
         {
             return Err<None, UsrDbErr>(UsrDbErr::UpdateDataErr);
@@ -146,7 +148,7 @@ Result<None, UsrDbErr> UserDb::update_data(const User& user)
     return Ok<None, UsrDbErr>({});
 }
 
-[[nodiscard]] bool UserDb::is_empty() { return m_db.is_table_empty("users"); }
+[[nodiscard]] bool UserDb::is_empty() { return m_db.is_table_empty(USERS_TABLE); }
 
 [[nodiscard]] String rtos(Role role)
 {
