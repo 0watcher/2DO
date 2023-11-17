@@ -7,7 +7,7 @@
 
 namespace twodo
 {
-[[nodiscard]] String tptos(const TimePoint& tp)
+[[nodiscard]] String tptos(const TimePoint& tp) noexcept
 {
     std::time_t time = std::chrono::system_clock::to_time_t(tp);
 
@@ -20,7 +20,7 @@ namespace twodo
     return timeString;
 }
 
-[[nodiscard]] TimePoint stotp(const String& stringified_tp)
+[[nodiscard]] TimePoint stotp(const String& stringified_tp) noexcept
 {
     auto minutes_count = std::stoll(stringified_tp);
 
@@ -230,7 +230,8 @@ Result<None, DbError> Database::update_data(const String& table_name, const std:
     }
     catch (const std::exception&)
     {
-        return false;
+        return true;
     }
+    return false;
 }
 }  // namespace twodo

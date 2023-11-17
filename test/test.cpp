@@ -214,11 +214,11 @@ TEST(TaskDbTest, CheckTaskDbOverallCorrectness)
     std::unique_ptr<TaskDb> tdb = std::make_unique<TaskDb>(db_path);
     auto task = Task {"sometopic",
                       "somecontent",
-                      TP_NOW(),
-                      TP_NOW(5),
+                      give_date(),
+                      give_date(5),
                       1,
                       2,
-                      Discussion{},
+                      0,
                       false};
                       
     EXPECT_TRUE(tdb->add_task(task));

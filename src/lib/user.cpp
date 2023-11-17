@@ -17,7 +17,7 @@ namespace twodo
 
 UserDb::UserDb(const String& path) : m_db {path}
 {
-    if (!m_db.is_table_empty("users"))
+    if (m_db.is_table_empty(USERS_TABLE))
     {
         auto result = m_db.create_table(USERS_TABLE, {{"id", "INTEGER PRIMARY KEY AUTOINCREMENT"},
                                                   {"username", "TEXT"},

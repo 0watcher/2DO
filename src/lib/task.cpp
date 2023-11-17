@@ -1,16 +1,46 @@
 #include "task.hpp"
 
+#include <stdexcept>
 #include <string>
 
 #include "result.hpp"
 
 #define TASKS_TABLE "tasks"
+#define CHAT_TABLE "chat"
 
 namespace twodo
 {
+DiscussionDb::DiscussionDb(const String& path) : m_db(path)
+{
+    if (m_db.is_table_empty(CHAT_TABLE))
+    {
+        auto msg_result = m_db.create_table(CHAT_TABLE, {
+            {"id", "INTEGER PRIMARY KEY AUTOINCREMENT"},
+            {"sender", "TEXT"},
+            {"content", "TEXT"},
+            {"timestamp", "TEXT"},
+            {"tid", "INTEGER"}
+        });
+
+        if (!msg_result)
+        {
+            throw std::runtime_error("Failed to create the table: " + msg_result.err().sql_err());
+        }
+
+        auto cr_result = m_db.create_table(CHAT_TABLE, {
+            {"id", "INTEGER PRIMARY KEY AUTOINCREMENT"},
+        });
+
+        if (!cr_result)
+        {
+            throw std::runtime_error("Failed to create the table: " + cr_result.err().sql_err());
+        }
+    }
+}
+
 TaskDb::TaskDb(const String& path) : m_db {path}
 {
-    if (!m_db.is_table_empty(TASKS_TABLE))
+    if (m_db.is_table_empty(TASKS_TABLE))
     {
         auto result = m_db.create_table(TASKS_TABLE, {{"id", "INTEGER PRIMARY KEY AUTOINCREMENT"},
                                                   {"topic", "TEXT"},
@@ -19,7 +49,7 @@ TaskDb::TaskDb(const String& path) : m_db {path}
                                                   {"deadline", "TEXT"},
                                                   {"eid", "INTEGER"},
                                                   {"oid", "INTEGER"},
-                                                  {"discussion", "TEXT"},
+                                                  {"did", "INTEGER"},
                                                   {"done", "INTEGER"}});
         if (!result)
         {
@@ -32,7 +62,7 @@ Result<Task, TaskErr> TaskDb::get_task(const String& topic)
 {
     auto task = m_db.select_data(
         TASKS_TABLE,
-        {"id", "topic", "content", "start_date", "deadline", "eid", "oid", "discussion", "done"},
+        {"id", "topic", "content", "start_date", "deadline", "eid", "oid", "did", "done"},
         {"topic", topic});
     if (!task)
     {
@@ -41,14 +71,14 @@ Result<Task, TaskErr> TaskDb::get_task(const String& topic)
     std::vector<Value> task_data = task.value();
     return Ok<Task, TaskErr>(Task {std::stoi(task_data[0]), task_data[1], task_data[2],
                                    stotp(task_data[3]), stotp(task_data[4]),
-                                   std::stoi(task_data[5]), std::stoi(task_data[6]), Discussion {},
+                                   std::stoi(task_data[5]), std::stoi(task_data[6]), 0,
                                    bool(std::stoi(task_data[7]))});
 }
 
 Result<Task, TaskErr> TaskDb::get_task(int id)
 {
     auto task = m_db.select_data(
-        TASKS_TABLE, {"topic", "content", "start_date", "deadline", "eid", "oid", "discussion", "done"},
+        TASKS_TABLE, {"topic", "content", "start_date", "deadline", "eid", "oid", "did", "done"},
         {"id", std::to_string(id)});
     if (!task)
     {
@@ -65,7 +95,7 @@ Result<Task, TaskErr> TaskDb::get_task(int id)
     bool done = (std::stoi(task_data[7]) != 0) ? true : false;
 
     return Ok<Task, TaskErr>(
-        Task {id, topic, content, start_date, deadline, eid, oid, Discussion {}, done});
+        Task {id, topic, content, start_date, deadline, eid, oid, 0, done});
 }
 
 [[nodiscard]] Result<Id, TaskErr> TaskDb::get_task_id(const String& topic)
@@ -94,13 +124,12 @@ Result<None, TaskErr> TaskDb::add_task(Task& task)
                                              {"deadline", deadline},
                                              {"eid", eid},
                                              {"oid", oid},
-                                             {"discussion", ""},
+                                             {"did", std::to_string(0)},
                                              {"done", done}});
     if (!result)
     {
         return Err<None, TaskErr>(TaskErr::AddTaskFailure);
     }
-
     auto id = get_task_id(task.get_topic());
     if (!id)
     {
@@ -125,7 +154,7 @@ Result<None, TaskErr> TaskDb::update_data(const Task& task)
 {
     auto data = m_db.select_data(
         TASKS_TABLE,
-        {"id", "topic", "content", "start_date", "deadline", "eid", "oid", "discussion", "done"},
+        {"id", "topic", "content", "start_date", "deadline", "eid", "oid", "did", "done"},
         {"id", std::to_string(task.get_id())});
 
     if (!data)
@@ -140,7 +169,7 @@ Result<None, TaskErr> TaskDb::update_data(const Task& task)
     String db_deadline = data.value()[5];
     String db_eid = data.value()[6];
     String db_oid = data.value()[7];
-    String db_discussion = data.value()[8];
+    String db_did = data.value()[8];
     String db_done = data.value()[9];
 
     String id = std::to_string(task.get_id());
@@ -150,7 +179,7 @@ Result<None, TaskErr> TaskDb::update_data(const Task& task)
     String deadline = tptos(task.get_deadline());
     String eid = std::to_string(task.get_executor_id());
     String oid = std::to_string(task.get_owner_id());
-    String discussion = "";
+    String did = 0;
     String done = std::to_string(task.get_is_done());
 
     if (id != db_id)
@@ -216,9 +245,9 @@ Result<None, TaskErr> TaskDb::update_data(const Task& task)
         }
     }
 
-    if (discussion != db_discussion)
+    if (did != db_did)
     {
-        auto result = m_db.update_data("tasks", {"discussion", discussion}, {"id", db_id});
+        auto result = m_db.update_data("tasks", {"did", did}, {"id", db_id});
         if (!result)
         {
             return Err<None, TaskErr>(TaskErr::UpdateTaskFailure);

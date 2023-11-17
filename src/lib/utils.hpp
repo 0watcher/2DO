@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SQLiteCpp/SQLiteCpp.h>
+#include <vcruntime.h>
 
 #include <iostream>
 #include <string>
@@ -17,16 +18,22 @@ using Value = String;
 using Condition = std::pair<Attribute, Value>;
 using TimePoint = std::chrono::time_point<std::chrono::system_clock, std::chrono::minutes>;
 
-#define TP_NOW(x) std::chrono::time_point_cast<std::chrono::minutes>(std::chrono::system_clock::now() + std::chrono::hours {x})
-
 namespace twodo
 {
-[[nodiscard]] String tptos(const TimePoint&);
-[[nodiscard]] TimePoint stotp(const String&);
+[[nodiscard]] String tptos(const TimePoint&) noexcept;
+[[nodiscard]] TimePoint stotp(const String&) noexcept;
 
 [[nodiscard]] String input();
 
 [[nodiscard]] String hash(const String& str);
+
+inline void sleep(int t) noexcept { std::this_thread::sleep_for(std::chrono::milliseconds(t)); }
+
+[[nodiscard]] inline TimePoint give_date(int days = 0) noexcept
+{
+    return std::chrono::time_point_cast<std::chrono::minutes>(std::chrono::system_clock::now() +
+                                                              std::chrono::days {days});
+}
 
 class IUserInputHandler
 {

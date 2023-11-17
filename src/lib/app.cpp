@@ -2,12 +2,10 @@
 #include <chrono>
 #include <thread>
 
-#define SLEEP(t) std::this_thread::sleep_for(std::chrono::milliseconds(t))
-
 #ifdef _WIN32
 #define CLEAR_TERM() system("cls")
 #else
-#define CLEAR_TERM system("clear")
+#define CLEAR_TERM() system("clear")
 #endif
 
 
@@ -71,14 +69,14 @@ Result<None, RunError> App::run()
                                     break;
                                 default:
                                     std::cerr << "Invalid option. Try again!\n";
-                                    SLEEP(2000);
+                                    sleep(2000);
                                     break;
                             }
                         }
                         else
                         {
                             std::cerr << "Invalid input. Try again!\n";
-                            SLEEP(2000);
+                            sleep(2000);
                         }
                     }
                     break;
@@ -90,14 +88,14 @@ Result<None, RunError> App::run()
                     break;
                 default:
                     std::cerr << "Invalid option. Try again!\n";
-                    SLEEP(2000);
+                    sleep(2000);
                     break;
             }
         }
         else
         {
             std::cerr << "Invalid input. Try again!\n";
-            SLEEP(2000);
+            sleep(2000);
         }
     }
     return Ok<None, RunError>({});
