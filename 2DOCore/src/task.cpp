@@ -1,40 +1,25 @@
-#include "task.hpp"
+#include "2DOCore/task.hpp"
 
 #include <stdexcept>
 #include <string>
 
-#include "result.hpp"
+#include "2DOCore/result.hpp"
 
 #define TASKS_TABLE "tasks"
-#define CHAT_TABLE "chat"
+#define CHATS_TABLE "chatrooms"
+#define MSG_TABLE "messages"
 
-namespace twodo
+namespace twodocore
 {
-DiscussionDb::DiscussionDb(const String& path) : m_db(path)
+Result<None, TaskErr> TaskDb::add_message(Message msg)
 {
-    if (m_db.is_table_empty(CHAT_TABLE))
+    auto result = m_db.insert_data(CHATS_TABLE, {{"sender", msg.sender},
+                                                 {"content", msg.content},
+                                                 {"timestamp", tptos(msg.timestamp)},
+                                                 {"did", std::to_string(msg.crid)}});
+    if (!result)
     {
-        auto msg_result = m_db.create_table(CHAT_TABLE, {
-            {"id", "INTEGER PRIMARY KEY AUTOINCREMENT"},
-            {"sender", "TEXT"},
-            {"content", "TEXT"},
-            {"timestamp", "TEXT"},
-            {"tid", "INTEGER"}
-        });
-
-        if (!msg_result)
-        {
-            throw std::runtime_error("Failed to create the table: " + msg_result.err().sql_err());
-        }
-
-        auto cr_result = m_db.create_table(CHAT_TABLE, {
-            {"id", "INTEGER PRIMARY KEY AUTOINCREMENT"},
-        });
-
-        if (!cr_result)
-        {
-            throw std::runtime_error("Failed to create the table: " + cr_result.err().sql_err());
-        }
+        return Err<None, TaskErr>(TaskErr::AddTaskFailure);
     }
 }
 
@@ -43,17 +28,42 @@ TaskDb::TaskDb(const String& path) : m_db {path}
     if (m_db.is_table_empty(TASKS_TABLE))
     {
         auto result = m_db.create_table(TASKS_TABLE, {{"id", "INTEGER PRIMARY KEY AUTOINCREMENT"},
-                                                  {"topic", "TEXT"},
-                                                  {"content", "TEXT"},
-                                                  {"start_date", "TEXT"},
-                                                  {"deadline", "TEXT"},
-                                                  {"eid", "INTEGER"},
-                                                  {"oid", "INTEGER"},
-                                                  {"did", "INTEGER"},
-                                                  {"done", "INTEGER"}});
+                                                      {"topic", "TEXT"},
+                                                      {"content", "TEXT"},
+                                                      {"start_date", "TEXT"},
+                                                      {"deadline", "TEXT"},
+                                                      {"eid", "INTEGER"},
+                                                      {"oid", "INTEGER"},
+                                                      {"did", "INTEGER"},
+                                                      {"done", "INTEGER"}});
         if (!result)
         {
             throw std::runtime_error("Failed create the table: " + result.err().sql_err());
+        }
+
+        if (m_db.is_table_empty(CHATS_TABLE))
+        {
+            auto msg_result =
+                m_db.create_table(MSG_TABLE, {{"id", "INTEGER PRIMARY KEY AUTOINCREMENT"},
+                                              {"sender", "TEXT"},
+                                              {"content", "TEXT"},
+                                              {"timestamp", "TEXT"},
+                                              {"crid", "INTEGER"}});
+
+            if (!msg_result)
+            {
+                throw std::runtime_error("Failed to create the table: " +
+                                         msg_result.err().sql_err());
+            }
+
+            auto cr_result = m_db.create_table(
+                CHATS_TABLE, {{"id", "INTEGER PRIMARY KEY AUTOINCREMENT"}, {"tid", "INTEGER"}});
+
+            if (!cr_result)
+            {
+                throw std::runtime_error("Failed to create the table: " +
+                                         cr_result.err().sql_err());
+            }
         }
     }
 }
@@ -94,8 +104,7 @@ Result<Task, TaskErr> TaskDb::get_task(int id)
     int oid = std::stoi(task_data[5]);
     bool done = (std::stoi(task_data[7]) != 0) ? true : false;
 
-    return Ok<Task, TaskErr>(
-        Task {id, topic, content, start_date, deadline, eid, oid, 0, done});
+    return Ok<Task, TaskErr>(Task {id, topic, content, start_date, deadline, eid, oid, 0, done});
 }
 
 [[nodiscard]] Result<Id, TaskErr> TaskDb::get_task_id(const String& topic)
@@ -116,16 +125,16 @@ Result<None, TaskErr> TaskDb::add_task(Task& task)
     const auto deadline = tptos(task.get_deadline());
     const auto eid = std::to_string(task.get_executor_id());
     const auto oid = std::to_string(task.get_owner_id());
-    const auto done = std::to_string((task.get_is_done())? 1 : 0);
+    const auto done = std::to_string((task.get_is_done()) ? 1 : 0);
 
     auto result = m_db.insert_data(TASKS_TABLE, {{"topic", topic},
-                                             {"content", content},
-                                             {"start_date", start_date},
-                                             {"deadline", deadline},
-                                             {"eid", eid},
-                                             {"oid", oid},
-                                             {"did", std::to_string(0)},
-                                             {"done", done}});
+                                                 {"content", content},
+                                                 {"start_date", start_date},
+                                                 {"deadline", deadline},
+                                                 {"eid", eid},
+                                                 {"oid", oid},
+                                                 {"did", std::to_string(0)},
+                                                 {"done", done}});
     if (!result)
     {
         return Err<None, TaskErr>(TaskErr::AddTaskFailure);

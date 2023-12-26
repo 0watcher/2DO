@@ -1,11 +1,18 @@
 #pragma once
 
 #include <SQLiteCpp/SQLiteCpp.h>
-#include <vcruntime.h>
 
+#include <chrono>
 #include <iostream>
 #include <string>
+#include <thread>
 #include <vector>
+
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <cstdlib>
+#endif
 
 #include "result.hpp"
 
@@ -18,10 +25,16 @@ using Value = String;
 using Condition = std::pair<Attribute, Value>;
 using TimePoint = std::chrono::time_point<std::chrono::system_clock, std::chrono::minutes>;
 
-namespace twodo
+namespace twodocore
 {
-[[nodiscard]] String tptos(const TimePoint&) noexcept;
-[[nodiscard]] TimePoint stotp(const String&) noexcept;
+inline void clear_term()
+{
+#ifdef _WIN32
+    system("cls");
+#else
+    system("clear");
+#endif
+}
 
 [[nodiscard]] String input();
 
@@ -34,6 +47,9 @@ inline void sleep(int t) noexcept { std::this_thread::sleep_for(std::chrono::mil
     return std::chrono::time_point_cast<std::chrono::minutes>(std::chrono::system_clock::now() +
                                                               std::chrono::days {days});
 }
+
+[[nodiscard]] String tptos(const TimePoint&) noexcept;
+[[nodiscard]] TimePoint stotp(const String&) noexcept;
 
 class IUserInputHandler
 {

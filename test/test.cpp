@@ -8,11 +8,13 @@
 #include <string>
 #include <string_view>
 
-#include "result.hpp"
-#include "task.hpp"
-#include "user.hpp"
-#include "utils.hpp"
+#include <2DOCore/result.hpp>
+#include <2DOCore/task.hpp>
+#include <2DOCore/user.hpp>
+#include <2DOCore/utils.hpp>
+#include <2DOApp/term.hpp>
 
+using namespace twodocore;
 using namespace twodo;
 using namespace testing;
 namespace fs = std::filesystem;

@@ -2,7 +2,7 @@
 
 #include <variant>
 
-namespace twodo
+namespace twodocore
 {
 struct None{};
 

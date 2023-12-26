@@ -1,17 +1,17 @@
 #include <memory>
 #include <variant>
 
-#include "app.hpp"
-#include "result.hpp"
-#include "user.hpp"
+#include <2DOApp/app.hpp>
+#include <2DOCore/result.hpp>
+#include <2DOCore/user.hpp>
+#include <2DOCore/utils.hpp>
+#include <2DOApp/term.hpp>
 
 using namespace twodo;
+using namespace twodocore;
 
 #include <memory>
 #include <string>
-
-#include "user.cpp"
-#include "utils.hpp"
 
 class MockUserInputHandler : public IUserInputHandler
 {

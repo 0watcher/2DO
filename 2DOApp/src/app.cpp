@@ -1,21 +1,15 @@
-#include "app.hpp"
+#include "2DOApp/app.hpp"
 #include <chrono>
 #include <thread>
-
-#ifdef _WIN32
-#define CLEAR_TERM() system("cls")
-#else
-#define CLEAR_TERM() system("clear")
-#endif
-
+#include <2DOCore/utils.hpp>
 
 namespace twodo
 {
-Result<None, RunError> App::run()
+tdc::Result<tdc::None, RunError> App::run()
 {
     while (m_is_running)
     {
-        CLEAR_TERM();
+        tdc::clear_term();
 
         std::cout << "Main Menu:\n"
                   << "[1] Tasks\n"
@@ -37,7 +31,7 @@ Result<None, RunError> App::run()
                     m_in_task_menu = true;
                     while (m_in_task_menu)
                     {
-                        CLEAR_TERM();
+                        tdc::clear_term();
 
                         std::cout << "Task Menu:\n"
                                   << "[1] Task List\n"
@@ -69,14 +63,14 @@ Result<None, RunError> App::run()
                                     break;
                                 default:
                                     std::cerr << "Invalid option. Try again!\n";
-                                    sleep(2000);
+                                    tdc::sleep(2000);
                                     break;
                             }
                         }
                         else
                         {
                             std::cerr << "Invalid input. Try again!\n";
-                            sleep(2000);
+                            tdc::sleep(2000);
                         }
                     }
                     break;
@@ -88,20 +82,20 @@ Result<None, RunError> App::run()
                     break;
                 default:
                     std::cerr << "Invalid option. Try again!\n";
-                    sleep(2000);
+                    tdc::sleep(2000);
                     break;
             }
         }
         else
         {
             std::cerr << "Invalid input. Try again!\n";
-            sleep(2000);
+            tdc::sleep(2000);
         }
     }
-    return Ok<None, RunError>({});
+    return tdc::Ok<tdc::None, RunError>({});
 }
 
-Result<int, InputError> App::get_valid_option() noexcept
+tdc::Result<int, InputError> App::get_valid_option() noexcept
 {
     int value = 0;
     std::cin >> value;
@@ -110,9 +104,9 @@ Result<int, InputError> App::get_valid_option() noexcept
         std::cin.clear();
         std::cin.ignore(INT_MAX, '\n');
         
-        return Err<int, InputError>(InputError::InvalidInput);
+        return tdc::Err<int, InputError>(InputError::InvalidInput);
     }
     std::cin.ignore(INT_MAX, '\n');
-    return Ok<int, InputError>(std::move(value));
+    return tdc::Ok<int, InputError>(std::move(value));
 }
 }  // namespace twodo

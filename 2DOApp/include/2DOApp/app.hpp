@@ -1,14 +1,10 @@
 #pragma once
 
 #include <memory>
+#include <2DOCore/result.hpp>
+#include <2DOCore/user.hpp>
 
-#include "result.hpp"
-#include "user.hpp"
-#ifdef _WIN32
-#include <windows.h>
-#else
-#include <cstdlib>
-#endif
+namespace tdc = twodocore;
 
 namespace twodo
 {
@@ -25,19 +21,19 @@ enum class InputError
 class App
 {
    public:
-    Result<None, RunError> run();
+    tdc::Result<tdc::None, RunError> run();
 
    private:
     bool m_is_running = true;
     bool m_in_task_menu = true;
 
-    Result<int, InputError> get_valid_option() noexcept;
+    tdc::Result<int, InputError> get_valid_option() noexcept;
 };
 
 class Session
 {
    public:
-    std::shared_ptr<User> curr_user;
+    std::shared_ptr<tdc::User> curr_user;
 };
 
 }  // namespace twodo

@@ -1,11 +1,11 @@
-#include "utils.hpp"
+#include "2DOCore/utils.hpp"
 
 #include <filesystem>
 #include <map>
 #include <utility>
 #include <vector>
 
-namespace twodo
+namespace twodocore
 {
 [[nodiscard]] String tptos(const TimePoint& tp) noexcept
 {

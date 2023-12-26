@@ -15,35 +15,17 @@ enum class TaskErr
     GetTaskFailure,
     AddTaskFailure,
     DeleteTaskFailure,
-    UpdateTaskFailure
+    UpdateTaskFailure,
+    AddMessageFailure
 };
 
-namespace twodo
+namespace twodocore
 {
-struct Message
-{
-  int id;
-  String sender;
-  String content;
-  TimePoint timestamp;
-  int tid;
-};
-
-class DiscussionDb
-{
-   public:
-    DiscussionDb(const String& path);
-    Result<None, TaskErr> add_message(Message msg);
-
-   private:
-    Database m_db;
-};
-
 class Task
 {
    public:
     Task(int id, std::string_view topic, std::string_view content, const TimePoint& start_date,
-         const TimePoint& deadline, int eid, int oid, int did, bool is_done)
+         const TimePoint& deadline, int eid, int oid, int crid, bool is_done)
         : m_id {id},
           m_topic {topic},
           m_content {content},
@@ -51,20 +33,20 @@ class Task
           m_deadline {deadline},
           m_executor_id {eid},
           m_owner_id {oid},
-          m_discussion_id {did},
+          m_chatroom_id {crid},
           m_is_done {is_done}
     {
     }
 
     Task(std::string_view topic, std::string_view content, const TimePoint& start_date,
-         const TimePoint& deadline, int eid, int oid, int did, bool is_done)
+         const TimePoint& deadline, int eid, int oid, int crid, bool is_done)
         : m_topic {topic},
           m_content {content},
           m_start_date {start_date},
           m_deadline {deadline},
           m_executor_id {eid},
           m_owner_id {oid},
-          m_discussion_id {did},
+          m_chatroom_id {crid},
           m_is_done {is_done}
     {
     }
@@ -74,7 +56,7 @@ class Task
         return m_id == other.m_id && m_topic == other.m_topic && m_content == other.m_content &&
                m_start_date == other.m_start_date && m_deadline == other.m_deadline &&
                m_executor_id == other.m_executor_id && m_owner_id == other.m_owner_id &&
-               m_discussion_id == other.m_discussion_id && m_is_done == other.m_is_done;
+               m_chatroom_id == other.m_chatroom_id && m_is_done == other.m_is_done;
     }
 
     [[nodiscard]] int get_id() const { return m_id.value(); }
@@ -84,7 +66,7 @@ class Task
     [[nodiscard]] TimePoint get_deadline() const { return m_deadline; }
     [[nodiscard]] int get_executor_id() const { return m_executor_id; }
     [[nodiscard]] int get_owner_id() const { return m_owner_id; }
-    [[nodiscard]] int get_discussion() const { return m_discussion_id; }
+    [[nodiscard]] int get_chatroom_id() const { return m_chatroom_id; }
     [[nodiscard]] bool get_is_done() const { return m_is_done; }
 
     void set_id(int id) { m_id = id; };
@@ -104,8 +86,16 @@ class Task
     TimePoint m_deadline {};
     int m_executor_id {};
     int m_owner_id {};
-    int m_discussion_id {};
-    bool m_is_done {};
+    int m_chatroom_id {};
+    bool m_is_done {}; 
+};
+
+struct Message
+{
+  String sender;
+  String content;
+  TimePoint timestamp;
+  int crid;
 };
 
 class TaskDb
@@ -119,6 +109,7 @@ class TaskDb
     Result<None, TaskErr> add_task(Task& task);
     Result<None, TaskErr> delete_task(int id);
     Result<None, TaskErr> update_data(const Task& task);
+    Result<None, TaskErr> add_message(Message msg);
 
    private:
     Database m_db;

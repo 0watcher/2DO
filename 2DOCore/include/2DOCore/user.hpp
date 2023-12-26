@@ -9,22 +9,8 @@
 #include "result.hpp"
 #include "utils.hpp"
 
-namespace twodo
+namespace twodocore
 {
-enum class AuthErr
-{
-    InvalidNameLength = 1,
-    AlreadyExistingName,
-    PasswordTooShort,
-    MissingUpperCase,
-    MissingLowerCase,
-    MissingNumber,
-    MissingSpecialCharacter,
-    UserNotFound,
-    AllTriesExhausted,
-    DbErr,
-};
-
 enum class UsrDbErr
 {
     GetUserDataErr,
@@ -99,41 +85,5 @@ class UserDb
 
    private:
     Database m_db;
-};
-
-class RegisterManager
-{
-   public:
-    RegisterManager(std::shared_ptr<UserDb> udb, std::shared_ptr<IUserInputHandler> ihandler, std::shared_ptr<IDisplayer> idisplayer)
-        : m_udb {udb}, m_ihandler {ihandler}, m_idisplayer {idisplayer}
-    {
-    }
-
-    [[nodiscard]] Result<User, AuthErr> singup();
-    [[nodiscard]] Result<None, AuthErr> username_validation(std::string_view username) const;
-    [[nodiscard]] Result<None, AuthErr> password_validation(const String& password) const;
-
-   private:
-    std::shared_ptr<UserDb> m_udb;
-    std::shared_ptr<IUserInputHandler> m_ihandler;
-    std::shared_ptr<IDisplayer> m_idisplayer;
-};
-
-class AuthManager
-{
-   public:
-    AuthManager(std::shared_ptr<UserDb> udb, std::shared_ptr<IUserInputHandler> ihandler, std::shared_ptr<IDisplayer> idisplayer)
-        : m_udb {udb}, m_ihandler {ihandler}, m_idisplayer {idisplayer}
-    {
-    }
-
-    [[nodiscard]] Result<User, AuthErr> login();
-    [[nodiscard]] Result<None, AuthErr> auth_username();
-    [[nodiscard]] Result<User, AuthErr> auth_password(const String& username);
-
-   private:
-    std::shared_ptr<UserDb> m_udb;
-    std::shared_ptr<IUserInputHandler> m_ihandler;
-    std::shared_ptr<IDisplayer> m_idisplayer;
 };
 }  // namespace twodo
