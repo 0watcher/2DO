@@ -25,7 +25,6 @@ class App
 
    private:
     bool m_is_running = true;
-    bool m_in_task_menu = true;
 
     tdc::Result<int, InputError> get_valid_option() noexcept;
 };

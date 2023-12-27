@@ -51,10 +51,11 @@ inline void sleep(int t) noexcept { std::this_thread::sleep_for(std::chrono::mil
 [[nodiscard]] String tptos(const TimePoint&) noexcept;
 [[nodiscard]] TimePoint stotp(const String&) noexcept;
 
+template<typename T>
 class IUserInputHandler
 {
    public:
-    virtual String get_input() = 0;
+    virtual T get_input() = 0;
     virtual ~IUserInputHandler() = default;
 };
 

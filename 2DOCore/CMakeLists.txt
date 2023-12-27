@@ -16,3 +16,8 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/thirdparty/SQLiteCpp SQLiteCpp)
 target_link_libraries(2DOCore
   SQLiteCpp
 )
+
+add_subdirectory(${CMAKE_SOURCE_DIR}/thirdparty/fmt fmt)
+target_link_libraries(2DOCore
+  fmt
+)

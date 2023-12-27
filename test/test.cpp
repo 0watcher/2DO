@@ -1,18 +1,16 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <2DOApp/term.hpp>
+#include <2DOCore/result.hpp>
+#include <2DOCore/task.hpp>
+#include <2DOCore/user.hpp>
+#include <2DOCore/utils.hpp>
 #include <chrono>
 #include <filesystem>
 #include <memory>
 #include <stdexcept>
 #include <string>
-#include <string_view>
-
-#include <2DOCore/result.hpp>
-#include <2DOCore/task.hpp>
-#include <2DOCore/user.hpp>
-#include <2DOCore/utils.hpp>
-#include <2DOApp/term.hpp>
 
 using namespace twodocore;
 using namespace twodo;
@@ -20,6 +18,39 @@ using namespace testing;
 namespace fs = std::filesystem;
 
 #define TEST_DB_PATH "../../test/db"
+
+TEST(ResultTest, OkWithValue)
+{
+    auto result = Ok<int, None>(42);
+    ASSERT_TRUE(result);
+    EXPECT_EQ(result.value(), 42);
+}
+
+TEST(ResultTest, OkWithConstValue)
+{
+    const int value = 42;
+    auto result = Ok<int, None>(value);
+    ASSERT_TRUE(result);
+    EXPECT_EQ(result.value(), value);
+}
+
+TEST(ResultTest, ErrWithError)
+{
+    auto result = Err<int, std::string>("Error message");
+    ASSERT_FALSE(result);
+    EXPECT_EQ(result.err(), "Error message");
+}
+
+TEST(ResultTest, Accessors)
+{
+    auto result = Ok<int, std::string>(42);
+    ASSERT_TRUE(result);
+    EXPECT_EQ(result.value(), 42);
+
+    result = Err<int, std::string>("Error message");
+    ASSERT_FALSE(result);
+    EXPECT_EQ(result.err(), "Error message");
+}
 
 struct DbTest : Test
 {
@@ -116,7 +147,7 @@ TEST(UserDbTest, ChecksOverallUserDbFunctionality)
     fs::remove(TEST_DB_PATH ".db3");
 }
 
-class MockUserInputHandler : public IUserInputHandler
+class MockUserInputHandler : public IUserInputHandler<String>
 {
    public:
     MOCK_METHOD(String, get_input, (), (override));
@@ -212,17 +243,10 @@ TEST_F(LoginTest, AuthCorrectness) {}
 
 TEST(TaskDbTest, CheckTaskDbOverallCorrectness)
 {
-    auto db_path = String{"../../test/db"};
+    auto db_path = String {"../../test/db"};
     std::unique_ptr<TaskDb> tdb = std::make_unique<TaskDb>(db_path);
-    auto task = Task {"sometopic",
-                      "somecontent",
-                      give_date(),
-                      give_date(5),
-                      1,
-                      2,
-                      0,
-                      false};
-                      
+    auto task = Task {"sometopic", "somecontent", give_date(), give_date(5), 1, 2, 0, false};
+
     EXPECT_TRUE(tdb->add_task(task));
     auto db_task = tdb->get_task(task.get_id());
     EXPECT_TRUE(db_task);

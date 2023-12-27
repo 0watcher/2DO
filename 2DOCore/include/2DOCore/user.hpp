@@ -31,8 +31,8 @@ enum class Role
 class User
 {
    public:
-    User(int id, std::string_view username, Role role, std::string_view password)
-        : m_id {id}, m_username {username}, m_role {role}, m_password {password}
+    User(int user_id, std::string_view username, Role role, std::string_view password)
+        : m_user_id {user_id}, m_username {username}, m_role {role}, m_password {password}
     {
     }
 
@@ -43,22 +43,22 @@ class User
 
     bool operator==(const User& other) const
     {
-        return m_id == other.m_id && m_username == other.m_username && m_role == other.m_role &&
+        return m_user_id == other.m_user_id && m_username == other.m_username && m_role == other.m_role &&
                m_password == other.m_password;
     }
 
-    [[nodiscard]] int get_id() const { return m_id.value(); }
+    [[nodiscard]] int get_id() const { return m_user_id.value(); }
     [[nodiscard]] String get_username() const { return m_username; }
     [[nodiscard]] Role get_role() const { return m_role; }
     [[nodiscard]] String get_password() const { return m_password; }
 
-    void set_id(int id) { m_id = id; }
+    void set_id(int user_id) { m_user_id = user_id; }
     void set_username(std::string_view username) { m_username = username; }
     void set_role(Role role) { m_role = role; }
     void set_password(std::string_view passwd) { m_password = passwd; }
 
    private:
-    std::optional<int> m_id {std::nullopt};
+    std::optional<int> m_user_id {std::nullopt};
     String m_username {};
     Role m_role {};
     String m_password {};
@@ -78,7 +78,7 @@ class UserDb
     [[nodiscard]] Result<User, UsrDbErr> get_user(int id);
     [[nodiscard]] Result<Id, UsrDbErr> get_user_id(const String& username);
     [[nodiscard]] bool is_empty();
-    Result<None, UsrDbErr> add_user(const User& user);
+    Result<None, UsrDbErr> add_user(User& user);
     Result<None, UsrDbErr> delete_user(const String& username);
     Result<None, UsrDbErr> delete_user(int id);
     Result<None, UsrDbErr> update_data(const User& user);

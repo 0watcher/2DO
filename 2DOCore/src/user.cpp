@@ -68,15 +68,18 @@ UserDb::UserDb(const String& path) : m_db {path}
     return Ok<int, UsrDbErr>(stoi(id.value()[0]));
 }
 
-Result<None, UsrDbErr> UserDb::add_user(const User& user)
+Result<None, UsrDbErr> UserDb::add_user(User& user)
 {
     auto result = m_db.insert_data(USERS_TABLE, {{"username", user.get_username()},
                                              {"role", rtos(user.get_role())},
                                              {"password", user.get_password()}});
-    if (!result)
+    auto id = get_user_id(user.get_username());
+    if (!result || !id)
     {
         return Err<None, UsrDbErr>(UsrDbErr::AddUserErr);
     }
+
+    user.set_id(id.value());
     return Ok<None, UsrDbErr>({});
 }
 

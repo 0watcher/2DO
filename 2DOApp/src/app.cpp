@@ -1,7 +1,8 @@
 #include "2DOApp/app.hpp"
+
+#include <2DOCore/utils.hpp>
 #include <chrono>
 #include <thread>
-#include <2DOCore/utils.hpp>
 
 namespace twodo
 {
@@ -25,10 +26,13 @@ tdc::Result<tdc::None, RunError> App::run()
             switch (main_option.value())
             {
                 case 0:
+                {
                     m_is_running = false;
                     break;
+                }
                 case 1:
-                    m_in_task_menu = true;
+                {
+                    bool m_in_task_menu = true;
                     while (m_in_task_menu)
                     {
                         tdc::clear_term();
@@ -74,16 +78,23 @@ tdc::Result<tdc::None, RunError> App::run()
                         }
                     }
                     break;
+                }
                 case 2:
+                {
                     std::cout << "users";
                     break;
+                }
                 case 3:
+                {
                     std::cout << "settings";
                     break;
+                }
                 default:
+                {
                     std::cerr << "Invalid option. Try again!\n";
                     tdc::sleep(2000);
                     break;
+                }
             }
         }
         else
@@ -103,7 +114,7 @@ tdc::Result<int, InputError> App::get_valid_option() noexcept
     {
         std::cin.clear();
         std::cin.ignore(INT_MAX, '\n');
-        
+
         return tdc::Err<int, InputError>(InputError::InvalidInput);
     }
     std::cin.ignore(INT_MAX, '\n');

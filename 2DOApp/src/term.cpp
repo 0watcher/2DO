@@ -4,93 +4,98 @@ namespace twodo
 {
 [[nodiscard]] tdc::Result<tdc::User, AuthErr> RegisterManager::singup()
 {
-    auto username_ = std::string();
+    auto username_ = String {};
 
-    while (true)
+    const auto username_input = [this, &username_]()
     {
-        m_idisplayer->msg_display("username: ");
-        auto username = m_ihandler->get_input();
-        auto usrnm_result = username_validation(username);
+        while (true)
+        {
+            m_idisplayer->msg_display("username: ");
+            const auto username = m_ihandler->get_input();
+            const auto username_result = username_validation(username);
 
-        if (!usrnm_result)
-        {
-            m_idisplayer->err_display("Invalid name length!\n");
-        }
-        else
-        {
-            auto name_exists = m_udb->get_user(username);
-            if (!name_exists)
+            if (!username_result)
             {
-                username_ = username;
-                break;
-            }
-            m_idisplayer->err_display("User with this name already exists!\n");
-        }
-    }
-
-    while (true)
-    {
-        m_idisplayer->msg_display("password: ");
-        auto password = m_ihandler->get_input();
-
-        auto passwd_result = password_validation(password);
-        if (!passwd_result)
-        {
-            switch (passwd_result.err())
-            {
-                case AuthErr::PasswordTooShort:
-                {
-                    m_idisplayer->err_display("Password is too short!\n");
-                    break;
-                }
-                case AuthErr::MissingLowerCase:
-                {
-                    m_idisplayer->err_display(
-                        "Password must contain at least one lowercase letter!\n");
-                    break;
-                }
-                case AuthErr::MissingUpperCase:
-                {
-                    m_idisplayer->err_display(
-                        "Password must contain at least one uppercase letter!\n");
-                    break;
-                }
-                case AuthErr::MissingNumber:
-                {
-                    m_idisplayer->err_display(
-                        "Password must contain at least one number letter!\n");
-                    break;
-                }
-                case AuthErr::MissingSpecialCharacter:
-                {
-                    m_idisplayer->err_display(
-                        "Password must contain at least one special character!\n");
-                    break;
-                }
-            }
-        }
-        else
-        {
-            auto hashed_passwd = tdc::hash(password);
-            tdc::Role usr_role {};
-
-            if (m_udb->is_empty())
-            {
-                usr_role = tdc::Role::Admin;
+                m_idisplayer->err_display("Invalid name length!\n");
             }
             else
             {
-                usr_role = tdc::Role::User;
+                const auto name_exists = m_udb->get_user(username);
+                if (!name_exists)
+                {
+                    username_ = username;
+                    break;
+                }
+                m_idisplayer->err_display("User with this name already exists!\n");
             }
-            m_udb->add_user(tdc::User {username_, usr_role, hashed_passwd});
-            auto id = m_udb->get_user_id(username_);
-            if (!id)
-            {
-                return tdc::Err<tdc::User, AuthErr>(AuthErr::DbErr);
-            }
-            return tdc::Ok<tdc::User, AuthErr>(tdc::User {id.value(), username_, usr_role, hashed_passwd});
         }
-    }
+    };
+
+    const auto password_input = [this, &username_]()
+    {
+        while (true)
+        {
+            m_idisplayer->msg_display("password: ");
+            const auto password = m_ihandler->get_input();
+
+            const auto passwd_result = password_validation(password);
+            if (!passwd_result)
+            {
+                switch (passwd_result.err())
+                {
+                    case AuthErr::PasswordTooShort:
+                    {
+                        m_idisplayer->err_display("Password is too short!\n");
+                        break;
+                    }
+                    case AuthErr::MissingLowerCase:
+                    {
+                        m_idisplayer->err_display(
+                            "Password must contain at least one lowercase letter!\n");
+                        break;
+                    }
+                    case AuthErr::MissingUpperCase:
+                    {
+                        m_idisplayer->err_display(
+                            "Password must contain at least one uppercase letter!\n");
+                        break;
+                    }
+                    case AuthErr::MissingNumber:
+                    {
+                        m_idisplayer->err_display(
+                            "Password must contain at least one number letter!\n");
+                        break;
+                    }
+                    case AuthErr::MissingSpecialCharacter:
+                    {
+                        m_idisplayer->err_display(
+                            "Password must contain at least one special character!\n");
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                tdc::Role usr_role {};
+                if (m_udb->is_empty())
+                {
+                    usr_role = tdc::Role::Admin;
+                }
+                else
+                {
+                    usr_role = tdc::Role::User;
+                }
+                auto user = tdc::User {username_, usr_role, tdc::hash(password)};
+                m_udb->add_user(user);
+
+                return tdc::Ok<tdc::User, AuthErr>(user);
+            }
+        }
+    };
+
+    username_input();
+
+    return password_input();
 }
 
 [[nodiscard]] tdc::Result<tdc::None, AuthErr> RegisterManager::username_validation(
@@ -106,10 +111,10 @@ namespace twodo
 [[nodiscard]] tdc::Result<tdc::None, AuthErr> RegisterManager::password_validation(
     const String& password) const
 {
-    std::regex upper_case_expression {"[A-Z]+"};
-    std::regex lower_case_expression {"[a-z]+"};
-    std::regex number_expression {"[0-9]+"};
-    std::regex special_char_expression {"[!@#$%^&*()_+\\-=\\[\\]{};:\\\",<.>/?]+"};
+    const std::regex upper_case_expression {"[A-Z]+"};
+    const std::regex lower_case_expression {"[a-z]+"};
+    const std::regex number_expression {"[0-9]+"};
+    const std::regex special_char_expression {"[!@#$%^&*()_+\\-=\\[\\]{};:\\\",<.>/?]+"};
 
     if (password.length() < 8)
     {
@@ -137,50 +142,52 @@ namespace twodo
 
 [[nodiscard]] tdc::Result<tdc::User, AuthErr> AuthManager::login()
 {
-    std::optional<tdc::User> user {std::nullopt};
+    std::optional<tdc::User> user {};
 
-    int tries = 3;
-
-    while (true)
+    const auto username_input = [this, &user]()
     {
-        if (tries <= 0)
+        while (true)
         {
-            return tdc::Err<tdc::User, AuthErr>(AuthErr::AllTriesExhausted);
+            m_idisplayer->msg_display("username: ");
+            const auto username = m_ihandler->get_input();
+            const auto result = m_udb->get_user(username);
+            if (!result)
+            {
+                m_idisplayer->err_display("User not found!\n");
+            }
+            else
+            {
+                user = result.value();
+                break;
+            }
         }
+    };
 
-        m_idisplayer->msg_display("username: ");
-        String username = m_ihandler->get_input();
-        auto result = m_udb->get_user(username);
-        if (!result)
+    const auto password_input = [this, &user]()
+    {
+        int tries = 3;
+
+        while (true)
         {
-            m_idisplayer->err_display("User not found!\n");
+            if (tries <= 0)
+            {
+                return tdc::Err<tdc::User, AuthErr>(AuthErr::AllTriesExhausted);
+            }
+
+            m_idisplayer->msg_display("password: ");
+            const auto password = m_ihandler->get_input();
+            if (tdc::hash(password) == user->get_password())
+            {
+                return tdc::Ok<tdc::User, AuthErr>(std::move(user.value()));
+            }
+            m_idisplayer->err_display("Invalid password!\n");
             tries--;
         }
-        else
-        {
-            user = result.value();
-            break;
-        }
-    }
+    };
 
-    tries = 3;
+    username_input();
 
-    while (true)
-    {
-        if (tries <= 0)
-        {
-            return tdc::Err<tdc::User, AuthErr>(AuthErr::AllTriesExhausted);
-        }
-
-        m_idisplayer->msg_display("password: ");
-        String password = m_ihandler->get_input();
-        if (tdc::hash(password) == user->get_password())
-        {
-            return tdc::Ok<tdc::User, AuthErr>(std::move(user.value()));
-        }
-        m_idisplayer->err_display("Invalid password!\n");
-        tries--;
-    }
+    return password_input();
 }
 
 [[nodiscard]] tdc::Result<tdc::None, AuthErr> AuthManager::auth_username()
@@ -213,4 +220,4 @@ namespace twodo
         m_idisplayer->err_display("Invalid password!\n");
     }
 }
-}  // namespace app
+}  // namespace twodo
