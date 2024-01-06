@@ -3,6 +3,7 @@
 #include <2DOCore/utils.hpp>
 #include <chrono>
 #include <thread>
+#include <fmt/core.h>
 
 namespace twodo
 {

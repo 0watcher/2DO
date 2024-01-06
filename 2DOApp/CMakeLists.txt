@@ -16,6 +16,7 @@ target_include_directories(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     2DOCore::2DOCore
+    fmt
 )
 
 add_executable(main main.cpp)

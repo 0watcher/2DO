@@ -6,6 +6,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "fmt/core.h"
+
 namespace tdc = twodocore;
 
 namespace twodo
@@ -15,8 +17,8 @@ class Page : public std::enable_shared_from_this<Page<TOption>>
 {
    public:
     Page(std::function<void()> content, std::shared_ptr<Page> parent = nullptr,
-         bool is_input_event = false)
-        : content {std::move(content)}, parent {parent}, input_event {is_input_event}
+         bool is_page_event = true)
+        : content {std::move(content)}, parent {parent}, page_event {is_page_event}
     {
     }
 
@@ -28,7 +30,7 @@ class Page : public std::enable_shared_from_this<Page<TOption>>
         child->parent = this->shared_from_this();
     }
 
-    std::shared_ptr<Page> getParent() const { return parent; }
+    std::shared_ptr<Page> get_parent() const { return parent; }
 
     std::shared_ptr<Page<TOption>> get_page(TOption option) const
     {
@@ -37,18 +39,16 @@ class Page : public std::enable_shared_from_this<Page<TOption>>
         {
             return it->second;
         }
-        else
-        {
-            return nullptr;
-        }
+        return nullptr;
     }
-
-    bool input_event;
 
    private:
     std::function<void()> content;
     std::shared_ptr<Page<TOption>> parent;
     std::unordered_map<TOption, std::shared_ptr<Page<TOption>>> childs;
+
+   public:
+    bool page_event;
 };
 
 template <typename TOption>
@@ -63,33 +63,19 @@ class Menu
     {
     }
 
-    void run(TOption quit_input = TOption{})
+    void run(TOption quit_input = TOption {})
     {
         while (true)
         {
-            if (current_page)
+            execute_current_page();
+
+            TOption user_choice = get_user_choice();
+            if (handle_quit(user_choice, quit_input))
             {
-                current_page->execute();
+                break;
             }
 
-            TOption choice = getOption();
-            if(choice == quit_input) break;
-
-            std::shared_ptr<Page<TOption>> page = nullptr;
-            if (page = current_page->get_page(choice); !page)
-            {
-                displayer.msg_display("Invalid option!");
-                tdc::sleep(2000);
-            }
-
-            if (page->input_event)
-            {
-                page->execute();
-            }
-            else
-            {
-                current_page = page;
-            }
+            navigate_or_display_error(user_choice, quit_input);
 
             tdc::clear_term();
         }
@@ -100,10 +86,65 @@ class Menu
     tdc::IDisplayer& displayer;
     tdc::IUserInputHandler<TOption>& input_handler;
 
-    TOption get_option()
+    TOption get_user_choice() { return input_handler.get_input(); }
+
+    void execute_current_page()
     {
-        displayer.msg_display("->");
-        return input_handler.get_input();
+        if (current_page)
+        {
+            current_page->execute();
+        }
+    }
+
+    bool handle_quit(TOption user_choice, TOption quit_input)
+    {
+        if (user_choice == quit_input)
+        {
+            return navigate_to_parent_or_exit();
+        }
+        return false;
+    }
+
+    bool navigate_to_parent_or_exit()
+    {
+        const auto parent_page = current_page->get_parent();
+        if (!parent_page)
+        {
+            return true;
+        }
+        current_page = parent_page;
+        return false;
+    }
+
+    void navigate_or_display_error(TOption user_choice, TOption quit_input)
+    {
+        std::shared_ptr<Page<TOption>> selected_page = current_page->get_page(user_choice);
+        if (!selected_page && user_choice != quit_input)
+        {
+            display_invalid_option_error();
+        }
+        else
+        {
+            perform_page_navigation_or_execution(selected_page);
+        }
+    }
+
+    void display_invalid_option_error()
+    {
+        displayer.msg_display("Invalid option!");
+        tdc::sleep(2000);
+    }
+
+    void perform_page_navigation_or_execution(std::shared_ptr<Page<TOption>> selected_page)
+    {
+        if (selected_page && !selected_page->page_event)
+        {
+            selected_page->execute();
+        }
+        else if (selected_page)
+        {
+            current_page = selected_page;
+        }
     }
 };
 
