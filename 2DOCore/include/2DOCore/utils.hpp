@@ -3,10 +3,14 @@
 #include <SQLiteCpp/SQLiteCpp.h>
 
 #include <chrono>
+#include <filesystem>
 #include <iostream>
+#include <optional>
+#include <stdexcept>
 #include <string>
 #include <thread>
 #include <vector>
+
 
 #ifdef _WIN32
 #include <windows.h>
@@ -15,6 +19,8 @@
 #endif
 
 #include "result.hpp"
+
+namespace fs = std::filesystem;
 
 using String = std::string;
 using Id = int;
@@ -36,6 +42,12 @@ inline void clear_term()
 #endif
 }
 
+std::optional<String> get_base_directory();
+
+void create_simple_app_env(const std::string folder_name, const std::vector<std::string>& files);
+
+void wipe_simple_app_env(const std::string& folder_name);
+
 [[nodiscard]] String input();
 
 [[nodiscard]] String hash(const String& str);
@@ -51,7 +63,7 @@ inline void sleep(int t) noexcept { std::this_thread::sleep_for(std::chrono::mil
 [[nodiscard]] String tptos(const TimePoint&) noexcept;
 [[nodiscard]] TimePoint stotp(const String&) noexcept;
 
-template<typename T>
+template <typename T>
 class IUserInputHandler
 {
    public:
@@ -114,4 +126,4 @@ class Database
    private:
     SQLite::Database m_db;
 };
-}  // namespace twodo
+}  // namespace twodocore

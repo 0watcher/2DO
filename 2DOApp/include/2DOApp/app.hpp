@@ -1,38 +1,77 @@
 #pragma once
 
-#include <memory>
+#include <2DOApp/term.hpp>
 #include <2DOCore/result.hpp>
 #include <2DOCore/user.hpp>
+#include <2DOCore/utils.hpp>
+#include <memory>
+
 
 namespace tdc = twodocore;
 
 namespace twodo
 {
-enum class RunError
+class UserInput : public tdc::IUserInputHandler<String>
 {
-    ExitFailure
+   public:
+    String get_input() override
+    {
+        auto input = std::string();
+        std::getline(std::cin, input);
+        return input;
+    }
 };
 
-enum class InputError
+class MsgDisplayer : public tdc::IDisplayer
 {
-    InvalidInput,
+   public:
+    void msg_display(std::string_view msg) override { std::cout << msg; }
+
+    void err_display(std::string_view err) override { std::cerr << err; }
 };
 
 class App
 {
    public:
-    tdc::Result<tdc::None, RunError> run();
+    void run();
+    std::shared_ptr<tdc::User> get_current_user() { return current_user; }
 
    private:
-    bool m_is_running = true;
+    std::shared_ptr<tdc::User> current_user = nullptr;
 
-    tdc::Result<int, InputError> get_valid_option() noexcept;
+    Menu<String> load_menu();
+    std::shared_ptr<Page<String>> tasks_menu();
+    std::shared_ptr<Page<String>> settings_menu();
 };
-
-class Session
-{
-   public:
-    std::shared_ptr<tdc::User> curr_user;
-};
-
 }  // namespace twodo
+
+// namespace twodo
+// {
+// enum class RunError
+// {
+//     ExitFailure
+// };
+
+// enum class InputError
+// {
+//     InvalidInput,
+// };
+
+// class App
+// {
+//    public:
+//     tdc::Result<tdc::None, RunError> run();
+
+//    private:
+//     bool m_is_running = true;
+
+//     tdc::Result<int, InputError> get_valid_option() noexcept;
+// };
+
+// class Session
+// {
+//    public:
+//     std::shared_ptr<tdc::User> curr_user;
+// };
+
+// }  // namespace twodo

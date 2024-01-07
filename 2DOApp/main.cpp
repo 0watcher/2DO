@@ -1,43 +1,13 @@
 #include <2DOApp/app.hpp>
-#include <2DOApp/term.hpp>
-#include <2DOCore/result.hpp>
-#include <2DOCore/user.hpp>
-#include <2DOCore/utils.hpp>
-#include <memory>
-#include <variant>
-
-#include "fmt/core.h"
 
 using namespace twodo;
-using namespace twodocore;
-
-#include <memory>
-#include <string>
-
-class MockUserInputHandler : public IUserInputHandler<String>
-{
-   public:
-    String get_input() override
-    {
-        auto input = std::string();
-        std::getline(std::cin, input);
-        return input;
-    }
-};
-
-class MockDisplayer : public IDisplayer
-{
-   public:
-    void msg_display(std::string_view msg) override { std::cout << msg; }
-
-    void err_display(std::string_view err) override { std::cerr << err; }
-};
-
-#include <filesystem>
-namespace fs = std::filesystem;
 
 int main()
 {
+    App app{};
+
+    app.run();
+    
     // App app{};
 
     // auto result = app.run();
@@ -87,36 +57,4 @@ int main()
     // ih2.reset();
     // d2.reset();
     // fs::remove(db_path + ".db3");
-
-    std::shared_ptr<Page<String>> main = std::make_shared<Page<String>>(
-        []()
-        {
-            fmt::print(
-                "Main Menu:\n"
-                "[1] Tasks\n"
-                "[2] Users\n"
-                "[3] Settings\n"
-                "[0] Exit\n"
-                "-> ");
-        });
-
-    MockDisplayer md {};
-    MockUserInputHandler muih {};
-
-    Menu m {main, md, muih};
-
-    std::shared_ptr<Page<String>> s = std::make_shared<Page<String>>(
-        []()
-        {
-            fmt::print(
-                "Settings:\n"
-                "[1] s1\n"
-                "[2] s2\n"
-                "[3] s3\n"
-                "[0] Back\n"
-                "-> ");
-        });
-    main->add_child("1", s);
-
-    m.run("0");
 }
