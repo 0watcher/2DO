@@ -3,48 +3,42 @@
 #include <optional>
 #include <regex>
 #include <string>
-#include <vector>
 #include <string_view>
+#include <vector>
 
 #include "result.hpp"
 #include "utils.hpp"
 
-namespace twodocore
-{
-enum class UsrDbErr
-{
+namespace twodocore {
+enum class UsrDbErr {
     GetUserDataErr,
     AddUserErr,
     DeleteUserErr,
     UpdateDataErr
 };
 
-enum class Role
-{
-    User,
-    Admin
-};
+enum class Role { User, Admin };
 
 [[nodiscard]] Role stor(const String& role_str);
 [[nodiscard]] String rtos(Role role);
 
-class User
-{
-   public:
-    User(int user_id, std::string_view username, Role role, std::string_view password)
-        : m_user_id {user_id}, m_username {username}, m_role {role}, m_password {password}
-    {
-    }
+class User {
+  public:
+    User(int user_id,
+         std::string_view username,
+         Role role,
+         std::string_view password)
+        : m_user_id{user_id},
+          m_username{username},
+          m_role{role},
+          m_password{password} {}
 
     User(std::string_view username, Role role, std::string_view password)
-        : m_username {username}, m_role {role}, m_password {password}
-    {
-    }
+        : m_username{username}, m_role{role}, m_password{password} {}
 
-    bool operator==(const User& other) const
-    {
-        return m_user_id == other.m_user_id && m_username == other.m_username && m_role == other.m_role &&
-               m_password == other.m_password;
+    bool operator==(const User& other) const {
+        return m_user_id == other.m_user_id && m_username == other.m_username &&
+               m_role == other.m_role && m_password == other.m_password;
     }
 
     [[nodiscard]] int get_id() const { return m_user_id.value(); }
@@ -57,16 +51,15 @@ class User
     void set_role(Role role) { m_role = role; }
     void set_password(std::string_view passwd) { m_password = passwd; }
 
-   private:
-    std::optional<int> m_user_id {std::nullopt};
-    String m_username {};
-    Role m_role {};
-    String m_password {};
+  private:
+    std::optional<int> m_user_id{std::nullopt};
+    String m_username{};
+    Role m_role{};
+    String m_password{};
 };
 
-class UserDb
-{
-   public:
+class UserDb {
+  public:
     UserDb(const String& path);
 
     UserDb(const UserDb&) = delete;
@@ -83,7 +76,7 @@ class UserDb
     Result<None, UsrDbErr> delete_user(int id);
     Result<None, UsrDbErr> update_data(const User& user);
 
-   private:
+  private:
     Database m_db;
 };
-}  // namespace twodo
+}  // namespace twodocore

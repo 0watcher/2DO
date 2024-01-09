@@ -4,3 +4,6 @@
 [submodule "thirdparty/SQLiteCpp"]
 	path = thirdparty/SQLiteCpp
 	url = https://github.com/SRombauts/SQLiteCpp
+[submodule "thirdparty/fmt"]
+    path = thirdparty/fmt
+    url = https://github.com/fmtlib/fmt

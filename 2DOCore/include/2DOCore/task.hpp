@@ -10,8 +10,7 @@
 #include "task.hpp"
 #include "utils.hpp"
 
-enum class TaskErr
-{
+enum class TaskErr {
     GetTaskFailure,
     AddTaskFailure,
     DeleteTaskFailure,
@@ -19,44 +18,54 @@ enum class TaskErr
     AddMessageFailure
 };
 
-namespace twodocore
-{
-class Task
-{
-   public:
-    Task(int id, std::string_view topic, std::string_view content, const TimePoint& start_date,
-         const TimePoint& deadline, int eid, int oid, int crid, bool is_done)
-        : m_id {id},
-          m_topic {topic},
-          m_content {content},
-          m_start_date {start_date},
-          m_deadline {deadline},
-          m_executor_id {eid},
-          m_owner_id {oid},
-          m_chatroom_id {crid},
-          m_is_done {is_done}
-    {
-    }
+namespace twodocore {
+class Task {
+  public:
+    Task(int id,
+         std::string_view topic,
+         std::string_view content,
+         const TimePoint& start_date,
+         const TimePoint& deadline,
+         int eid,
+         int oid,
+         int crid,
+         bool is_done)
+        : m_id{id},
+          m_topic{topic},
+          m_content{content},
+          m_start_date{start_date},
+          m_deadline{deadline},
+          m_executor_id{eid},
+          m_owner_id{oid},
+          m_chatroom_id{crid},
+          m_is_done{is_done} {}
 
-    Task(std::string_view topic, std::string_view content, const TimePoint& start_date,
-         const TimePoint& deadline, int eid, int oid, int crid, bool is_done)
-        : m_topic {topic},
-          m_content {content},
-          m_start_date {start_date},
-          m_deadline {deadline},
-          m_executor_id {eid},
-          m_owner_id {oid},
-          m_chatroom_id {crid},
-          m_is_done {is_done}
-    {
-    }
+    Task(std::string_view topic,
+         std::string_view content,
+         const TimePoint& start_date,
+         const TimePoint& deadline,
+         int eid,
+         int oid,
+         int crid,
+         bool is_done)
+        : m_topic{topic},
+          m_content{content},
+          m_start_date{start_date},
+          m_deadline{deadline},
+          m_executor_id{eid},
+          m_owner_id{oid},
+          m_chatroom_id{crid},
+          m_is_done{is_done} {}
 
-    bool operator==(const Task& other) const
-    {
-        return m_id == other.m_id && m_topic == other.m_topic && m_content == other.m_content &&
-               m_start_date == other.m_start_date && m_deadline == other.m_deadline &&
-               m_executor_id == other.m_executor_id && m_owner_id == other.m_owner_id &&
-               m_chatroom_id == other.m_chatroom_id && m_is_done == other.m_is_done;
+    bool operator==(const Task& other) const {
+        return m_id == other.m_id && m_topic == other.m_topic &&
+               m_content == other.m_content &&
+               m_start_date == other.m_start_date &&
+               m_deadline == other.m_deadline &&
+               m_executor_id == other.m_executor_id &&
+               m_owner_id == other.m_owner_id &&
+               m_chatroom_id == other.m_chatroom_id &&
+               m_is_done == other.m_is_done;
     }
 
     [[nodiscard]] int get_id() const { return m_id.value(); }
@@ -78,29 +87,27 @@ class Task
     void set_owner(int id) { m_owner_id = id; }
     void set_is_done(bool done) { m_is_done = done; }
 
-   private:
-    std::optional<int> m_id {std::nullopt};
-    String m_topic {};
-    String m_content {};
-    TimePoint m_start_date {};
-    TimePoint m_deadline {};
-    int m_executor_id {};
-    int m_owner_id {};
-    int m_chatroom_id {};
-    bool m_is_done {}; 
+  private:
+    std::optional<int> m_id{std::nullopt};
+    String m_topic{};
+    String m_content{};
+    TimePoint m_start_date{};
+    TimePoint m_deadline{};
+    int m_executor_id{};
+    int m_owner_id{};
+    int m_chatroom_id{};
+    bool m_is_done{};
 };
 
-struct Message
-{
-  String sender;
-  String content;
-  TimePoint timestamp;
-  int crid;
+struct Message {
+    String sender;
+    String content;
+    TimePoint timestamp;
+    int crid;
 };
 
-class TaskDb
-{
-   public:
+class TaskDb {
+  public:
     TaskDb(const String& path);
 
     [[nodiscard]] Result<Task, TaskErr> get_task(const String& topic);
@@ -111,7 +118,7 @@ class TaskDb
     Result<None, TaskErr> update_data(const Task& task);
     Result<None, TaskErr> add_message(Message msg);
 
-   private:
+  private:
     Database m_db;
 };
-}  // namespace twodo
+}  // namespace twodocore

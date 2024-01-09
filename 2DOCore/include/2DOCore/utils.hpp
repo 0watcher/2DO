@@ -11,7 +11,6 @@
 #include <thread>
 #include <vector>
 
-
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -29,12 +28,11 @@ using UpdatedValue = String;
 using AttributeType = String;
 using Value = String;
 using Condition = std::pair<Attribute, Value>;
-using TimePoint = std::chrono::time_point<std::chrono::system_clock, std::chrono::minutes>;
+using TimePoint =
+    std::chrono::time_point<std::chrono::system_clock, std::chrono::minutes>;
 
-namespace twodocore
-{
-inline void clear_term()
-{
+namespace twodocore {
+inline void clear_term() {
 #ifdef _WIN32
     system("cls");
 #else
@@ -44,7 +42,8 @@ inline void clear_term()
 
 std::optional<String> get_base_directory();
 
-void create_simple_app_env(const std::string folder_name, const std::vector<std::string>& files);
+void create_simple_app_env(const std::string& folder_name,
+                           const std::vector<std::string>& files);
 
 void wipe_simple_app_env(const std::string& folder_name);
 
@@ -52,78 +51,76 @@ void wipe_simple_app_env(const std::string& folder_name);
 
 [[nodiscard]] String hash(const String& str);
 
-inline void sleep(int t) noexcept { std::this_thread::sleep_for(std::chrono::milliseconds(t)); }
+inline void sleep(int t) noexcept {
+    std::this_thread::sleep_for(std::chrono::milliseconds(t));
+}
 
-[[nodiscard]] inline TimePoint give_date(int days = 0) noexcept
-{
-    return std::chrono::time_point_cast<std::chrono::minutes>(std::chrono::system_clock::now() +
-                                                              std::chrono::days {days});
+[[nodiscard]] inline TimePoint give_date(int days = 0) noexcept {
+    return std::chrono::time_point_cast<std::chrono::minutes>(
+        std::chrono::system_clock::now() + std::chrono::days{days});
 }
 
 [[nodiscard]] String tptos(const TimePoint&) noexcept;
 [[nodiscard]] TimePoint stotp(const String&) noexcept;
 
 template <typename T>
-class IUserInputHandler
-{
-   public:
+class IUserInputHandler {
+  public:
     virtual T get_input() = 0;
     virtual ~IUserInputHandler() = default;
 };
 
-class IDisplayer
-{
-   public:
+class IDisplayer {
+  public:
     virtual void msg_display(std::string_view msg) = 0;
     virtual void err_display(std::string_view err) = 0;
     virtual ~IDisplayer() = default;
 };
 
-enum class DbErr
-{
+enum class DbErr {
     Error = 1,
     EmptyProps,
     IncompatibleNumberOfColumns,
     EmptyResult
 };
 
-class DbError
-{
-   public:
-    DbError(String sq_err_) : sq_err {sq_err_} {}
-    DbError(DbErr db_err_) : cdb_err {db_err_} {}
+class DbError {
+  public:
+    DbError(String sq_err_) : sq_err{sq_err_} {}
+    DbError(DbErr db_err_) : cdb_err{db_err_} {}
 
     String sql_err() const { return sq_err; }
     DbErr db_err() const { return cdb_err; }
 
-   private:
-    String sq_err {};
-    DbErr cdb_err {};
+  private:
+    String sq_err{};
+    DbErr cdb_err{};
 };
 
-class Database
-{
-   public:
+class Database {
+  public:
     Database(const String& path) noexcept
-        : m_db {path + ".db3", SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE}
-    {
-    }
+        : m_db{path + ".db3", SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE} {}
 
-    Result<None, DbError> create_table(const String& table_name,
-                                       const std::map<Attribute, AttributeType>& column_def);
+    Result<None, DbError> create_table(
+        const String& table_name,
+        const std::map<Attribute, AttributeType>& column_def);
     Result<None, DbError> drop_table(const String& table_name);
     Result<None, DbError> insert_data(const String& table_name,
                                       const std::map<Attribute, Value>& values);
-    Result<None, DbError> delete_data(const String& table_name, const Condition& where);
-    Result<None, DbError> update_data(const String& table_name,
-                                      const std::pair<Attribute, UpdatedValue>& set,
+    Result<None, DbError> delete_data(const String& table_name,
                                       const Condition& where);
-    [[nodiscard]] Result<std::vector<Value>, DbError> select_data(const String& table_name,
-                                                                  const std::vector<Attribute>& who,
-                                                                  const Condition& where);
+    Result<None, DbError> update_data(
+        const String& table_name,
+        const std::pair<Attribute, UpdatedValue>& set,
+        const Condition& where);
+    [[nodiscard]] Result<std::vector<Value>, DbError> select_data(
+        const String& table_name,
+        const std::vector<Attribute>& who,
+        const Condition& where);
     [[nodiscard]] bool is_table_empty(const String& table_name);
 
-   private:
+  private:
     SQLite::Database m_db;
 };
 }  // namespace twodocore

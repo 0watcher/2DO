@@ -16,5 +16,6 @@
 It's just simple todo list with some additional features.
 
 ## Dependencies
-- gtest
+- googletest
 - SQLiteCpp
+- fmt
