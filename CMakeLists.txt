@@ -8,4 +8,5 @@ enable_testing()
 
 add_subdirectory(2DOApp)
 add_subdirectory(2DOCore)
+add_subdirectory(Utils)
 add_subdirectory(test)

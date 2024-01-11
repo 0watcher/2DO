@@ -1,17 +1,14 @@
 #pragma once
 
-#include <chrono>
-#include <map>
-#include <string>
-#include <string_view>
-#include <vector>
+#include <Utils/database.hpp>
+#include <Utils/result.hpp>
+#include <Utils/type.hpp>
+#include <Utils/util.hpp>
 
-#include "result.hpp"
-#include "task.hpp"
-#include "utils.hpp"
+namespace tdl = twodoutils;
 
 enum class TaskErr {
-    GetTaskFailure,
+    GetTaskFailure = 1,
     AddTaskFailure,
     DeleteTaskFailure,
     UpdateTaskFailure,
@@ -21,9 +18,14 @@ enum class TaskErr {
 namespace twodocore {
 class Task {
   public:
+    Task(const Task&) = default;
+    Task& operator=(const Task&) = default;
+    Task(Task&& other) = default;
+    Task& operator=(Task&& other) = default;
+
     Task(int id,
-         std::string_view topic,
-         std::string_view content,
+         StringView topic,
+         StringView content,
          const TimePoint& start_date,
          const TimePoint& deadline,
          int eid,
@@ -40,8 +42,8 @@ class Task {
           m_chatroom_id{crid},
           m_is_done{is_done} {}
 
-    Task(std::string_view topic,
-         std::string_view content,
+    Task(StringView topic,
+         StringView content,
          const TimePoint& start_date,
          const TimePoint& deadline,
          int eid,
@@ -68,19 +70,19 @@ class Task {
                m_is_done == other.m_is_done;
     }
 
-    [[nodiscard]] int get_id() const { return m_id.value(); }
-    [[nodiscard]] String get_topic() const { return m_topic; }
-    [[nodiscard]] String get_content() const { return m_content; }
-    [[nodiscard]] TimePoint get_start_date() const { return m_start_date; }
-    [[nodiscard]] TimePoint get_deadline() const { return m_deadline; }
-    [[nodiscard]] int get_executor_id() const { return m_executor_id; }
-    [[nodiscard]] int get_owner_id() const { return m_owner_id; }
-    [[nodiscard]] int get_chatroom_id() const { return m_chatroom_id; }
-    [[nodiscard]] bool get_is_done() const { return m_is_done; }
+    [[nodiscard]] int id() const { return m_id.value(); }
+    [[nodiscard]] String topic() const { return m_topic; }
+    [[nodiscard]] String content() const { return m_content; }
+    [[nodiscard]] TimePoint start_date() const { return m_start_date; }
+    [[nodiscard]] TimePoint deadline() const { return m_deadline; }
+    [[nodiscard]] int executor_id() const { return m_executor_id; }
+    [[nodiscard]] int owner_id() const { return m_owner_id; }
+    [[nodiscard]] int chatroom_id() const { return m_chatroom_id; }
+    [[nodiscard]] bool is_done() const { return m_is_done; }
 
     void set_id(int id) { m_id = id; };
-    void set_topic(std::string_view topic) { m_topic = topic; }
-    void set_content(std::string_view content) { m_content = content; }
+    void set_topic(StringView topic) { m_topic = topic; }
+    void set_content(StringView content) { m_content = content; }
     void set_start_date(TimePoint date) { m_start_date = date; }
     void set_deadline(TimePoint date) { m_deadline = date; }
     void set_executor(int id) { m_executor_id = id; }
@@ -108,17 +110,22 @@ struct Message {
 
 class TaskDb {
   public:
+    TaskDb(const TaskDb&) = delete;
+    TaskDb& operator=(const TaskDb&) = delete;
+    TaskDb(TaskDb&& other) = default;
+    TaskDb& operator=(TaskDb&& other) = default;
+
     TaskDb(const String& path);
 
-    [[nodiscard]] Result<Task, TaskErr> get_task(const String& topic);
-    [[nodiscard]] Result<Task, TaskErr> get_task(int id);
-    [[nodiscard]] Result<Id, TaskErr> get_task_id(const String& topic);
-    Result<None, TaskErr> add_task(Task& task);
-    Result<None, TaskErr> delete_task(int id);
-    Result<None, TaskErr> update_data(const Task& task);
-    Result<None, TaskErr> add_message(Message msg);
+    [[nodiscard]] tdl::Result<Task, TaskErr> get_task(const String& topic);
+    [[nodiscard]] tdl::Result<Task, TaskErr> get_task(int id);
+    [[nodiscard]] tdl::Result<Id, TaskErr> get_task_id(const String& topic);
+    tdl::Result<tdl::None, TaskErr> add_task(Task& task);
+    tdl::Result<tdl::None, TaskErr> delete_task(int id);
+    tdl::Result<tdl::None, TaskErr> update_data(const Task& task);
+    tdl::Result<tdl::None, TaskErr> add_message(Message msg);
 
   private:
-    Database m_db;
+    tdl::Database m_db;
 };
 }  // namespace twodocore

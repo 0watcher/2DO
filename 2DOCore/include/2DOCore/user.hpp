@@ -1,39 +1,41 @@
 #pragma once
 
 #include <optional>
-#include <regex>
-#include <string>
-#include <string_view>
-#include <vector>
 
-#include "result.hpp"
-#include "utils.hpp"
+#include <Utils/database.hpp>
+#include <Utils/result.hpp>
+#include <Utils/type.hpp>
+#include <Utils/util.hpp>
+
+namespace tdl = twodoutils;
 
 namespace twodocore {
 enum class UsrDbErr {
-    GetUserDataErr,
+    GetUserDataErr = 1,
     AddUserErr,
     DeleteUserErr,
     UpdateDataErr
 };
 
-enum class Role { User, Admin };
+enum class [[nodiscard]] Role{User, Admin};
 
 [[nodiscard]] Role stor(const String& role_str);
 [[nodiscard]] String rtos(Role role);
 
-class User {
+class [[nodiscard]] User {
   public:
-    User(int user_id,
-         std::string_view username,
-         Role role,
-         std::string_view password)
+    User(const User&) = default;
+    User& operator=(const User&) = default;
+    User(User&& other) = default;
+    User& operator=(User&& other) = default;
+
+    User(int user_id, StringView username, Role role, StringView password)
         : m_user_id{user_id},
           m_username{username},
           m_role{role},
           m_password{password} {}
 
-    User(std::string_view username, Role role, std::string_view password)
+    User(StringView username, Role role, StringView password)
         : m_username{username}, m_role{role}, m_password{password} {}
 
     bool operator==(const User& other) const {
@@ -41,15 +43,15 @@ class User {
                m_role == other.m_role && m_password == other.m_password;
     }
 
-    [[nodiscard]] int get_id() const { return m_user_id.value(); }
-    [[nodiscard]] String get_username() const { return m_username; }
-    [[nodiscard]] Role get_role() const { return m_role; }
-    [[nodiscard]] String get_password() const { return m_password; }
+    [[nodiscard]] int id() const { return m_user_id.value(); }
+    [[nodiscard]] String username() const { return m_username; }
+    [[nodiscard]] Role role() const { return m_role; }
+    [[nodiscard]] String password() const { return m_password; }
 
     void set_id(int user_id) { m_user_id = user_id; }
-    void set_username(std::string_view username) { m_username = username; }
+    void set_username(StringView username) { m_username = username; }
     void set_role(Role role) { m_role = role; }
-    void set_password(std::string_view passwd) { m_password = passwd; }
+    void set_password(StringView passwd) { m_password = passwd; }
 
   private:
     std::optional<int> m_user_id{std::nullopt};
@@ -58,25 +60,25 @@ class User {
     String m_password{};
 };
 
-class UserDb {
+class [[nodiscard]] UserDb {
   public:
-    UserDb(const String& path);
-
     UserDb(const UserDb&) = delete;
     UserDb& operator=(const UserDb&) = delete;
     UserDb(UserDb&& other) = default;
     UserDb& operator=(UserDb&& other) = default;
 
-    [[nodiscard]] Result<User, UsrDbErr> get_user(const String& username);
-    [[nodiscard]] Result<User, UsrDbErr> get_user(int id);
-    [[nodiscard]] Result<Id, UsrDbErr> get_user_id(const String& username);
+    UserDb(const String& path);
+
+    [[nodiscard]] tdl::Result<User, UsrDbErr> get_user(const String& username);
+    [[nodiscard]] tdl::Result<User, UsrDbErr> get_user(int id);
+    [[nodiscard]] tdl::Result<Id, UsrDbErr> get_user_id(const String& username);
     [[nodiscard]] bool is_empty();
-    Result<None, UsrDbErr> add_user(User& user);
-    Result<None, UsrDbErr> delete_user(const String& username);
-    Result<None, UsrDbErr> delete_user(int id);
-    Result<None, UsrDbErr> update_data(const User& user);
+    tdl::Result<tdl::None, UsrDbErr> add_user(User& user);
+    tdl::Result<tdl::None, UsrDbErr> delete_user(const String& username);
+    tdl::Result<tdl::None, UsrDbErr> delete_user(int id);
+    tdl::Result<tdl::None, UsrDbErr> update_data(const User& user);
 
   private:
-    Database m_db;
+    tdl::Database m_db;
 };
 }  // namespace twodocore

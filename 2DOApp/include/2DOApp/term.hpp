@@ -1,19 +1,26 @@
-#include <2DOCore/result.hpp>
-#include <2DOCore/user.hpp>
-#include <2DOCore/utils.hpp>
+#pragma once
+
+#include <fmt/core.h>
 #include <functional>
 #include <memory>
-#include <unordered_map>
-#include <vector>
 
-#include "fmt/core.h"
+#include <2DOCore/user.hpp>
+#include <Utils/result.hpp>
+#include <Utils/type.hpp>
+#include <Utils/util.hpp>
 
+namespace tdl = twodoutils;
 namespace tdc = twodocore;
 
 namespace twodo {
 template <typename TOption>
-class Page : public std::enable_shared_from_this<Page<TOption>> {
+class [[nodiscard]] Page : public std::enable_shared_from_this<Page<TOption>> {
   public:
+    Page(const Page&) = default;
+    Page& operator=(const Page&) = default;
+    Page(Page&& other) = default;
+    Page& operator=(Page&& other) = default;
+
     Page(std::function<void()> content,
          std::shared_ptr<Page> parent = nullptr,
          bool is_page_event = true)
@@ -41,18 +48,23 @@ class Page : public std::enable_shared_from_this<Page<TOption>> {
   private:
     std::function<void()> content;
     std::shared_ptr<Page<TOption>> parent;
-    std::unordered_map<TOption, std::shared_ptr<Page<TOption>>> childs;
+    HashMap<TOption, std::shared_ptr<Page<TOption>>> childs;
 
   public:
     bool page_event;
 };
 
 template <typename TOption>
-class Menu {
+class [[nodiscard]] Menu {
   public:
+    Menu(Menu&& other) = default;
+    Menu& operator=(Menu&& other) = default;
+    Menu(const Menu&) = delete;
+    Menu& operator=(const Menu&) = delete;
+
     Menu(std::shared_ptr<Page<TOption>> initial_page,
-         tdc::IDisplayer& displayer,
-         tdc::IUserInputHandler<TOption>& input_handler_)
+         tdl::IDisplayer& displayer,
+         tdl::IUserInputHandler<TOption>& input_handler_)
         : current_page{std::move(initial_page)},
           displayer{displayer},
           input_handler{input_handler_} {}
@@ -68,14 +80,14 @@ class Menu {
 
             navigate_or_display_error(user_choice, quit_input);
 
-            tdc::clear_term();
+            tdl::clear_term();
         }
     }
 
   private:
     std::shared_ptr<Page<TOption>> current_page;
-    tdc::IDisplayer& displayer;
-    tdc::IUserInputHandler<TOption>& input_handler;
+    tdl::IDisplayer& displayer;
+    tdl::IUserInputHandler<TOption>& input_handler;
 
     TOption get_user_choice() { return input_handler.get_input(); }
 
@@ -113,7 +125,7 @@ class Menu {
 
     void display_invalid_option_error() {
         displayer.msg_display("Invalid option!");
-        tdc::sleep(2000);
+        tdl::sleep(2000);
     }
 
     void perform_page_navigation_or_execution(
@@ -139,40 +151,50 @@ enum class AuthErr {
     DbErr,
 };
 
-class RegisterManager {
+class [[nodiscard]] RegisterManager {
   public:
+    RegisterManager(RegisterManager&& other) = default;
+    RegisterManager& operator=(RegisterManager&& other) = default;
+    RegisterManager(const RegisterManager&) = delete;
+    RegisterManager& operator=(const RegisterManager&) = delete;
+
     RegisterManager(std::shared_ptr<tdc::UserDb> udb,
-                    std::shared_ptr<tdc::IUserInputHandler<String>> ihandler,
-                    std::shared_ptr<tdc::IDisplayer> idisplayer)
+                    std::shared_ptr<tdl::IUserInputHandler<String>> ihandler,
+                    std::shared_ptr<tdl::IDisplayer> idisplayer)
         : m_udb{udb}, m_ihandler{ihandler}, m_idisplayer{idisplayer} {}
 
-    [[nodiscard]] tdc::Result<tdc::User, AuthErr> singup();
-    [[nodiscard]] tdc::Result<tdc::None, AuthErr> username_validation(
-        std::string_view username) const;
-    [[nodiscard]] tdc::Result<tdc::None, AuthErr> password_validation(
+    [[nodiscard]] tdl::Result<tdc::User, AuthErr> singup();
+    [[nodiscard]] tdl::Result<tdl::None, AuthErr> username_validation(
+        StringView username) const;
+    [[nodiscard]] tdl::Result<tdl::None, AuthErr> password_validation(
         const String& password) const;
 
   private:
     std::shared_ptr<tdc::UserDb> m_udb;
-    std::shared_ptr<tdc::IUserInputHandler<String>> m_ihandler;
-    std::shared_ptr<tdc::IDisplayer> m_idisplayer;
+    std::shared_ptr<tdl::IUserInputHandler<String>> m_ihandler;
+    std::shared_ptr<tdl::IDisplayer> m_idisplayer;
 };
 
-class AuthManager {
+class [[nodiscard]] AuthManager {
   public:
+    AuthManager(AuthManager&& other) = default;
+    AuthManager& operator=(AuthManager&& other) = default;
+    AuthManager(const AuthManager&) = delete;
+    AuthManager& operator=(const AuthManager&) = delete;
+
     AuthManager(std::shared_ptr<tdc::UserDb> udb,
-                std::shared_ptr<tdc::IUserInputHandler<String>> ihandler,
-                std::shared_ptr<tdc::IDisplayer> idisplayer)
+                std::shared_ptr<tdl::IUserInputHandler<String>> ihandler,
+                std::shared_ptr<tdl::IDisplayer> idisplayer)
         : m_udb{udb}, m_ihandler{ihandler}, m_idisplayer{idisplayer} {}
 
-    [[nodiscard]] tdc::Result<tdc::User, AuthErr> login();
-    [[nodiscard]] tdc::Result<tdc::None, AuthErr> auth_username();
-    [[nodiscard]] tdc::Result<tdc::User, AuthErr> auth_password(
+    [[nodiscard]] tdl::Result<tdc::User, AuthErr> login();
+    [[nodiscard]] tdl::Result<tdl::None, AuthErr> auth_username();
+    [[nodiscard]] tdl::Result<tdc::User, AuthErr> auth_password(
         const String& username);
 
   private:
     std::shared_ptr<tdc::UserDb> m_udb;
-    std::shared_ptr<tdc::IUserInputHandler<String>> m_ihandler;
-    std::shared_ptr<tdc::IDisplayer> m_idisplayer;
+    std::shared_ptr<tdl::IUserInputHandler<String>> m_ihandler;
+    std::shared_ptr<tdl::IDisplayer> m_idisplayer;
 };
 }  // namespace twodo

@@ -2,12 +2,17 @@
 
 #include <variant>
 
-namespace twodocore {
+namespace twodoutils {
 struct None {};
 
 template <typename T, typename E>
-class Result {
+class [[nodiscard]] Result {
   public:
+    Result(const Result&) = default;
+    Result& operator=(const Result&) = default;
+    Result(Result&& other) = default;
+    Result& operator=(Result&& other) = default;
+
     [[nodiscard]] const T& value() const noexcept {
         return std::get<T>(m_storage);
     }
@@ -51,4 +56,4 @@ template <typename T, typename E>
 [[nodiscard]] Result<T, E> Err(E error) noexcept {
     return Result<T, E>{std::move(error)};
 }
-}  // namespace twodocore
+}  // namespace twodoutils

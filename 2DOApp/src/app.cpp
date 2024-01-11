@@ -1,15 +1,10 @@
 #include "2DOApp/app.hpp"
 
-#include <fmt/core.h>
-
-#include <2DOCore/task.hpp>
-#include <2DOCore/utils.hpp>
-#include <chrono>
-#include <thread>
+#define QUIT_KEY "0"
 
 namespace twodo {
 void App::run() {
-    tdc::create_simple_app_env("2DO", {"users.db3", "tasks.db3"});
+    tdl::create_simple_app_env("2DO", {"users.db3", "tasks.db3"});
     load_menu().run("0");
 }
 
@@ -60,7 +55,7 @@ std::shared_ptr<Page<String>> App::tasks_menu() {
 
     std::shared_ptr<Page<String>> create_task =
         std::make_shared<Page<String>>([]() {
-            
+
         });
 
     return tasks;
