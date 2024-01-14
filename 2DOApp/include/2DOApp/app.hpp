@@ -1,7 +1,6 @@
 #pragma once
 
 #include <fmt/core.h>
-#include <cerrno>
 #include <iostream>
 #include <memory>
 
@@ -26,9 +25,9 @@ class UserInput : public tdl::IUserInputHandler<String> {
 
 class MsgDisplayer : public tdl::IDisplayer {
   public:
-    void msg_display(StringView msg) const override { fmt::print("{}", msg); }
+    void msg_display(StringView msg) const override { fmt::println("{}", msg); }
 
-    void err_display(StringView err) const override { fmt::print(stderr, "{}", err); }
+    void err_display(StringView err) const override { fmt::println(stderr, "{}", err); }
 };
 
 class [[nodiscard]] App {
@@ -37,6 +36,8 @@ class [[nodiscard]] App {
     App& operator=(App&& other) = default;
     App(const App&) = delete;
     App& operator=(const App&) = delete;
+
+    App(){};
 
     static std::shared_ptr<App> getInstance() {
         if(instance.get() == nullptr) {

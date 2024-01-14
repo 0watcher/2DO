@@ -63,11 +63,11 @@ class [[nodiscard]] Menu {
     Menu& operator=(const Menu&) = delete;
 
     Menu(std::shared_ptr<Page<TOption>> initial_page,
-         tdl::IDisplayer& displayer,
-         tdl::IUserInputHandler<TOption>& input_handler_)
+         std::unique_ptr<tdl::IDisplayer> displayer_,
+         std::unique_ptr<tdl::IUserInputHandler<TOption>> input_handler_)
         : current_page{std::move(initial_page)},
-          displayer{displayer},
-          input_handler{input_handler_} {}
+          displayer{std::move(displayer_)},
+          input_handler{std::move(input_handler_)} {}
 
     void run(TOption quit_input = TOption{}) {
         while (true) {
@@ -86,10 +86,10 @@ class [[nodiscard]] Menu {
 
   private:
     std::shared_ptr<Page<TOption>> current_page;
-    tdl::IDisplayer& displayer;
-    tdl::IUserInputHandler<TOption>& input_handler;
+    std::unique_ptr<tdl::IDisplayer> displayer;
+    std::unique_ptr<tdl::IUserInputHandler<TOption>> input_handler;
 
-    TOption get_user_choice() const { return input_handler.get_input(); }
+    TOption get_user_choice() const { return input_handler->get_input(); }
 
     void execute_current_page() {
         if (current_page) {
@@ -124,7 +124,7 @@ class [[nodiscard]] Menu {
     }
 
     void display_invalid_option_error() const {
-        displayer.msg_display("Invalid option!");
+        displayer->msg_display("Invalid option!");
         tdl::sleep(2000);
     }
 
