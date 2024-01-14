@@ -69,10 +69,11 @@ class [[nodiscard]] UserDb {
 
     UserDb(const String& path);
 
-    [[nodiscard]] tdl::Result<User, UsrDbErr> get_user(const String& username);
-    [[nodiscard]] tdl::Result<User, UsrDbErr> get_user(int id);
-    [[nodiscard]] tdl::Result<Id, UsrDbErr> get_user_id(const String& username);
-    [[nodiscard]] bool is_empty();
+    [[nodiscard]] tdl::Result<User, UsrDbErr> get_user(const String& username) const;
+    [[nodiscard]] tdl::Result<User, UsrDbErr> get_user(int id) const;
+    [[nodiscard]] tdl::Result<tdl::Id, UsrDbErr> get_user_id(const String& username) const;
+    [[nodiscard]] bool is_empty() const;
+    
     tdl::Result<tdl::None, UsrDbErr> add_user(User& user);
     tdl::Result<tdl::None, UsrDbErr> delete_user(const String& username);
     tdl::Result<tdl::None, UsrDbErr> delete_user(int id);

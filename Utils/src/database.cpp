@@ -1,11 +1,5 @@
 #include "Utils/database.hpp"
 
-#include <fstream>
-#include <map>
-#include <stdexcept>
-#include <string>
-#include <utility>
-
 namespace twodoutils {
 Result<None, DbError> Database::create_table(
     const String& table_name,
@@ -24,7 +18,7 @@ Result<None, DbError> Database::create_table(
     query += ")";
 
     try {
-        auto result = m_db.exec(query);
+        const auto result = m_db.exec(query);
     } catch (const std::exception& e) {
         return Err<None, DbError>(DbError{e.what()});
     }
@@ -36,7 +30,7 @@ Result<None, DbError> Database::drop_table(const String& table_name) {
     String drop = "DROP TABLE " + table_name;
 
     try {
-        auto result = m_db.exec(drop);
+        const auto result = m_db.exec(drop);
     } catch (const std::exception& e) {
         return Err<None, DbError>(DbError{e.what()});
     }
@@ -63,7 +57,7 @@ Result<None, DbError> Database::insert_data(
     query += ");";
 
     try {
-        auto result = m_db.exec(query);
+        const auto result = m_db.exec(query);
     } catch (const std::exception& e) {
         return Err<None, DbError>(DbError{e.what()});
     }
@@ -77,7 +71,7 @@ Result<None, DbError> Database::delete_data(const String& table_name,
                    " = " + "'" + where.second + "';";
 
     try {
-        auto result = m_db.exec(query);
+        const auto result = m_db.exec(query);
     } catch (const std::exception& e) {
         return Err<None, DbError>(DbError{e.what()});
     }
@@ -93,7 +87,7 @@ Result<None, DbError> Database::update_data(
                    where.second + ";";
 
     try {
-        auto result = m_db.exec(query);
+        const auto result = m_db.exec(query);
     } catch (const std::exception& e) {
         return Err<None, DbError>(DbError{e.what()});
     }
@@ -104,7 +98,7 @@ Result<None, DbError> Database::update_data(
 [[nodiscard]] Result<Vector<Value>, DbError> Database::select_data(
     const String& table_name,
     const Vector<Attribute>& what,
-    const Condition& where) {
+    const Condition& where) const {
     String query = "SELECT ";
     for (const auto& name : what) {
         query += name + ", ";
@@ -145,13 +139,12 @@ Result<None, DbError> Database::update_data(
     return Ok<Vector<Value>, DbError>(std::move(values));
 }
 
-[[nodiscard]] bool Database::is_table_empty(const String& table_name) {
+[[nodiscard]] bool Database::is_table_empty(const String& table_name) const {
     try {
         SQLite::Statement query(m_db, "SELECT COUNT(*) FROM " + table_name);
 
         if (query.executeStep()) {
-            int rowCount = query.getColumn(0).getInt();
-            return rowCount == 0;
+            query.getColumn(0).getInt();
         }
     } catch (const std::exception&) {
         return true;

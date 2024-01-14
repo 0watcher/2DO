@@ -69,16 +69,16 @@ void wipe_simple_app_env(const String& folder_name) {
 [[nodiscard]] String tptos(const TimePoint& tp) noexcept {
     std::time_t time = std::chrono::system_clock::to_time_t(tp);
 
-    std::chrono::minutes minutes =
+    const std::chrono::minutes minutes =
         std::chrono::duration_cast<std::chrono::minutes>(tp.time_since_epoch());
 
     return std::to_string(minutes.count());
 }
 
 [[nodiscard]] TimePoint stotp(const String& stringified_tp) noexcept {
-    auto minutes_count = std::stoll(stringified_tp);
+    const auto minutes_count = std::stoll(stringified_tp);
 
-    TimePoint tp = std::chrono::time_point<std::chrono::system_clock,
+    const TimePoint tp = std::chrono::time_point<std::chrono::system_clock,
                                            std::chrono::minutes>(
         std::chrono::minutes(minutes_count));
 
@@ -96,7 +96,7 @@ void wipe_simple_app_env(const String& folder_name) {
 
 [[nodiscard]] String hash(const String& str) {
     std::hash<String> hasher{};
-    auto hashed_value = std::to_string(hasher(str));
+    const auto hashed_value = std::to_string(hasher(str));
     if (hashed_value.empty()) {
         throw std::runtime_error("Failure hashing value.");
     }

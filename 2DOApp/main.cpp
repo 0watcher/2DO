@@ -4,12 +4,11 @@
 #include <memory>
 
 namespace td = twodo;
-namespace tdc = twodocore;
 
 int main() {
     try {
-        //td::App(make_shared<tdc::User>(), make_unique<tdc::UserDb>(), make_unique<tdc::TaskDb>()).run();
+        td::App::getInstance()->run();
     } catch (const std::runtime_error& e) {
-        std::cerr << "Big Error: " << e.what() << '\n';
+        fmt::print(stderr, "{}", e.what());
     }
 }

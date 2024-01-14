@@ -8,7 +8,7 @@ void App::run() {
     load_menu().run("0");
 }
 
-Menu<String> App::load_menu() {
+Menu<String> App::load_menu() const {
     std::shared_ptr<Page<String>> main = std::make_shared<Page<String>>([]() {
         fmt::print(
             "Main Menu:\n"
@@ -22,13 +22,13 @@ Menu<String> App::load_menu() {
     MsgDisplayer md{};
     Menu menu{main, md, ui};
 
-    main->add_child("1", tasks_menu());
-    main->add_child("2", settings_menu());
+    main->add_child("1", load_tasks_menu());
+    main->add_child("2", load_settings_menu());
 
     return menu;
 }
 
-std::shared_ptr<Page<String>> App::tasks_menu() {
+std::shared_ptr<Page<String>> App::load_tasks_menu() const {
     std::shared_ptr<Page<String>> tasks = std::make_shared<Page<String>>([]() {
         fmt::print(
             "Tasks:\n"
@@ -61,7 +61,7 @@ std::shared_ptr<Page<String>> App::tasks_menu() {
     return tasks;
 }
 
-std::shared_ptr<Page<String>> App::settings_menu() {
+std::shared_ptr<Page<String>> App::load_settings_menu() const {
     std::shared_ptr<Page<String>> settings =
         std::make_shared<Page<String>>([]() {
             fmt::print(

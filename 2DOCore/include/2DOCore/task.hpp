@@ -7,6 +7,7 @@
 
 namespace tdl = twodoutils;
 
+namespace twodocore {
 enum class TaskErr {
     GetTaskFailure = 1,
     AddTaskFailure,
@@ -15,8 +16,7 @@ enum class TaskErr {
     AddMessageFailure
 };
 
-namespace twodocore {
-class Task {
+class [[nodiscard]] Task {
   public:
     Task(const Task&) = default;
     Task& operator=(const Task&) = default;
@@ -98,17 +98,17 @@ class Task {
     int m_executor_id{};
     int m_owner_id{};
     int m_chatroom_id{};
-    bool m_is_done{};
+    bool m_is_done = false;
 };
 
-struct Message {
+struct [[nodiscard]] Message {
     String sender;
     String content;
     TimePoint timestamp;
     int crid;
 };
 
-class TaskDb {
+class [[nodiscard]] TaskDb {
   public:
     TaskDb(const TaskDb&) = delete;
     TaskDb& operator=(const TaskDb&) = delete;
@@ -117,9 +117,10 @@ class TaskDb {
 
     TaskDb(const String& path);
 
-    [[nodiscard]] tdl::Result<Task, TaskErr> get_task(const String& topic);
-    [[nodiscard]] tdl::Result<Task, TaskErr> get_task(int id);
-    [[nodiscard]] tdl::Result<Id, TaskErr> get_task_id(const String& topic);
+    [[nodiscard]] tdl::Result<Task, TaskErr> get_task(const String& topic) const;
+    [[nodiscard]] tdl::Result<Task, TaskErr> get_task(int id) const;
+    [[nodiscard]] tdl::Result<tdl::Id, TaskErr> get_task_id(const String& topic) const;
+    
     tdl::Result<tdl::None, TaskErr> add_task(Task& task);
     tdl::Result<tdl::None, TaskErr> delete_task(int id);
     tdl::Result<tdl::None, TaskErr> update_data(const Task& task);

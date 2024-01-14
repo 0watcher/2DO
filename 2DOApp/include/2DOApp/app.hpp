@@ -1,6 +1,7 @@
 #pragma once
 
 #include <fmt/core.h>
+#include <cerrno>
 #include <iostream>
 #include <memory>
 
@@ -16,7 +17,7 @@ namespace tdl = twodoutils;
 namespace twodo {
 class UserInput : public tdl::IUserInputHandler<String> {
   public:
-    String get_input() override {
+    String get_input() const override {
         auto input = String();
         std::getline(std::cin, input);
         return input;
@@ -25,9 +26,9 @@ class UserInput : public tdl::IUserInputHandler<String> {
 
 class MsgDisplayer : public tdl::IDisplayer {
   public:
-    void msg_display(StringView msg) override { fmt::print("{}", msg); }
+    void msg_display(StringView msg) const override { fmt::print("{}", msg); }
 
-    void err_display(StringView err) override { fmt::print("{}", err); }
+    void err_display(StringView err) const override { fmt::print(stderr, "{}", err); }
 };
 
 class [[nodiscard]] App {
@@ -37,23 +38,25 @@ class [[nodiscard]] App {
     App(const App&) = delete;
     App& operator=(const App&) = delete;
 
-    App(std::shared_ptr<tdc::User> current_user_,
-        std::unique_ptr<tdc::UserDb> user_db_,
-        std::unique_ptr<tdc::TaskDb> task_db_)
-        : current_user{current_user},
-          user_db{std::move(user_db_)},
-          task_db{std::move(task_db_)} {}
+    static std::shared_ptr<App> getInstance() {
+        if(instance.get() == nullptr) {
+            instance = std::make_shared<App>();
+        }
+
+        return instance;
+    }
 
     void run();
     std::shared_ptr<tdc::User> get_current_user() { return current_user; }
 
   private:
+    inline static std::shared_ptr<App> instance = nullptr;
     std::shared_ptr<tdc::User> current_user;
     std::unique_ptr<tdc::UserDb> user_db;
     std::unique_ptr<tdc::TaskDb> task_db;
 
-    Menu<String> load_menu();
-    std::shared_ptr<Page<String>> tasks_menu();
-    std::shared_ptr<Page<String>> settings_menu();
+    Menu<String> load_menu() const;
+    std::shared_ptr<Page<String>> load_tasks_menu() const;
+    std::shared_ptr<Page<String>> load_settings_menu() const;
 };
 }  // namespace twodo

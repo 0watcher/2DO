@@ -89,7 +89,7 @@ class [[nodiscard]] Menu {
     tdl::IDisplayer& displayer;
     tdl::IUserInputHandler<TOption>& input_handler;
 
-    TOption get_user_choice() { return input_handler.get_input(); }
+    TOption get_user_choice() const { return input_handler.get_input(); }
 
     void execute_current_page() {
         if (current_page) {
@@ -123,7 +123,7 @@ class [[nodiscard]] Menu {
         }
     }
 
-    void display_invalid_option_error() {
+    void display_invalid_option_error() const {
         displayer.msg_display("Invalid option!");
         tdl::sleep(2000);
     }
@@ -164,8 +164,10 @@ class [[nodiscard]] RegisterManager {
         : m_udb{udb}, m_ihandler{ihandler}, m_idisplayer{idisplayer} {}
 
     [[nodiscard]] tdl::Result<tdc::User, AuthErr> singup();
+
     [[nodiscard]] tdl::Result<tdl::None, AuthErr> username_validation(
         StringView username) const;
+
     [[nodiscard]] tdl::Result<tdl::None, AuthErr> password_validation(
         const String& password) const;
 
@@ -188,7 +190,9 @@ class [[nodiscard]] AuthManager {
         : m_udb{udb}, m_ihandler{ihandler}, m_idisplayer{idisplayer} {}
 
     [[nodiscard]] tdl::Result<tdc::User, AuthErr> login();
+
     [[nodiscard]] tdl::Result<tdl::None, AuthErr> auth_username();
+    
     [[nodiscard]] tdl::Result<tdc::User, AuthErr> auth_password(
         const String& username);
 

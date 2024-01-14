@@ -44,14 +44,14 @@ void sleep(int t) noexcept;
 template <typename T>
 class [[nodiscard]] IUserInputHandler {
   public:
-    virtual T get_input() = 0;
+    virtual T get_input() const = 0;
     virtual ~IUserInputHandler() = default;
 };
 
 class [[nodiscard]] IDisplayer {
   public:
-    virtual void msg_display(StringView msg) = 0;
-    virtual void err_display(StringView err) = 0;
+    virtual void msg_display(StringView msg) const = 0;
+    virtual void err_display(StringView err) const = 0;
     virtual ~IDisplayer() = default;
 };
 }  // namespace twodoutils
