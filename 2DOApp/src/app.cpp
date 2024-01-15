@@ -22,7 +22,7 @@ Menu<String> App::load_menu() const {
             "-> ");
     });
 
-    Menu<String> menu{main, std::make_unique<MsgDisplayer>(), std::make_unique<UserInput>()};
+    Menu<String> menu{std::move(main), std::make_unique<MsgDisplayer>(), std::make_unique<UserInput>()};
 
     main->add_child(FIRST_OPTION, load_tasks_menu());
     main->add_child(SECOND_OPTION, load_settings_menu());

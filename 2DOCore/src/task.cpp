@@ -51,30 +51,31 @@ TaskDb::TaskDb(const String& path) : m_db{path} {
 }
 
 tdl::Result<Task, TaskErr> TaskDb::get_task(const String& topic) const {
-    const auto task = m_db.select_data(TASKS_TABLE,
-                                 {"id", "topic", "content", "start_date",
-                                  "deadline", "eid", "oid", "did", "done"},
-                                 {"topic", topic});
+    const auto task =
+        m_db.select_data(TASKS_TABLE,
+                         {"id", "topic", "content", "start_date", "deadline",
+                          "eid", "oid", "did", "done"},
+                         {"topic", topic});
     if (!task) {
-        return tdl::Err<Task, TaskErr>(TaskErr::GetTaskFailure);
+        return tdl::Err(TaskErr::GetTaskFailure);
     }
-    const Vector<tdl::Value> task_data = task.value();
-    return tdl::Ok<Task, TaskErr>(
-        Task{std::stoi(task_data[0]), task_data[1], task_data[2],
-             tdl::stotp(task_data[3]), tdl::stotp(task_data[4]),
-             std::stoi(task_data[5]), std::stoi(task_data[6]), 0,
-             bool(std::stoi(task_data[7]))});
+    const Vector<tdl::Value> task_data = task.unwrap();
+    return tdl::Ok(Task{std::stoi(task_data[0]), task_data[1], task_data[2],
+                        tdl::stotp(task_data[3]), tdl::stotp(task_data[4]),
+                        std::stoi(task_data[5]), std::stoi(task_data[6]), 0,
+                        bool(std::stoi(task_data[7]))});
 }
 
 tdl::Result<Task, TaskErr> TaskDb::get_task(int id) const {
-    const auto task = m_db.select_data(TASKS_TABLE,
-                                 {"topic", "content", "start_date", "deadline",
-                                  "eid", "oid", "did", "done"},
-                                 {"id", std::to_string(id)});
+    const auto task =
+        m_db.select_data(TASKS_TABLE,
+                         {"topic", "content", "start_date", "deadline", "eid",
+                          "oid", "did", "done"},
+                         {"id", std::to_string(id)});
     if (!task) {
-        return tdl::Err<Task, TaskErr>(TaskErr::GetTaskFailure);
+        return tdl::Err(TaskErr::GetTaskFailure);
     }
-    const Vector<tdl::Value> task_data = task.value();
+    const Vector<tdl::Value> task_data = task.unwrap();
 
     const String topic = task_data[0];
     const String content = task_data[1];
@@ -84,7 +85,7 @@ tdl::Result<Task, TaskErr> TaskDb::get_task(int id) const {
     const int oid = std::stoi(task_data[5]);
     const bool done = (std::stoi(task_data[7]) != 0) ? true : false;
 
-    return tdl::Ok<Task, TaskErr>(
+    return tdl::Ok(
         Task{id, topic, content, start_date, deadline, eid, oid, 0, done});
 }
 
@@ -92,12 +93,12 @@ tdl::Result<Task, TaskErr> TaskDb::get_task(int id) const {
     const String& topic) const {
     const auto id = m_db.select_data(TASKS_TABLE, {"id"}, {"topic", topic});
     if (!id) {
-        return tdl::Err<int, TaskErr>(TaskErr::GetTaskFailure);
+        return tdl::Err(TaskErr::GetTaskFailure);
     }
-    return tdl::Ok<int, TaskErr>(stoi(id.value()[0]));
+    return tdl::Ok(stoi(id.unwrap()[0]));
 }
 
-tdl::Result<tdl::None, TaskErr> TaskDb::add_task(Task& task) {
+tdl::Result<void, TaskErr> TaskDb::add_task(Task& task) {
     const auto topic = task.topic();
     const auto content = task.content();
     const auto start_date = tdl::tptos(task.start_date());
@@ -106,53 +107,56 @@ tdl::Result<tdl::None, TaskErr> TaskDb::add_task(Task& task) {
     const auto oid = std::to_string(task.owner_id());
     const auto done = std::to_string((task.is_done()) ? 1 : 0);
 
-    const auto result = m_db.insert_data(TASKS_TABLE, {{"topic", topic},
-                                                 {"content", content},
-                                                 {"start_date", start_date},
-                                                 {"deadline", deadline},
-                                                 {"eid", eid},
-                                                 {"oid", oid},
-                                                 {"did", std::to_string(0)},
-                                                 {"done", done}});
+    const auto result =
+        m_db.insert_data(TASKS_TABLE, {{"topic", topic},
+                                       {"content", content},
+                                       {"start_date", start_date},
+                                       {"deadline", deadline},
+                                       {"eid", eid},
+                                       {"oid", oid},
+                                       {"did", std::to_string(0)},
+                                       {"done", done}});
     if (!result) {
-        return tdl::Err<tdl::None, TaskErr>(TaskErr::AddTaskFailure);
+        return tdl::Err(TaskErr::AddTaskFailure);
     }
     const auto id = get_task_id(task.topic());
     if (!id) {
-        return tdl::Err<tdl::None, TaskErr>(TaskErr::AddTaskFailure);
+        return tdl::Err(TaskErr::AddTaskFailure);
     }
-    task.set_id(id.value());
+    task.set_id(id.unwrap());
 
-    return tdl::Ok<tdl::None, TaskErr>({});
+    return tdl::Ok();
 }
 
-tdl::Result<tdl::None, TaskErr> TaskDb::delete_task(int id) {
-    const auto result = m_db.delete_data(TASKS_TABLE, {"id", std::to_string(id)});
+tdl::Result<void, TaskErr> TaskDb::delete_task(int id) {
+    const auto result =
+        m_db.delete_data(TASKS_TABLE, {"id", std::to_string(id)});
     if (!result) {
-        return tdl::Err<tdl::None, TaskErr>(TaskErr::DeleteTaskFailure);
+        return tdl::Err(TaskErr::DeleteTaskFailure);
     }
-    return tdl::Ok<tdl::None, TaskErr>({});
+    return tdl::Ok();
 }
 
-tdl::Result<tdl::None, TaskErr> TaskDb::update_data(const Task& task) {
-    const auto data = m_db.select_data(TASKS_TABLE,
-                                 {"id", "topic", "content", "start_date",
-                                  "deadline", "eid", "oid", "did", "done"},
-                                 {"id", std::to_string(task.id())});
+tdl::Result<void, TaskErr> TaskDb::update_data(const Task& task) {
+    const auto data =
+        m_db.select_data(TASKS_TABLE,
+                         {"id", "topic", "content", "start_date", "deadline",
+                          "eid", "oid", "did", "done"},
+                         {"id", std::to_string(task.id())});
 
     if (!data) {
-        return tdl::Err<tdl::None, TaskErr>(TaskErr::GetTaskFailure);
+        return tdl::Err(TaskErr::GetTaskFailure);
     }
 
-    const String db_id = data.value()[0];
-    const String db_topic = data.value()[1];
-    const String db_content = data.value()[3];
-    const String db_start_date = data.value()[4];
-    const String db_deadline = data.value()[5];
-    const String db_eid = data.value()[6];
-    const String db_oid = data.value()[7];
-    const String db_did = data.value()[8];
-    const String db_done = data.value()[9];
+    const String db_id = data.unwrap()[0];
+    const String db_topic = data.unwrap()[1];
+    const String db_content = data.unwrap()[3];
+    const String db_start_date = data.unwrap()[4];
+    const String db_deadline = data.unwrap()[5];
+    const String db_eid = data.unwrap()[6];
+    const String db_oid = data.unwrap()[7];
+    const String db_did = data.unwrap()[8];
+    const String db_done = data.unwrap()[9];
 
     const String id = std::to_string(task.id());
     const String topic = task.topic();
@@ -167,7 +171,7 @@ tdl::Result<tdl::None, TaskErr> TaskDb::update_data(const Task& task) {
     if (id != db_id) {
         const auto result = m_db.update_data("tasks", {"id", id}, {"id", id});
         if (!result) {
-            return tdl::Err<tdl::None, TaskErr>(TaskErr::UpdateTaskFailure);
+            return tdl::Err(TaskErr::UpdateTaskFailure);
         }
     }
 
@@ -175,7 +179,7 @@ tdl::Result<tdl::None, TaskErr> TaskDb::update_data(const Task& task) {
         const auto result =
             m_db.update_data("tasks", {"topic", topic}, {"id", db_id});
         if (!result) {
-            return tdl::Err<tdl::None, TaskErr>(TaskErr::UpdateTaskFailure);
+            return tdl::Err(TaskErr::UpdateTaskFailure);
         }
     }
 
@@ -183,15 +187,15 @@ tdl::Result<tdl::None, TaskErr> TaskDb::update_data(const Task& task) {
         const auto result =
             m_db.update_data("tasks", {"content", content}, {"id", db_id});
         if (!result) {
-            return tdl::Err<tdl::None, TaskErr>(TaskErr::UpdateTaskFailure);
+            return tdl::Err(TaskErr::UpdateTaskFailure);
         }
     }
 
     if (start_date != db_start_date) {
-        const auto result = m_db.update_data("tasks", {"start_date", start_date},
-                                       {"id", db_id});
+        const auto result = m_db.update_data(
+            "tasks", {"start_date", start_date}, {"id", db_id});
         if (!result) {
-            return tdl::Err<tdl::None, TaskErr>(TaskErr::UpdateTaskFailure);
+            return tdl::Err(TaskErr::UpdateTaskFailure);
         }
     }
 
@@ -199,50 +203,54 @@ tdl::Result<tdl::None, TaskErr> TaskDb::update_data(const Task& task) {
         const auto result =
             m_db.update_data("tasks", {"deadline", deadline}, {"id", db_id});
         if (!result) {
-            return tdl::Err<tdl::None, TaskErr>(TaskErr::UpdateTaskFailure);
+            return tdl::Err(TaskErr::UpdateTaskFailure);
         }
     }
 
     if (eid != db_eid) {
-        const auto result = m_db.update_data("tasks", {"eid", eid}, {"id", db_id});
+        const auto result =
+            m_db.update_data("tasks", {"eid", eid}, {"id", db_id});
         if (!result) {
-            return tdl::Err<tdl::None, TaskErr>(TaskErr::UpdateTaskFailure);
+            return tdl::Err(TaskErr::UpdateTaskFailure);
         }
     }
 
     if (oid != db_oid) {
-        const auto result = m_db.update_data("tasks", {"oid", oid}, {"id", db_id});
+        const auto result =
+            m_db.update_data("tasks", {"oid", oid}, {"id", db_id});
         if (!result) {
-            return tdl::Err<tdl::None, TaskErr>(TaskErr::UpdateTaskFailure);
+            return tdl::Err(TaskErr::UpdateTaskFailure);
         }
     }
 
     if (did != db_did) {
-        const auto result = m_db.update_data("tasks", {"did", did}, {"id", db_id});
+        const auto result =
+            m_db.update_data("tasks", {"did", did}, {"id", db_id});
         if (!result) {
-            return tdl::Err<tdl::None, TaskErr>(TaskErr::UpdateTaskFailure);
+            return tdl::Err(TaskErr::UpdateTaskFailure);
         }
     }
 
     if (done != db_done) {
-        const auto result = m_db.update_data("tasks", {"done", done}, {"id", db_id});
+        const auto result =
+            m_db.update_data("tasks", {"done", done}, {"id", db_id});
         if (!result) {
-            return tdl::Err<tdl::None, TaskErr>(TaskErr::UpdateTaskFailure);
+            return tdl::Err(TaskErr::UpdateTaskFailure);
         }
     }
 
-    return tdl::Ok<tdl::None, TaskErr>({});
+    return tdl::Ok();
 }
 
-tdl::Result<tdl::None, TaskErr> TaskDb::add_message(Message msg) {
+tdl::Result<void, TaskErr> TaskDb::add_message(Message msg) {
     const auto result =
         m_db.insert_data(CHATS_TABLE, {{"sender", msg.sender},
                                        {"content", msg.content},
                                        {"timestamp", tdl::tptos(msg.timestamp)},
                                        {"did", std::to_string(msg.crid)}});
     if (!result) {
-        return tdl::Err<tdl::None, TaskErr>(TaskErr::AddTaskFailure);
+        return tdl::Err(TaskErr::AddTaskFailure);
     }
-    return tdl::Ok<tdl::None, TaskErr>({});
+    return tdl::Ok();
 }
 }  // namespace twodocore

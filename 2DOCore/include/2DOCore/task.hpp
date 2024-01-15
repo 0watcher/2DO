@@ -117,14 +117,16 @@ class [[nodiscard]] TaskDb {
 
     TaskDb(const String& path);
 
-    [[nodiscard]] tdl::Result<Task, TaskErr> get_task(const String& topic) const;
+    [[nodiscard]] tdl::Result<Task, TaskErr> get_task(
+        const String& topic) const;
     [[nodiscard]] tdl::Result<Task, TaskErr> get_task(int id) const;
-    [[nodiscard]] tdl::Result<tdl::Id, TaskErr> get_task_id(const String& topic) const;
-    
-    tdl::Result<tdl::None, TaskErr> add_task(Task& task);
-    tdl::Result<tdl::None, TaskErr> delete_task(int id);
-    tdl::Result<tdl::None, TaskErr> update_data(const Task& task);
-    tdl::Result<tdl::None, TaskErr> add_message(Message msg);
+    [[nodiscard]] tdl::Result<tdl::Id, TaskErr> get_task_id(
+        const String& topic) const;
+
+    tdl::Result<void, TaskErr> add_task(Task& task);
+    tdl::Result<void, TaskErr> delete_task(int id);
+    tdl::Result<void, TaskErr> update_data(const Task& task);
+    tdl::Result<void, TaskErr> add_message(Message msg);
 
   private:
     tdl::Database m_db;

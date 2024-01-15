@@ -1,6 +1,7 @@
 #include "2DOApp/term.hpp"
 
 #include <regex>
+#include "Utils/result.hpp"
 
 namespace twodo {
 [[nodiscard]] tdl::Result<tdc::User, AuthErr> RegisterManager::singup() {
@@ -77,7 +78,7 @@ namespace twodo {
                 auto user = tdc::User{username_, usr_role, tdl::hash(password)};
                 m_udb->add_user(user);
 
-                return tdl::Ok<tdc::User, AuthErr>(user);
+                return tdl::Ok(user);
             }
         }
     };
@@ -87,16 +88,16 @@ namespace twodo {
     return password_input();
 }
 
-[[nodiscard]] tdl::Result<tdl::None, AuthErr>
-RegisterManager::username_validation(StringView username) const {
+[[nodiscard]] tdl::Result<void, AuthErr> RegisterManager::username_validation(
+    StringView username) const {
     if (username.length() < 1 || username.length() > 20) {
-        return tdl::Err<tdl::None, AuthErr>(AuthErr::InvalidNameLength);
+        return tdl::Err(AuthErr::InvalidNameLength);
     }
-    return tdl::Ok<tdl::None, AuthErr>({});
+    return tdl::Ok();
 }
 
-[[nodiscard]] tdl::Result<tdl::None, AuthErr>
-RegisterManager::password_validation(const String& password) const {
+[[nodiscard]] tdl::Result<void, AuthErr> RegisterManager::password_validation(
+    const String& password) const {
     const std::regex upper_case_expression{"[A-Z]+"};
     const std::regex lower_case_expression{"[a-z]+"};
     const std::regex number_expression{"[0-9]+"};
@@ -104,22 +105,22 @@ RegisterManager::password_validation(const String& password) const {
         "[!@#$%^&*()_+\\-=\\[\\]{};:\\\",<.>/?]+"};
 
     if (password.length() < 8) {
-        return tdl::Err<tdl::None, AuthErr>(AuthErr::PasswordTooShort);
+        return tdl::Err(AuthErr::PasswordTooShort);
     }
     if (!std::regex_search(password, upper_case_expression)) {
-        return tdl::Err<tdl::None, AuthErr>(AuthErr::MissingUpperCase);
+        return tdl::Err(AuthErr::MissingUpperCase);
     }
     if (!std::regex_search(password, lower_case_expression)) {
-        return tdl::Err<tdl::None, AuthErr>(AuthErr::MissingLowerCase);
+        return tdl::Err(AuthErr::MissingLowerCase);
     }
     if (!std::regex_search(password, number_expression)) {
-        return tdl::Err<tdl::None, AuthErr>(AuthErr::MissingNumber);
+        return tdl::Err(AuthErr::MissingNumber);
     }
     if (!std::regex_search(password, special_char_expression)) {
-        return tdl::Err<tdl::None, AuthErr>(AuthErr::MissingSpecialCharacter);
+        return tdl::Err(AuthErr::MissingSpecialCharacter);
     }
 
-    return tdl::Ok<tdl::None, AuthErr>({});
+    return tdl::Ok();
 }
 
 [[nodiscard]] tdl::Result<tdc::User, AuthErr> AuthManager::login() {
@@ -133,24 +134,25 @@ RegisterManager::password_validation(const String& password) const {
             if (!result) {
                 m_idisplayer->err_display("User not found!\n");
             } else {
-                user = result.value();
+                user = result.unwrap();
                 break;
             }
         }
     };
 
-    const auto password_input = [this, &user]() {
+    const auto password_input = [this,
+                                 &user]() -> tdl::Result<tdc::User, AuthErr> {
         int tries = 3;
 
         while (true) {
             if (tries <= 0) {
-                return tdl::Err<tdc::User, AuthErr>(AuthErr::AllTriesExhausted);
+                return tdl::Err(AuthErr::AllTriesExhausted);
             }
 
             m_idisplayer->msg_display("password: ");
             const auto password = m_ihandler->get_input();
             if (tdl::hash(password) == user->password()) {
-                return tdl::Ok<tdc::User, AuthErr>(std::move(user.value()));
+                return tdl::Ok(std::move(user.value()));
             }
             m_idisplayer->err_display("Invalid password!\n");
             tries--;
@@ -162,27 +164,27 @@ RegisterManager::password_validation(const String& password) const {
     return password_input();
 }
 
-[[nodiscard]] tdl::Result<tdl::None, AuthErr> AuthManager::auth_username() {
+[[nodiscard]] tdl::Result<void, AuthErr> AuthManager::auth_username() {
     m_idisplayer->msg_display("username: ");
     String username = m_ihandler->get_input();
     auto result = m_udb->get_user(username);
     if (!result) {
-        return tdl::Err<tdl::None, AuthErr>(AuthErr::UserNotFound);
+        return tdl::Err(AuthErr::UserNotFound);
     }
-    return tdl::Ok<tdl::None, AuthErr>({});
+    return tdl::Ok();
 }
 
 [[nodiscard]] tdl::Result<tdc::User, AuthErr> AuthManager::auth_password(
     const String& username) {
     auto result = m_udb->get_user(username);
     if (!result) {
-        return tdl::Err<tdc::User, AuthErr>(AuthErr::UserNotFound);
+        return tdl::Err(AuthErr::UserNotFound);
     }
     while (true) {
         m_idisplayer->msg_display("password: ");
         String password = m_ihandler->get_input();
-        if (password == result.value().password()) {
-            return tdl::Ok<tdc::User, AuthErr>(std::move(result.value()));
+        if (password == result.unwrap().password()) {
+            return tdl::Ok(std::move(result.unwrap()));
         }
         m_idisplayer->err_display("Invalid password!\n");
     }

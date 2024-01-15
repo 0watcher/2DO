@@ -51,8 +51,8 @@ TEST_F(DbTest, CheckDbFunctionalities) {
             FAIL() << "SelectDataFailure";
         }
 
-        auto s_name = s_result.value()[0];
-        auto s_password = s_result.value()[1];
+        auto s_name = s_result.unwrap()[0];
+        auto s_password = s_result.unwrap()[1];
 
         ASSERT_EQ(s_name, name);
         ASSERT_EQ(s_password, password);
@@ -71,7 +71,7 @@ TEST_F(DbTest, CheckDbFunctionalities) {
             FAIL() << "SelectDataFailure";
         }
 
-        auto updated_name = ns_result.value()[0];
+        auto updated_name = ns_result.unwrap()[0];
 
         ASSERT_EQ(updated_name, new_name);
     }
@@ -92,8 +92,8 @@ TEST(UserDbTest, ChecksOverallUserDbFunctionality) {
 
     auto id = udb->get_user_id(user.username());
     EXPECT_TRUE(id);
-    user.set_id(id.value());
-    EXPECT_EQ(user_from_db.value(), user);
+    user.set_id(id.unwrap());
+    EXPECT_EQ(user_from_db.unwrap(), user);
 
     user.set_username("Dupa");
     user.set_role(tdc::Role::Admin);
@@ -102,7 +102,7 @@ TEST(UserDbTest, ChecksOverallUserDbFunctionality) {
     EXPECT_TRUE(result2);
     auto user_from_db2 = udb->get_user(user.id());
     EXPECT_TRUE(user_from_db2);
-    EXPECT_EQ(user_from_db2.value(), user);
+    EXPECT_EQ(user_from_db2.unwrap(), user);
 
     auto result3 = udb->delete_user(user.id());
     EXPECT_TRUE(result3);
@@ -168,7 +168,7 @@ TEST_F(RegisterTest, ChecksSingupOverallFunctionality) {
 
     auto user_ = cut->singup();
     EXPECT_TRUE(user_);
-    EXPECT_EQ(user_.value(), expectedUser);
+    EXPECT_EQ(user_.unwrap(), expectedUser);
 }
 
 struct LoginTest : testing::Test {
@@ -187,7 +187,7 @@ struct LoginTest : testing::Test {
     void SetUp() override {
         udb->add_user(added_user);
         auto id = udb->get_user_id(username);
-        added_user.set_id(id.value());
+        added_user.set_id(id.unwrap());
     }
 
     void TearDown() override {
@@ -208,7 +208,7 @@ TEST_F(LoginTest, LoginCorrectness) {
 
     auto user = am->login();
     EXPECT_TRUE(user);
-    EXPECT_EQ(user.value(), added_user);
+    EXPECT_EQ(user.unwrap(), added_user);
 }
 
 TEST_F(LoginTest, AuthCorrectness) {}
@@ -223,7 +223,7 @@ TEST(TaskDbTest, CheckTaskDbOverallCorrectness) {
     EXPECT_TRUE(tdb->add_task(task));
     auto db_task = tdb->get_task(task.id());
     EXPECT_TRUE(db_task);
-    EXPECT_EQ(db_task.value(), task);
+    EXPECT_EQ(db_task.unwrap(), task);
     tdb.reset();
     fs::path filepath = fs::path(TEST_DB_PATH) / String(DB_FILE_EXT);
 fs:

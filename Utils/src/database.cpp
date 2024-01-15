@@ -1,7 +1,7 @@
 #include "Utils/database.hpp"
 
 namespace twodoutils {
-Result<None, DbError> Database::create_table(
+Result<void, DbError> Database::create_table(
     const String& table_name,
     const HashMap<Attribute, AttributeType>& column_def) {
     String query = "CREATE TABLE IF NOT EXISTS " + table_name + " (";
@@ -20,25 +20,25 @@ Result<None, DbError> Database::create_table(
     try {
         const auto result = m_db.exec(query);
     } catch (const std::exception& e) {
-        return Err<None, DbError>(DbError{e.what()});
+        return Err(DbError{e.what()});
     }
 
-    return Ok<None, DbError>({});
+    return Ok();
 }
 
-Result<None, DbError> Database::drop_table(const String& table_name) {
+Result<void, DbError> Database::drop_table(const String& table_name) {
     String drop = "DROP TABLE " + table_name;
 
     try {
         const auto result = m_db.exec(drop);
     } catch (const std::exception& e) {
-        return Err<None, DbError>(DbError{e.what()});
+        return Err(DbError{e.what()});
     }
 
-    return Ok<None, DbError>({});
+    return Ok();
 }
 
-Result<None, DbError> Database::insert_data(
+Result<void, DbError> Database::insert_data(
     const String& table_name,
     const HashMap<Attribute, Value>& values) {
     String query = "INSERT INTO " + table_name + " (";
@@ -59,13 +59,13 @@ Result<None, DbError> Database::insert_data(
     try {
         const auto result = m_db.exec(query);
     } catch (const std::exception& e) {
-        return Err<None, DbError>(DbError{e.what()});
+        return Err(DbError{e.what()});
     }
 
-    return Ok<None, DbError>({});
+    return Ok();
 }
 
-Result<None, DbError> Database::delete_data(const String& table_name,
+Result<void, DbError> Database::delete_data(const String& table_name,
                                             const Condition& where) {
     String query = "DELETE FROM " + table_name + " WHERE " + where.first +
                    " = " + "'" + where.second + "';";
@@ -73,12 +73,12 @@ Result<None, DbError> Database::delete_data(const String& table_name,
     try {
         const auto result = m_db.exec(query);
     } catch (const std::exception& e) {
-        return Err<None, DbError>(DbError{e.what()});
+        return Err(DbError{e.what()});
     }
-    return Ok<None, DbError>({});
+    return Ok();
 }
 
-Result<None, DbError> Database::update_data(
+Result<void, DbError> Database::update_data(
     const String& table_name,
     const std::pair<Attribute, UpdatedValue>& set,
     const Condition& where) {
@@ -89,10 +89,10 @@ Result<None, DbError> Database::update_data(
     try {
         const auto result = m_db.exec(query);
     } catch (const std::exception& e) {
-        return Err<None, DbError>(DbError{e.what()});
+        return Err(DbError{e.what()});
     }
 
-    return Ok<None, DbError>({});
+    return Ok();
 }
 
 [[nodiscard]] Result<Vector<Value>, DbError> Database::select_data(
@@ -119,8 +119,7 @@ Result<None, DbError> Database::update_data(
     try {
         SQLite::Statement query_(m_db, query);
         if (query_.getColumnCount() != what.size()) {
-            return Err<Vector<Value>, DbError>(
-                DbError(DbErr::IncompatibleNumberOfColumns));
+            return Err(DbError(DbErr::IncompatibleNumberOfColumns));
         }
 
         while (query_.executeStep()) {
@@ -130,13 +129,13 @@ Result<None, DbError> Database::update_data(
         }
 
         if (values.empty()) {
-            return Err<Vector<Value>, DbError>(DbError(DbErr::EmptyResult));
+            return Err(DbError(DbErr::EmptyResult));
         }
     } catch (const std::exception& e) {
-        return Err<Vector<Value>, DbError>(DbError{e.what()});
+        return Err(DbError{e.what()});
     }
 
-    return Ok<Vector<Value>, DbError>(std::move(values));
+    return Ok(std::move(values));
 }
 
 [[nodiscard]] bool Database::is_table_empty(const String& table_name) const {

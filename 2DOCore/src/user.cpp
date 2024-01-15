@@ -26,75 +26,78 @@ UserDb::UserDb(const String& path) : m_db{path} {
         m_db.select_data(USERS_TABLE, {"id", "username", "role", "password"},
                          {"username", username});
     if (!data) {
-        return tdl::Err<User, UsrDbErr>(UsrDbErr::GetUserDataErr);
+        return tdl::Err(UsrDbErr::GetUserDataErr);
     }
-    const Vector<tdl::Value> usr_data = data.value();
+    const Vector<tdl::Value> usr_data = data.unwrap();
 
-    return tdl::Ok<User, UsrDbErr>(User{std::stoi(usr_data[0]), usr_data[1],
-                                        stor(usr_data[2]), usr_data[3]});
+    return tdl::Ok(User{std::stoi(usr_data[0]), usr_data[1], stor(usr_data[2]),
+                        usr_data[3]});
 }
 
 [[nodiscard]] tdl::Result<User, UsrDbErr> UserDb::get_user(int id) const {
-    const auto data = m_db.select_data(USERS_TABLE, {"username", "role", "password"},
-                                 {"id", std::to_string(id)});
+    const auto data =
+        m_db.select_data(USERS_TABLE, {"username", "role", "password"},
+                         {"id", std::to_string(id)});
     if (!data) {
-        return tdl::Err<User, UsrDbErr>(UsrDbErr::GetUserDataErr);
+        return tdl::Err(UsrDbErr::GetUserDataErr);
     }
-    const Vector<tdl::Value> usr_data = data.value();
+    const Vector<tdl::Value> usr_data = data.unwrap();
 
-    return tdl::Ok<User, UsrDbErr>(
-        User{id, usr_data[0], stor(usr_data[1]), usr_data[2]});
+    return tdl::Ok(User{id, usr_data[0], stor(usr_data[1]), usr_data[2]});
 }
 
 [[nodiscard]] tdl::Result<tdl::Id, UsrDbErr> UserDb::get_user_id(
     const String& username) const {
-    const auto id = m_db.select_data(USERS_TABLE, {"id"}, {"username", username});
+    const auto id =
+        m_db.select_data(USERS_TABLE, {"id"}, {"username", username});
     if (!id) {
-        return tdl::Err<tdl::Id, UsrDbErr>(UsrDbErr::GetUserDataErr);
+        return tdl::Err(UsrDbErr::GetUserDataErr);
     }
-    return tdl::Ok<tdl::Id, UsrDbErr>(stoi(id.value()[0]));
+    return tdl::Ok(stoi(id.unwrap()[0]));
 }
 
-tdl::Result<tdl::None, UsrDbErr> UserDb::add_user(User& user) {
+tdl::Result<void, UsrDbErr> UserDb::add_user(User& user) {
     const auto result =
         m_db.insert_data(USERS_TABLE, {{"username", user.username()},
                                        {"role", rtos(user.role())},
                                        {"password", user.password()}});
     const auto id = get_user_id(user.username());
     if (!result || !id) {
-        return tdl::Err<tdl::None, UsrDbErr>(UsrDbErr::AddUserErr);
+        return tdl::Err(UsrDbErr::AddUserErr);
     }
 
-    user.set_id(id.value());
-    return tdl::Ok<tdl::None, UsrDbErr>({});
+    user.set_id(id.unwrap());
+    return tdl::Ok();
 }
 
-tdl::Result<tdl::None, UsrDbErr> UserDb::delete_user(const String& username) {
+tdl::Result<void, UsrDbErr> UserDb::delete_user(const String& username) {
     const auto result = m_db.delete_data(USERS_TABLE, {"username", username});
     if (!result) {
-        return tdl::Err<tdl::None, UsrDbErr>(UsrDbErr::DeleteUserErr);
+        return tdl::Err(UsrDbErr::DeleteUserErr);
     }
-    return tdl::Ok<tdl::None, UsrDbErr>({});
+    return tdl::Ok();
 }
 
-tdl::Result<tdl::None, UsrDbErr> UserDb::delete_user(int id) {
-    const auto result = m_db.delete_data(USERS_TABLE, {"id", std::to_string(id)});
+tdl::Result<void, UsrDbErr> UserDb::delete_user(int id) {
+    const auto result =
+        m_db.delete_data(USERS_TABLE, {"id", std::to_string(id)});
     if (!result) {
-        return tdl::Err<tdl::None, UsrDbErr>(UsrDbErr::DeleteUserErr);
+        return tdl::Err(UsrDbErr::DeleteUserErr);
     }
-    return tdl::Ok<tdl::None, UsrDbErr>({});
+    return tdl::Ok();
 }
 
-tdl::Result<tdl::None, UsrDbErr> UserDb::update_data(const User& user) {
-    const auto data = m_db.select_data(USERS_TABLE, {"username", "role", "password"},
-                                 {"id", std::to_string(user.id())});
+tdl::Result<void, UsrDbErr> UserDb::update_data(const User& user) {
+    const auto data =
+        m_db.select_data(USERS_TABLE, {"username", "role", "password"},
+                         {"id", std::to_string(user.id())});
     if (!data) {
-        return tdl::Err<tdl::None, UsrDbErr>(UsrDbErr::GetUserDataErr);
+        return tdl::Err(UsrDbErr::GetUserDataErr);
     }
 
-    const String db_username = data.value()[0];
-    const String db_role = data.value()[1];
-    const String db_password = data.value()[2];
+    const String db_username = data.unwrap()[0];
+    const String db_role = data.unwrap()[1];
+    const String db_password = data.unwrap()[2];
 
     const String id = std::to_string(user.id());
     const String username = user.username();
@@ -105,14 +108,15 @@ tdl::Result<tdl::None, UsrDbErr> UserDb::update_data(const User& user) {
         const auto result =
             m_db.update_data(USERS_TABLE, {"username", username}, {"id", id});
         if (!result) {
-            return tdl::Err<tdl::None, UsrDbErr>(UsrDbErr::UpdateDataErr);
+            return tdl::Err(UsrDbErr::UpdateDataErr);
         }
     }
 
     if (role != db_role) {
-        const auto result = m_db.update_data(USERS_TABLE, {"role", role}, {"id", id});
+        const auto result =
+            m_db.update_data(USERS_TABLE, {"role", role}, {"id", id});
         if (!result) {
-            return tdl::Err<tdl::None, UsrDbErr>(UsrDbErr::UpdateDataErr);
+            return tdl::Err(UsrDbErr::UpdateDataErr);
         }
     }
 
@@ -120,11 +124,11 @@ tdl::Result<tdl::None, UsrDbErr> UserDb::update_data(const User& user) {
         const auto result =
             m_db.update_data(USERS_TABLE, {"password", password}, {"id", id});
         if (!result) {
-            return tdl::Err<tdl::None, UsrDbErr>(UsrDbErr::UpdateDataErr);
+            return tdl::Err(UsrDbErr::UpdateDataErr);
         }
     }
 
-    return tdl::Ok<tdl::None, UsrDbErr>({});
+    return tdl::Ok();
 }
 
 [[nodiscard]] bool UserDb::is_empty() const {

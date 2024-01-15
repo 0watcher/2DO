@@ -165,10 +165,10 @@ class [[nodiscard]] RegisterManager {
 
     [[nodiscard]] tdl::Result<tdc::User, AuthErr> singup();
 
-    [[nodiscard]] tdl::Result<tdl::None, AuthErr> username_validation(
+    [[nodiscard]] tdl::Result<void, AuthErr> username_validation(
         StringView username) const;
 
-    [[nodiscard]] tdl::Result<tdl::None, AuthErr> password_validation(
+    [[nodiscard]] tdl::Result<void, AuthErr> password_validation(
         const String& password) const;
 
   private:
@@ -191,8 +191,8 @@ class [[nodiscard]] AuthManager {
 
     [[nodiscard]] tdl::Result<tdc::User, AuthErr> login();
 
-    [[nodiscard]] tdl::Result<tdl::None, AuthErr> auth_username();
-    
+    [[nodiscard]] tdl::Result<void, AuthErr> auth_username();
+
     [[nodiscard]] tdl::Result<tdc::User, AuthErr> auth_password(
         const String& username);
 
