@@ -9,19 +9,19 @@ namespace twodo {
 
     const auto username_input = [this, &username_]() {
         while (true) {
-            m_idisplayer->msg_display("username: ");
+            m_printer->msg_print("username: ");
             const auto username = m_ihandler->get_input();
             const auto username_result = username_validation(username);
 
             if (!username_result) {
-                m_idisplayer->err_display("Invalid name length!\n");
+                m_printer->msg_print("Invalid name length!\n");
             } else {
                 const auto name_exists = m_udb->get_user(username);
                 if (!name_exists) {
                     username_ = username;
                     break;
                 }
-                m_idisplayer->err_display(
+                m_printer->msg_print(
                     "User with this name already exists!\n");
             }
         }
@@ -29,39 +29,39 @@ namespace twodo {
 
     const auto password_input = [this, &username_]() {
         while (true) {
-            m_idisplayer->msg_display("password: ");
+            m_printer->msg_print("password: ");
             const auto password = m_ihandler->get_input();
 
             const auto passwd_result = password_validation(password);
             if (!passwd_result) {
                 switch (passwd_result.err()) {
                     case AuthErr::PasswordTooShort: {
-                        m_idisplayer->err_display("Password is too short!\n");
+                        m_printer->msg_print("Password is too short!\n");
                         break;
                     }
                     case AuthErr::MissingLowerCase: {
-                        m_idisplayer->err_display(
+                        m_printer->msg_print(
                             "Password must contain at "
                             "least one lowercase "
                             "letter!\n");
                         break;
                     }
                     case AuthErr::MissingUpperCase: {
-                        m_idisplayer->err_display(
+                        m_printer->msg_print(
                             "Password must contain at "
                             "least one uppercase "
                             "letter!\n");
                         break;
                     }
                     case AuthErr::MissingNumber: {
-                        m_idisplayer->err_display(
+                        m_printer->msg_print(
                             "Password must contain at "
                             "least one number "
                             "letter!\n");
                         break;
                     }
                     case AuthErr::MissingSpecialCharacter: {
-                        m_idisplayer->err_display(
+                        m_printer->msg_print(
                             "Password must contain at "
                             "least one special "
                             "character!\n");
@@ -128,11 +128,11 @@ namespace twodo {
 
     const auto username_input = [this, &user]() {
         while (true) {
-            m_idisplayer->msg_display("username: ");
+            m_printer->msg_print("username: ");
             const auto username = m_ihandler->get_input();
             const auto result = m_udb->get_user(username);
             if (!result) {
-                m_idisplayer->err_display("User not found!\n");
+                m_printer->msg_print("User not found!\n");
             } else {
                 user = result.unwrap();
                 break;
@@ -149,12 +149,12 @@ namespace twodo {
                 return tdl::Err(AuthErr::AllTriesExhausted);
             }
 
-            m_idisplayer->msg_display("password: ");
+            m_printer->msg_print("password: ");
             const auto password = m_ihandler->get_input();
             if (tdl::hash(password) == user->password()) {
                 return tdl::Ok(std::move(user.value()));
             }
-            m_idisplayer->err_display("Invalid password!\n");
+            m_printer->msg_print("Invalid password!\n");
             tries--;
         }
     };
@@ -165,7 +165,7 @@ namespace twodo {
 }
 
 [[nodiscard]] tdl::Result<void, AuthErr> AuthManager::auth_username() {
-    m_idisplayer->msg_display("username: ");
+    m_printer->msg_print("username: ");
     String username = m_ihandler->get_input();
     auto result = m_udb->get_user(username);
     if (!result) {
@@ -181,12 +181,12 @@ namespace twodo {
         return tdl::Err(AuthErr::UserNotFound);
     }
     while (true) {
-        m_idisplayer->msg_display("password: ");
+        m_printer->msg_print("password: ");
         String password = m_ihandler->get_input();
         if (password == result.unwrap().password()) {
             return tdl::Ok(std::move(result.unwrap()));
         }
-        m_idisplayer->err_display("Invalid password!\n");
+        m_printer->msg_print("Invalid password!\n");
     }
 }
 }  // namespace twodo

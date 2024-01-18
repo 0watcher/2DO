@@ -63,10 +63,10 @@ class [[nodiscard]] Menu {
     Menu& operator=(const Menu&) = delete;
 
     Menu(std::shared_ptr<Page<TOption>> initial_page,
-         std::unique_ptr<tdl::IDisplayer> displayer_,
+         std::unique_ptr<tdl::IPrinter> iprinter,
          std::unique_ptr<tdl::IUserInputHandler<TOption>> input_handler_)
         : current_page{std::move(initial_page)},
-          displayer{std::move(displayer_)},
+          printer{std::move(iprinter)},
           input_handler{std::move(input_handler_)} {}
 
     void run(TOption quit_input = TOption{}) {
@@ -86,7 +86,7 @@ class [[nodiscard]] Menu {
 
   private:
     std::shared_ptr<Page<TOption>> current_page;
-    std::unique_ptr<tdl::IDisplayer> displayer;
+    std::unique_ptr<tdl::IPrinter> printer;
     std::unique_ptr<tdl::IUserInputHandler<TOption>> input_handler;
 
     TOption get_user_choice() const { return input_handler->get_input(); }
@@ -124,7 +124,7 @@ class [[nodiscard]] Menu {
     }
 
     void display_invalid_option_error() const {
-        displayer->msg_display("Invalid option!");
+        printer->msg_print("Invalid option!");
         tdl::sleep(2000);
     }
 
@@ -160,8 +160,8 @@ class [[nodiscard]] RegisterManager {
 
     RegisterManager(std::shared_ptr<tdc::UserDb> udb,
                     std::shared_ptr<tdl::IUserInputHandler<String>> ihandler,
-                    std::shared_ptr<tdl::IDisplayer> idisplayer)
-        : m_udb{udb}, m_ihandler{ihandler}, m_idisplayer{idisplayer} {}
+                    std::shared_ptr<tdl::IPrinter> iprinter)
+        : m_udb{udb}, m_ihandler{ihandler}, m_printer{iprinter} {}
 
     [[nodiscard]] tdl::Result<tdc::User, AuthErr> singup();
 
@@ -174,7 +174,7 @@ class [[nodiscard]] RegisterManager {
   private:
     std::shared_ptr<tdc::UserDb> m_udb;
     std::shared_ptr<tdl::IUserInputHandler<String>> m_ihandler;
-    std::shared_ptr<tdl::IDisplayer> m_idisplayer;
+    std::shared_ptr<tdl::IPrinter> m_printer;
 };
 
 class [[nodiscard]] AuthManager {
@@ -186,8 +186,8 @@ class [[nodiscard]] AuthManager {
 
     AuthManager(std::shared_ptr<tdc::UserDb> udb,
                 std::shared_ptr<tdl::IUserInputHandler<String>> ihandler,
-                std::shared_ptr<tdl::IDisplayer> idisplayer)
-        : m_udb{udb}, m_ihandler{ihandler}, m_idisplayer{idisplayer} {}
+                std::shared_ptr<tdl::IPrinter> iprinter)
+        : m_udb{udb}, m_ihandler{ihandler}, m_printer{iprinter} {}
 
     [[nodiscard]] tdl::Result<tdc::User, AuthErr> login();
 
@@ -199,6 +199,6 @@ class [[nodiscard]] AuthManager {
   private:
     std::shared_ptr<tdc::UserDb> m_udb;
     std::shared_ptr<tdl::IUserInputHandler<String>> m_ihandler;
-    std::shared_ptr<tdl::IDisplayer> m_idisplayer;
+    std::shared_ptr<tdl::IPrinter> m_printer;
 };
 }  // namespace twodo

@@ -118,10 +118,10 @@ class MockUserInputHandler : public tdl::IUserInputHandler<String> {
     MOCK_METHOD(String, get_input, (), (const override));
 };
 
-class MockDisplayer : public tdl::IDisplayer {
+class MockDisplayer : public tdl::IPrinter {
   public:
-    MOCK_METHOD(void, msg_display, (std::string_view msg), (const override));
-    MOCK_METHOD(void, err_display, (std::string_view err), (const override));
+    MOCK_METHOD(void, msg_print, (std::string_view msg), (const override));
+    MOCK_METHOD(void, err_print, (std::string_view err), (const override));
 };
 
 struct RegisterTest : testing::Test {

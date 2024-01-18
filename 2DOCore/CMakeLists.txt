@@ -12,6 +12,11 @@ target_include_directories(${PROJECT_NAME}
     PUBLIC ${PROJECT_SOURCE_DIR}/include
 )
 
+# add_subdirectory(${CMAKE_SOURCE_DIR}/thirdparty/SQLiteCpp SQLiteCpp)
+# target_link_libraries(${PROJECT_NAME}
+#   SQLiteCpp
+# )
+
 target_link_libraries(${PROJECT_NAME}
-    2DOUtils::2DOUtils
+  2DOUtils::2DOUtils
 )

@@ -48,10 +48,10 @@ class [[nodiscard]] IUserInputHandler {
     virtual ~IUserInputHandler() = default;
 };
 
-class [[nodiscard]] IDisplayer {
+class [[nodiscard]] IPrinter {
   public:
-    virtual void msg_display(StringView msg) const = 0;
-    virtual void err_display(StringView err) const = 0;
-    virtual ~IDisplayer() = default;
+    virtual void msg_print(StringView msg) const = 0;
+    virtual void err_print(StringView err) const = 0;
+    virtual ~IPrinter() = default;
 };
 }  // namespace twodoutils

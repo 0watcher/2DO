@@ -23,11 +23,11 @@ class UserInput : public tdl::IUserInputHandler<String> {
     }
 };
 
-class MsgDisplayer : public tdl::IDisplayer {
+class MsgDisplayer : public tdl::IPrinter {
   public:
-    void msg_display(StringView msg) const override { fmt::println("{}", msg); }
+    void msg_print(StringView msg) const override { fmt::println("{}", msg); }
 
-    void err_display(StringView err) const override { fmt::println(stderr, "{}", err); }
+    void err_print(StringView err) const override { fmt::println(stderr, "{}", err); }
 };
 
 class [[nodiscard]] App {
