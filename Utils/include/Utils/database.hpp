@@ -1,72 +1,55 @@
 #pragma once
 
 #include <SQLiteCpp/SQLiteCpp.h>
+#include "SQLiteCpp/Database.h"
+#include "SQLiteCpp/Statement.h"
 #include "Utils/result.hpp"
 #include "Utils/type.hpp"
 
 namespace twodoutils {
-using Id = int;
-using Attribute = String;
-using UpdatedValue = String;
-using AttributeType = String;
-using Value = String;
-using Condition = std::pair<Attribute, Value>;
-
-enum class DbErr {
-    Error = 1,
-    EmptyProps,
-    IncompatibleNumberOfColumns,
-    EmptyResult
+enum class DbError {
+    SelectFailure = 1,
+    InsertFailure,
+    UpdateFailure,
+    DeleteFailure
 };
 
-class [[nodiscard]] DbError {
+template <typename ObjectT>
+class Database {
   public:
-    DbError(String sq_err_) : sq_err{sq_err_} {}
-    DbError(DbErr db_err_) : cdb_err{db_err_} {}
+    Database();
+    ~Database();
 
-    String sql_err() const { return sq_err; }
-    DbErr db_err() const { return cdb_err; }
+    virtual Result<ObjectT, DbError> get_object_by_column_name(
+        const String& column_name,
+        const String& column_value) const noexcept;
 
-  private:
-    String sq_err{};
-    DbErr cdb_err{};
-};
+    virtual Result<ObjectT, DbError> get_object_by_id(int id) const noexcept;
+    virtual Result<Vector<ObjectT>, DbError> get_all_objects(
+        const String& table_name) const noexcept;
 
-class [[nodiscard]] Database {
-  public:
-    Database(const Database&) = delete;
-    Database& operator=(const Database&) = delete;
-    Database(Database&& other) = default;
-    Database& operator=(Database&& other) = default;
+    virtual Result<void, DbError> add_object(ObjectT& obj) noexcept;
+    virtual Result<void, DbError> update_object(
+        const ObjectT& obj) const noexcept;
+    virtual Result<void, DbError> delete_object(
+        const ObjectT& obj) const noexcept;
 
-    Database(const String& path) noexcept
-        : m_db{path + ".db3", SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE} {}
-
-    Result<void, DbError> create_table(
-        const String& table_name,
-        const HashMap<Attribute, AttributeType>& column_def);
-
-    Result<void, DbError> drop_table(const String& table_name);
-
-    Result<void, DbError> insert_data(const String& table_name,
-                                      const HashMap<Attribute, Value>& values);
-
-    Result<void, DbError> delete_data(const String& table_name,
-                                      const Condition& where);
-
-    Result<void, DbError> update_data(
-        const String& table_name,
-        const std::pair<Attribute, UpdatedValue>& set,
-        const Condition& where);
-
-    [[nodiscard]] Result<Vector<Value>, DbError> select_data(
-        const String& table_name,
-        const Vector<Attribute>& who,
-        const Condition& where) const;
-
-    [[nodiscard]] bool is_table_empty(const String& table_name) const;
-
-  private:
+  protected:
     SQLite::Database m_db;
 };
-}  // namespace twodoutils
+};  // namespace twodoutils
+
+#ifdef SQLITECPP_ENABLE_ASSERT_HANDLER
+namespace SQLite {
+void assertion_failed(const char* apFile,
+                      const long apLine,
+                      const char* apFunc,
+                      const char* apExpr,
+                      const char* apMsg) {
+    std::cerr << apFile << ":" << apLine << ":"
+              << " error: assertion failed (" << apExpr << ") in " << apFunc
+              << "() with message \"" << apMsg << "\"\n";
+    std::abort();
+}
+}  // namespace SQLite
+#endif

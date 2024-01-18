@@ -108,27 +108,36 @@ struct [[nodiscard]] Message {
     int crid;
 };
 
-class [[nodiscard]] TaskDb {
-  public:
+class [[nodiscard]] TaskDb : protected tdl::Database<Task> {
     TaskDb(const TaskDb&) = delete;
     TaskDb& operator=(const TaskDb&) = delete;
     TaskDb(TaskDb&& other) = default;
     TaskDb& operator=(TaskDb&& other) = default;
 
-    TaskDb(const String& path);
-
-    [[nodiscard]] tdl::Result<Task, TaskErr> get_task(
-        const String& topic) const;
-    [[nodiscard]] tdl::Result<Task, TaskErr> get_task(int id) const;
-    [[nodiscard]] tdl::Result<tdl::Id, TaskErr> get_task_id(
-        const String& topic) const;
-
-    tdl::Result<void, TaskErr> add_task(Task& task);
-    tdl::Result<void, TaskErr> delete_task(int id);
-    tdl::Result<void, TaskErr> update_data(const Task& task);
-    tdl::Result<void, TaskErr> add_message(Message msg);
-
-  private:
-    tdl::Database m_db;
+    TaskDb(StringView db_filepath) {}
 };
+
+// class [[nodiscard]] TaskDb {
+//   public:
+//     TaskDb(const TaskDb&) = delete;
+//     TaskDb& operator=(const TaskDb&) = delete;
+//     TaskDb(TaskDb&& other) = default;
+//     TaskDb& operator=(TaskDb&& other) = default;
+
+//     TaskDb(const String& path);
+
+//     [[nodiscard]] tdl::Result<Task, TaskErr> get_task(
+//         const String& topic) const;
+//     [[nodiscard]] tdl::Result<Task, TaskErr> get_task(int id) const;
+//     [[nodiscard]] tdl::Result<tdl::Id, TaskErr> get_task_id(
+//         const String& topic) const;
+
+//     tdl::Result<void, TaskErr> add_task(Task& task);
+//     tdl::Result<void, TaskErr> delete_task(int id);
+//     tdl::Result<void, TaskErr> update_data(const Task& task);
+//     tdl::Result<void, TaskErr> add_message(Message msg);
+
+//   private:
+//     tdl::Database m_db;
+// };
 }  // namespace twodocore
