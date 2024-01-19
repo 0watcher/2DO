@@ -141,7 +141,7 @@ class [[nodiscard]] Menu {
 enum class AuthErr {
     InvalidNameLength = 1,
     AlreadyExistingName,
-    PasswordTooShort,
+    InvalidPassLength,
     MissingUpperCase,
     MissingLowerCase,
     MissingNumber,

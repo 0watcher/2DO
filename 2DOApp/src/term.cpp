@@ -16,18 +16,19 @@ namespace twodo {
             if (!username_result) {
                 m_printer->msg_print("Invalid name length!\n");
             } else {
-                const auto name_exists = m_udb->get_user(username);
+                const auto name_exists =
+                    m_udb->get_object_by_unique_column(username);
                 if (!name_exists) {
                     username_ = username;
                     break;
                 }
-                m_printer->msg_print(
-                    "User with this name already exists!\n");
+                m_printer->msg_print("User with this name already exists!\n");
             }
         }
     };
 
-    const auto password_input = [this, &username_]() {
+    const auto password_input =
+        [this, &username_]() -> tdl::Result<tdc::User, AuthErr> {
         while (true) {
             m_printer->msg_print("password: ");
             const auto password = m_ihandler->get_input();
@@ -35,8 +36,10 @@ namespace twodo {
             const auto passwd_result = password_validation(password);
             if (!passwd_result) {
                 switch (passwd_result.err()) {
-                    case AuthErr::PasswordTooShort: {
-                        m_printer->msg_print("Password is too short!\n");
+                    case AuthErr::InvalidPassLength: {
+                        m_printer->msg_print(
+                            "Password must contain at least 8 characters and "
+                            "max 20!\n");
                         break;
                     }
                     case AuthErr::MissingLowerCase: {
@@ -70,15 +73,17 @@ namespace twodo {
                 }
             } else {
                 tdc::Role usr_role{};
-                if (m_udb->is_empty()) {
+                if (m_udb->is_table_empty()) {
                     usr_role = tdc::Role::Admin;
                 } else {
                     usr_role = tdc::Role::User;
                 }
                 auto user = tdc::User{username_, usr_role, tdl::hash(password)};
-                m_udb->add_user(user);
+                if (!m_udb->add_object(user)) {
+                    return tdl::Err(AuthErr::DbErr);
+                }
 
-                return tdl::Ok(user);
+                return tdl::Ok(std::move(user));
             }
         }
     };
@@ -93,6 +98,7 @@ namespace twodo {
     if (username.length() < 1 || username.length() > 20) {
         return tdl::Err(AuthErr::InvalidNameLength);
     }
+
     return tdl::Ok();
 }
 
@@ -104,8 +110,8 @@ namespace twodo {
     const std::regex special_char_expression{
         "[!@#$%^&*()_+\\-=\\[\\]{};:\\\",<.>/?]+"};
 
-    if (password.length() < 8) {
-        return tdl::Err(AuthErr::PasswordTooShort);
+    if (password.length() <= 8 && password.length() > 20) {
+        return tdl::Err(AuthErr::InvalidPassLength);
     }
     if (!std::regex_search(password, upper_case_expression)) {
         return tdl::Err(AuthErr::MissingUpperCase);
@@ -130,7 +136,7 @@ namespace twodo {
         while (true) {
             m_printer->msg_print("username: ");
             const auto username = m_ihandler->get_input();
-            const auto result = m_udb->get_user(username);
+            const auto result = m_udb->get_object_by_unique_column(username);
             if (!result) {
                 m_printer->msg_print("User not found!\n");
             } else {
@@ -167,7 +173,7 @@ namespace twodo {
 [[nodiscard]] tdl::Result<void, AuthErr> AuthManager::auth_username() {
     m_printer->msg_print("username: ");
     String username = m_ihandler->get_input();
-    auto result = m_udb->get_user(username);
+    auto result = m_udb->get_object_by_unique_column(username);
     if (!result) {
         return tdl::Err(AuthErr::UserNotFound);
     }
@@ -176,7 +182,7 @@ namespace twodo {
 
 [[nodiscard]] tdl::Result<tdc::User, AuthErr> AuthManager::auth_password(
     const String& username) {
-    auto result = m_udb->get_user(username);
+    auto result = m_udb->get_object_by_unique_column(username);
     if (!result) {
         return tdl::Err(AuthErr::UserNotFound);
     }

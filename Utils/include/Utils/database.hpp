@@ -6,6 +6,8 @@
 #include "Utils/result.hpp"
 #include "Utils/type.hpp"
 
+namespace SQL = SQLite;
+
 namespace twodoutils {
 enum class DbError {
     SelectFailure = 1,
@@ -18,24 +20,25 @@ template <typename ObjectT>
 class Database {
   public:
     Database();
-    ~Database();
+    virtual ~Database() = 0;
 
-    virtual Result<ObjectT, DbError> get_object_by_column_name(
-        const String& column_name,
-        const String& column_value) const noexcept;
+    virtual Result<ObjectT, DbError> get_object_by_unique_column(
+        const String& column_value) const noexcept = 0;
 
-    virtual Result<ObjectT, DbError> get_object_by_id(int id) const noexcept;
-    virtual Result<Vector<ObjectT>, DbError> get_all_objects(
-        const String& table_name) const noexcept;
+    virtual Result<ObjectT, DbError> get_object_by_id(
+        int id) const noexcept = 0;
+    virtual Result<Vector<ObjectT>, DbError> get_all_objects()
+        const noexcept = 0;
+    virtual bool is_table_empty() const noexcept = 0;
 
-    virtual Result<void, DbError> add_object(ObjectT& obj) noexcept;
+    virtual Result<void, DbError> add_object(ObjectT& obj) noexcept = 0;
     virtual Result<void, DbError> update_object(
-        const ObjectT& obj) const noexcept;
+        const ObjectT& obj) const noexcept = 0;
     virtual Result<void, DbError> delete_object(
-        const ObjectT& obj) const noexcept;
+        const ObjectT& obj) const noexcept = 0;
 
   protected:
-    SQLite::Database m_db;
+    SQL::Database m_db;
 };
 };  // namespace twodoutils
 

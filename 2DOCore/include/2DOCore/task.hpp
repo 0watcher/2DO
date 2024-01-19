@@ -1,21 +1,18 @@
 #pragma once
 
+#include <stdexcept>
+
+#include <SQLiteCpp/Database.h>
+#include <SQLiteCpp/Statement.h>
 #include <Utils/database.hpp>
 #include <Utils/result.hpp>
 #include <Utils/type.hpp>
 #include <Utils/util.hpp>
 
+namespace SQL = SQLite;
 namespace tdl = twodoutils;
 
 namespace twodocore {
-enum class TaskErr {
-    GetTaskFailure = 1,
-    AddTaskFailure,
-    DeleteTaskFailure,
-    UpdateTaskFailure,
-    AddMessageFailure
-};
-
 class [[nodiscard]] Task {
   public:
     Task(const Task&) = default;
@@ -24,39 +21,58 @@ class [[nodiscard]] Task {
     Task& operator=(Task&& other) = default;
 
     Task(int id,
-         StringView topic,
-         StringView content,
+         const String& topic,
+         const String& content,
          const TimePoint& start_date,
          const TimePoint& deadline,
-         int eid,
-         int oid,
-         int crid,
+         int executor_id,
+         int owner_id,
+         int chatroom_id,
          bool is_done)
         : m_id{id},
           m_topic{topic},
           m_content{content},
           m_start_date{start_date},
           m_deadline{deadline},
-          m_executor_id{eid},
-          m_owner_id{oid},
-          m_chatroom_id{crid},
+          m_executor_id{executor_id},
+          m_owner_id{owner_id},
+          m_chatroom_id{chatroom_id},
           m_is_done{is_done} {}
 
-    Task(StringView topic,
-         StringView content,
+    Task(int id,
+         const String& topic,
+         const String& content,
+         const String& start_date,
+         const String& deadline,
+         int executor_id,
+         int owner_id,
+         int chatroom_id,
+         int is_done)
+        : m_id{id},
+          m_topic{topic},
+          m_content{content},
+          m_start_date{tdl::stotp(start_date)},
+          m_deadline{tdl::stotp(deadline)},
+          m_executor_id{executor_id},
+          m_owner_id{owner_id},
+          m_chatroom_id{chatroom_id},
+          m_is_done{static_cast<bool>(is_done)} {}
+
+    Task(const String& topic,
+         const String& content,
          const TimePoint& start_date,
          const TimePoint& deadline,
-         int eid,
-         int oid,
-         int crid,
+         int executor_id,
+         int owner_id,
+         int chatroom_id,
          bool is_done)
         : m_topic{topic},
           m_content{content},
           m_start_date{start_date},
           m_deadline{deadline},
-          m_executor_id{eid},
-          m_owner_id{oid},
-          m_chatroom_id{crid},
+          m_executor_id{executor_id},
+          m_owner_id{owner_id},
+          m_chatroom_id{chatroom_id},
           m_is_done{is_done} {}
 
     bool operator==(const Task& other) const {
@@ -73,8 +89,30 @@ class [[nodiscard]] Task {
     [[nodiscard]] int id() const { return m_id.value(); }
     [[nodiscard]] String topic() const { return m_topic; }
     [[nodiscard]] String content() const { return m_content; }
-    [[nodiscard]] TimePoint start_date() const { return m_start_date; }
-    [[nodiscard]] TimePoint deadline() const { return m_deadline; }
+
+    template <typename T>
+    [[nodiscard]] typename std::enable_if<std::is_same<T, String>::value ||
+                                              std::is_same<T, TimePoint>::value,
+                                          T>::type
+    start_date() const {
+        if constexpr (std::is_same<T, String>::value) {
+            return tdl::tptos(m_start_date);
+        } else if constexpr (std::is_same<T, TimePoint>::value) {
+            return m_start_date;
+        }
+    }
+
+    template <typename T>
+    [[nodiscard]] typename std::enable_if<std::is_same<T, String>::value ||
+                                              std::is_same<T, TimePoint>::value,
+                                          T>::type
+    deadline() const {
+        if constexpr (std::is_same<T, String>::value) {
+            return tdl::tptos(m_deadline);
+        } else if constexpr (std::is_same<T, TimePoint>::value) {
+            return m_deadline;
+        }
+    }
     [[nodiscard]] int executor_id() const { return m_executor_id; }
     [[nodiscard]] int owner_id() const { return m_owner_id; }
     [[nodiscard]] int chatroom_id() const { return m_chatroom_id; }
@@ -101,43 +139,78 @@ class [[nodiscard]] Task {
     bool m_is_done = false;
 };
 
-struct [[nodiscard]] Message {
-    String sender;
-    String content;
-    TimePoint timestamp;
-    int crid;
-};
-
-class [[nodiscard]] TaskDb : protected tdl::Database<Task> {
+class [[nodiscard]] TaskDb : public tdl::Database<Task> {
+  public:
     TaskDb(const TaskDb&) = delete;
     TaskDb& operator=(const TaskDb&) = delete;
     TaskDb(TaskDb&& other) = default;
     TaskDb& operator=(TaskDb&& other) = default;
 
-    TaskDb(StringView db_filepath) {}
+    TaskDb(StringView db_filepath);
+
+    tdl::Result<Task, tdl::DbError> get_object_by_unique_column(
+        const String& column_value) const noexcept override;
+
+    tdl::Result<Task, tdl::DbError> get_object_by_id(
+        int id) const noexcept override;
+
+    tdl::Result<Vector<Task>, tdl::DbError> get_all_objects()
+        const noexcept override;
+
+    bool is_table_empty() const noexcept override;
+
+    tdl::Result<void, tdl::DbError> add_object(Task& task) noexcept override;
+
+    tdl::Result<void, tdl::DbError> update_object(
+        const Task& task) const noexcept override;
+
+    tdl::Result<void, tdl::DbError> delete_object(
+        const Task& task) const noexcept override;
 };
 
-// class [[nodiscard]] TaskDb {
-//   public:
-//     TaskDb(const TaskDb&) = delete;
-//     TaskDb& operator=(const TaskDb&) = delete;
-//     TaskDb(TaskDb&& other) = default;
-//     TaskDb& operator=(TaskDb&& other) = default;
+class [[nodiscard]] Message {
+  public:
+    Message(const Message&) = delete;
+    Message& operator=(const Message&) = delete;
+    Message(Message&& other) = default;
+    Message& operator=(Message&& other) = default;
 
-//     TaskDb(const String& path);
+    Message(int chatroom_id,
+            StringView sender_name,
+            StringView content,
+            TimePoint timestamp)
+        : m_chatroom_id{chatroom_id},
+          m_sender_name{sender_name},
+          m_content{content},
+          m_timestamp{timestamp} {}
 
-//     [[nodiscard]] tdl::Result<Task, TaskErr> get_task(
-//         const String& topic) const;
-//     [[nodiscard]] tdl::Result<Task, TaskErr> get_task(int id) const;
-//     [[nodiscard]] tdl::Result<tdl::Id, TaskErr> get_task_id(
-//         const String& topic) const;
+    [[nodiscard]] int chatroom_id() const { return m_chatroom_id; }
+    [[nodiscard]] StringView sender_name() const { return m_sender_name; }
+    [[nodiscard]] StringView content() const { return m_content; }
+    [[nodiscard]] TimePoint timestamp() const { return m_timestamp; }
 
-//     tdl::Result<void, TaskErr> add_task(Task& task);
-//     tdl::Result<void, TaskErr> delete_task(int id);
-//     tdl::Result<void, TaskErr> update_data(const Task& task);
-//     tdl::Result<void, TaskErr> add_message(Message msg);
+  private:
+    int m_chatroom_id;
+    StringView m_sender_name;
+    StringView m_content;
+    TimePoint m_timestamp;
+};
 
-//   private:
-//     tdl::Database m_db;
-// };
+class [[nodiscard]] MessageDb : protected tdl::Database<Message> {
+  public:
+    MessageDb(const MessageDb&) = delete;
+    MessageDb& operator=(const MessageDb&) = delete;
+    MessageDb(MessageDb&& other) = default;
+    MessageDb& operator=(MessageDb&& other) = default;
+
+    MessageDb(StringView db_filepath);
+
+    tdl::Result<Vector<Message>, tdl::DbError> get_all_objects()
+        const noexcept override;
+
+    bool is_table_empty() const noexcept override;
+
+    tdl::Result<void, tdl::DbError> add_object(
+        Message& message) noexcept override;
+};
 }  // namespace twodocore
