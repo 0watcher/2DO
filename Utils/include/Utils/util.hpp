@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -14,7 +15,11 @@
 using TimePoint =
     std::chrono::time_point<std::chrono::system_clock, std::chrono::minutes>;
 
+using NanoSeconds = std::chrono::nanoseconds;
+
 namespace twodoutils {
+NanoSeconds speed_test(std::function<void()> test);
+
 inline void clear_term() {
 #ifdef _WIN32
     system("cls");

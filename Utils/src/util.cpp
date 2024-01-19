@@ -111,4 +111,14 @@ void sleep(int t) noexcept {
     return std::chrono::time_point_cast<std::chrono::minutes>(
         std::chrono::system_clock::now() + std::chrono::days{days});
 }
+
+NanoSeconds speed_test(std::function<void()> test) {
+    auto start = std::chrono::high_resolution_clock::now();
+
+    test();
+
+    auto end = std::chrono::high_resolution_clock::now();
+
+    return std::chrono::duration_cast<NanoSeconds>(end - start);
+}
 }  // namespace twodoutils
