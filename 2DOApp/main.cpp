@@ -1,11 +1,10 @@
 #include <2DOApp/app.hpp>
-#include <2DOCore/user.hpp>
-#include <2DOCore/task.hpp>
 #include <Utils/util.hpp>
-
+#include "fmt/core.h"
 
 namespace tdu = twodoutils;
 namespace td = twodo;
+
 
 int main() {
     try {

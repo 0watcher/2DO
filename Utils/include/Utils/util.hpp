@@ -20,6 +20,7 @@ using TimePoint =
 using NanoSeconds = std::chrono::nanoseconds;
 
 class AssertFail : std::runtime_error {
+  public:
     AssertFail(const char* file, int line, const String& message)
         : std::runtime_error{message}, file{file}, line{line} {}
 

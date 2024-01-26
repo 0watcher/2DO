@@ -1,6 +1,8 @@
 #include "2DOCore/user.hpp"
 
 #include <stdexcept>
+#include "Utils/database.hpp"
+#include "Utils/util.hpp"
 
 namespace twodocore {
 [[nodiscard]] String User::rtos(Role role) const {
@@ -29,16 +31,15 @@ namespace twodocore {
     }
 }
 
-UserDb::UserDb(StringView db_filepath) {
-    m_db = SQLite::Database{db_filepath};
-
+UserDb::UserDb(StringView db_filepath) : tdl::Database<User>{db_filepath} {
     if (!is_table_empty()) {
         SQL::Statement query{
             m_db,
-            "CREATE TABLE users IF NOT EXISTS (user_id INTEGER "
-            "AUTOINCREMENT PRIMARY "
-            "KEY NOT NULL, username VARCHAR(20) NOT NULL, role BOOLEAN NOT "
-            "NULL, password VARCHAR(20) NOT NULL)"};
+            "CREATE TABLE IF NOT EXISTS users ("
+            "user_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "
+            "username VARCHAR(20) NOT NULL, "
+            "role BOOLEAN NOT NULL, "
+            "password VARCHAR(20) NOT NULL)"};
 
         query.exec();
         if (!query.isDone())
@@ -48,17 +49,16 @@ UserDb::UserDb(StringView db_filepath) {
 
 tdl::Result<User, tdl::DbError> UserDb::get_object_by_id(
     unsigned int id) const noexcept {
-    SQL::Statement query{m_db, "SELECT * FROM users WHERE id = ?"};
+    SQL::Statement query{m_db, "SELECT * FROM users WHERE user_id = ?"};
     query.bind(1, id);
 
-    query.exec();
-    const auto user =
-        User{(unsigned) query.getColumn(0).getInt(), query.getColumn(1).getString(),
-             query.getColumn(2).getString(), query.getColumn(3).getString()};
-
-    if (!query.isDone()) {
+    if (!query.executeStep()) {
         return tdl::Err(tdl::DbError::SelectFailure);
     }
+
+    const auto user = User{
+        (unsigned)query.getColumn(0).getInt(), query.getColumn(1).getString(),
+        query.getColumn(2).getString(), query.getColumn(3).getString()};
 
     return tdl::Ok(std::move(user));
 }
@@ -69,9 +69,10 @@ tdl::Result<Vector<User>, tdl::DbError> UserDb::get_all_objects()
 
     Vector<User> users;
     while (query.executeStep()) {
-        users.push_back(User{
-            (unsigned) query.getColumn(0).getInt(), query.getColumn(1).getString(),
-            query.getColumn(2).getString(), query.getColumn(3).getString()});
+        users.push_back(User{(unsigned)query.getColumn(0).getInt(),
+                             query.getColumn(1).getString(),
+                             query.getColumn(2).getString(),
+                             query.getColumn(3).getString()});
     }
 
     if (!query.isDone()) {
@@ -90,18 +91,20 @@ tdl::Result<void, tdl::DbError> UserDb::add_object(User& user) noexcept {
         m_db, "INSERT INTO users (username, role, password) VALUES (?, ?, ?)"};
     query.bind(1, user.username());
     query.bind(2, user.role<String>());
-    query.bind(3, user.username());
+    query.bind(3, user.password());
 
-    query.exec();
-    if (!query.isDone()) {
+    if (!query.exec()) {
         return tdl::Err(tdl::DbError::InsertFailure);
     }
 
     query = SQL::Statement{
         m_db, "SELECT user_id FROM users ORDER BY user_id DESC LIMIT 1"};
-    query.exec();
 
-    if (!query.isDone()) {
+    if (!query.executeStep()) {
+        return tdl::Err(tdl::DbError::SelectFailure);
+    }
+
+    if(query.isDone()) {
         return tdl::Err(tdl::DbError::SelectFailure);
     }
 
@@ -131,7 +134,7 @@ tdl::Result<void, tdl::DbError> UserDb::update_object(
 tdl::Result<void, tdl::DbError> UserDb::delete_object(
     const User& user) const noexcept {
     SQL::Statement query{m_db, "DELETE FROM users WHERE user_id = ?"};
-    query.bind(2, std::to_string(user.id()));
+    query.bind(1, std::to_string(user.id()));
 
     query.exec();
     if (!query.isDone()) {
@@ -140,4 +143,19 @@ tdl::Result<void, tdl::DbError> UserDb::delete_object(
 
     return tdl::Ok();
 }
+tdl::Result<User, tdl::DbError> UserDb::find_object_by_unique_column(
+    const String& column_value) const noexcept {
+    SQL::Statement query{m_db, "SELECT * FROM users WHERE username = ?"};
+    query.bind(1, column_value);
+
+    if (!query.executeStep()) {
+        return tdl::Err(tdl::DbError::SelectFailure);
+    }
+
+    const auto user = User{
+        (unsigned)query.getColumn(0).getInt(), query.getColumn(1).getString(),
+        query.getColumn(2).getString(), query.getColumn(3).getString()};
+
+    return tdl::Ok(std::move(user));
+};
 }  // namespace twodocore

@@ -17,7 +17,7 @@ namespace twodo {
                 m_printer->msg_print("Invalid name length!\n");
             } else {
                 const auto name_exists =
-                    m_udb->get_object_by_unique_column(username);
+                    m_udb->find_object_by_unique_column(username);
                 if (!name_exists) {
                     username_ = username;
                     break;
@@ -136,7 +136,7 @@ namespace twodo {
         while (true) {
             m_printer->msg_print("username: ");
             const auto username = m_ihandler->get_input();
-            const auto result = m_udb->get_object_by_unique_column(username);
+            const auto result = m_udb->find_object_by_unique_column(username);
             if (!result) {
                 m_printer->msg_print("User not found!\n");
             } else {
@@ -173,7 +173,7 @@ namespace twodo {
 [[nodiscard]] tdl::Result<void, AuthErr> AuthManager::auth_username() {
     m_printer->msg_print("username: ");
     String username = m_ihandler->get_input();
-    auto result = m_udb->get_object_by_unique_column(username);
+    auto result = m_udb->find_object_by_unique_column(username);
     if (!result) {
         return tdl::Err(AuthErr::UserNotFound);
     }
@@ -182,7 +182,7 @@ namespace twodo {
 
 [[nodiscard]] tdl::Result<tdc::User, AuthErr> AuthManager::auth_password(
     const String& username) {
-    auto result = m_udb->get_object_by_unique_column(username);
+    auto result = m_udb->find_object_by_unique_column(username);
     if (!result) {
         return tdl::Err(AuthErr::UserNotFound);
     }

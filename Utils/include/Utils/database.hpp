@@ -19,11 +19,8 @@ enum class DbError {
 template <typename ObjectT>
 class Database {
   public:
-    Database();
-    virtual ~Database() = 0;
-
-    virtual Result<ObjectT, DbError> get_object_by_unique_column(
-        const String& column_value) const noexcept = 0;
+    Database(StringView db_filepath) : m_db{db_filepath, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE} {}
+    virtual ~Database(){};
 
     virtual Result<ObjectT, DbError> get_object_by_id(
         unsigned int id) const noexcept = 0;

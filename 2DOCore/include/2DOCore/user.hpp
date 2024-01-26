@@ -8,6 +8,7 @@
 #include <Utils/result.hpp>
 #include <Utils/type.hpp>
 #include <Utils/util.hpp>
+#include "2DOCore/task.hpp"
 
 namespace SQL = SQLite;
 namespace tdl = twodoutils;
@@ -22,13 +23,19 @@ class [[nodiscard]] User {
     User(User&& other) = default;
     User& operator=(User&& other) = default;
 
-    User(unsigned int user_id, StringView username, Role role, StringView password)
+    User(unsigned int user_id,
+         StringView username,
+         Role role,
+         StringView password)
         : m_user_id{user_id},
           m_username{username},
           m_role{role},
           m_password{password} {}
 
-    User(unsigned int user_id, StringView username, String role, StringView password)
+    User(unsigned int user_id,
+         StringView username,
+         String role,
+         StringView password)
         : m_user_id{user_id},
           m_username{username},
           m_role{stor(role)},
@@ -73,7 +80,7 @@ class [[nodiscard]] User {
     [[nodiscard]] String rtos(Role role) const;
 };
 
-class [[nodiscard]] UserDb : public tdl::Database<User> {
+class [[nodiscard]] UserDb : protected tdl::Database<User> {
   public:
     UserDb(const UserDb&) = delete;
     UserDb& operator=(const UserDb&) = delete;
@@ -84,6 +91,9 @@ class [[nodiscard]] UserDb : public tdl::Database<User> {
 
     tdl::Result<User, tdl::DbError> get_object_by_id(
         unsigned int id) const noexcept override;
+
+    tdl::Result<User, tdl::DbError> find_object_by_unique_column(
+        const String& column_value) const noexcept;
 
     tdl::Result<Vector<User>, tdl::DbError> get_all_objects()
         const noexcept override;
