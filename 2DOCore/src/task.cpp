@@ -18,23 +18,27 @@ TaskDb::TaskDb(StringView db_filepath) {
             "is_done BOOLEAN NOT NULL)"};
 
         query.exec();
-        if (!query.isDone())
+        if (!query.isDone()) {
             throw std::runtime_error("Failure creating tasks table.");
+        }
     }
 }
 
 tdl::Result<Task, tdl::DbError> TaskDb::get_object_by_id(
-    int id) const noexcept {
+    unsigned int id) const noexcept {
     SQL::Statement query{m_db, "SELECT * FROM tasks WHERE task_id = ?"};
     query.bind(1, id);
 
     query.exec();
-    const auto user =
-        Task{query.getColumn(0).getInt(),    query.getColumn(1).getString(),
-             query.getColumn(2).getString(), query.getColumn(3).getString(),
-             query.getColumn(4).getString(), query.getColumn(5).getInt(),
-             query.getColumn(6).getInt(),    query.getColumn(7).getInt(),
-             query.getColumn(8).getInt()};
+    const auto user = Task{query.getColumn(0).getInt(),
+                           query.getColumn(1).getString(),
+                           query.getColumn(2).getString(),
+                           query.getColumn(3).getString(),
+                           query.getColumn(4).getString(),
+                           (unsigned)query.getColumn(5).getInt(),
+                           (unsigned)query.getColumn(6).getInt(),
+                           (unsigned)query.getColumn(7).getInt(),
+                           (unsigned)query.getColumn(8).getInt()};
 
     if (!query.isDone()) {
         return tdl::Err(tdl::DbError::SelectFailure);
@@ -52,9 +56,11 @@ tdl::Result<Vector<Task>, tdl::DbError> TaskDb::get_all_objects()
         tasks.push_back(
             Task{query.getColumn(0).getInt(), query.getColumn(1).getString(),
                  query.getColumn(2).getString(), query.getColumn(3).getString(),
-                 query.getColumn(4).getString(), query.getColumn(5).getInt(),
-                 query.getColumn(6).getInt(), query.getColumn(7).getInt(),
-                 query.getColumn(8).getInt()});
+                 query.getColumn(4).getString(),
+                 (unsigned)query.getColumn(5).getInt(),
+                 (unsigned)query.getColumn(6).getInt(),
+                 (unsigned)query.getColumn(7).getInt(),
+                 (unsigned)query.getColumn(8).getInt()});
     }
 
     if (!query.isDone()) {
@@ -186,6 +192,7 @@ tdl::Result<Vector<Message>, tdl::DbError> MessageDb::get_all_objects()
 
     return tdl::Ok(std::move(messages));
 };
+
 bool MessageDb::is_table_empty() const noexcept {
     return m_db.tableExists("chatrooms") && m_db.tableExists("messages");
 }

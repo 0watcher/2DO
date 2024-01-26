@@ -47,13 +47,13 @@ UserDb::UserDb(StringView db_filepath) {
 }
 
 tdl::Result<User, tdl::DbError> UserDb::get_object_by_id(
-    int id) const noexcept {
+    unsigned int id) const noexcept {
     SQL::Statement query{m_db, "SELECT * FROM users WHERE id = ?"};
     query.bind(1, id);
 
     query.exec();
     const auto user =
-        User{query.getColumn(0).getInt(), query.getColumn(1).getString(),
+        User{(unsigned) query.getColumn(0).getInt(), query.getColumn(1).getString(),
              query.getColumn(2).getString(), query.getColumn(3).getString()};
 
     if (!query.isDone()) {
@@ -70,7 +70,7 @@ tdl::Result<Vector<User>, tdl::DbError> UserDb::get_all_objects()
     Vector<User> users;
     while (query.executeStep()) {
         users.push_back(User{
-            query.getColumn(0).getInt(), query.getColumn(1).getString(),
+            (unsigned) query.getColumn(0).getInt(), query.getColumn(1).getString(),
             query.getColumn(2).getString(), query.getColumn(3).getString()});
     }
 

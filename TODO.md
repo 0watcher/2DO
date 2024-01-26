@@ -1,6 +1,7 @@
 ## TODO
-- make error sys tester
+- add hashing inside function
+- add deletion by id
 - make tests
-- add ternary operator where possible
-- look for mem leaks, there is propably lot of them
+- make user logs
 - finish app
+- make db data signature (optional)

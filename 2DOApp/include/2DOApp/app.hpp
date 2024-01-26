@@ -13,6 +13,13 @@
 namespace tdc = twodocore;
 namespace tdl = twodoutils;
 
+#define QUIT_OPTION "0"
+#define FIRST_OPTION "1"
+#define SECOND_OPTION "2"
+#define DB_NAME "2do.db3"
+#define ERR_LOGS_FILE_NAME "big-error-logs.txt"
+#define USER_LOGS_FILE_NAME "user-logs.txt"
+
 namespace twodo {
 class UserInput : public tdl::IUserInputHandler<String> {
   public:
@@ -27,7 +34,9 @@ class MsgDisplayer : public tdl::IPrinter {
   public:
     void msg_print(StringView msg) const override { fmt::println("{}", msg); }
 
-    void err_print(StringView err) const override { fmt::println(stderr, "{}", err); }
+    void err_print(StringView err) const override {
+        fmt::println(stderr, "{}", err);
+    }
 };
 
 class [[nodiscard]] App {
@@ -40,7 +49,7 @@ class [[nodiscard]] App {
     App(){};
 
     static std::shared_ptr<App> getInstance() {
-        if(instance.get() == nullptr) {
+        if (instance.get() == nullptr) {
             instance = std::make_shared<App>();
         }
 

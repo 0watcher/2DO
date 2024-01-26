@@ -25,9 +25,9 @@ class [[nodiscard]] Task {
          const String& content,
          const TimePoint& start_date,
          const TimePoint& deadline,
-         int executor_id,
-         int owner_id,
-         int chatroom_id,
+         unsigned int executor_id,
+         unsigned int owner_id,
+         unsigned int chatroom_id,
          bool is_done)
         : m_id{id},
           m_topic{topic},
@@ -44,10 +44,10 @@ class [[nodiscard]] Task {
          const String& content,
          const String& start_date,
          const String& deadline,
-         int executor_id,
-         int owner_id,
-         int chatroom_id,
-         int is_done)
+         unsigned int executor_id,
+         unsigned int owner_id,
+         unsigned int chatroom_id,
+         unsigned int is_done)
         : m_id{id},
           m_topic{topic},
           m_content{content},
@@ -62,9 +62,9 @@ class [[nodiscard]] Task {
          const String& content,
          const TimePoint& start_date,
          const TimePoint& deadline,
-         int executor_id,
-         int owner_id,
-         int chatroom_id,
+         unsigned int executor_id,
+         unsigned int owner_id,
+         unsigned int chatroom_id,
          bool is_done)
         : m_topic{topic},
           m_content{content},
@@ -86,7 +86,7 @@ class [[nodiscard]] Task {
                m_is_done == other.m_is_done;
     }
 
-    [[nodiscard]] int id() const { return m_id.value(); }
+    [[nodiscard]] unsigned int id() const { return m_id.value(); }
     [[nodiscard]] String topic() const { return m_topic; }
     [[nodiscard]] String content() const { return m_content; }
 
@@ -113,18 +113,18 @@ class [[nodiscard]] Task {
             return m_deadline;
         }
     }
-    [[nodiscard]] int executor_id() const { return m_executor_id; }
-    [[nodiscard]] int owner_id() const { return m_owner_id; }
-    [[nodiscard]] int chatroom_id() const { return m_chatroom_id; }
+    [[nodiscard]] unsigned int executor_id() const { return m_executor_id; }
+    [[nodiscard]] unsigned int owner_id() const { return m_owner_id; }
+    [[nodiscard]] unsigned int chatroom_id() const { return m_chatroom_id; }
     [[nodiscard]] bool is_done() const { return m_is_done; }
 
-    void set_id(int id) { m_id = id; };
+    void set_id(unsigned int id) { m_id = id; };
     void set_topic(StringView topic) { m_topic = topic; }
     void set_content(StringView content) { m_content = content; }
     void set_start_date(TimePoint date) { m_start_date = date; }
     void set_deadline(TimePoint date) { m_deadline = date; }
-    void set_executor(int id) { m_executor_id = id; }
-    void set_owner(int id) { m_owner_id = id; }
+    void set_executor(unsigned int id) { m_executor_id = id; }
+    void set_owner(unsigned int id) { m_owner_id = id; }
     void set_is_done(bool done) { m_is_done = done; }
 
   private:
@@ -133,9 +133,9 @@ class [[nodiscard]] Task {
     String m_content{};
     TimePoint m_start_date{};
     TimePoint m_deadline{};
-    int m_executor_id{};
-    int m_owner_id{};
-    int m_chatroom_id{};
+    unsigned int m_executor_id{};
+    unsigned int m_owner_id{};
+    unsigned int m_chatroom_id{};
     bool m_is_done = false;
 };
 
@@ -152,7 +152,7 @@ class [[nodiscard]] TaskDb : public tdl::Database<Task> {
         const String& column_value) const noexcept override;
 
     tdl::Result<Task, tdl::DbError> get_object_by_id(
-        int id) const noexcept override;
+        unsigned int id) const noexcept override;
 
     tdl::Result<Vector<Task>, tdl::DbError> get_all_objects()
         const noexcept override;

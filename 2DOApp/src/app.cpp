@@ -2,13 +2,9 @@
 #include <memory>
 #include "fmt/core.h"
 
-#define QUIT_OPTION "0"
-#define FIRST_OPTION "1"
-#define SECOND_OPTION "2"
-
 namespace twodo {
 void App::run() {
-    //tdl::create_simple_app_env("2DO", {"users.db3", "tasks.db3"});
+    //tdl::create_simple_app_env("2DO", {DB_NAME, ERR_LOGS_FILE_NAME, USER_LOGS_FILE_NAME});
     load_menu().run(QUIT_OPTION);
 }
 

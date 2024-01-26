@@ -26,7 +26,7 @@ class Database {
         const String& column_value) const noexcept = 0;
 
     virtual Result<ObjectT, DbError> get_object_by_id(
-        int id) const noexcept = 0;
+        unsigned int id) const noexcept = 0;
     virtual Result<Vector<ObjectT>, DbError> get_all_objects()
         const noexcept = 0;
     virtual bool is_table_empty() const noexcept = 0;

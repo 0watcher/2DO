@@ -22,13 +22,13 @@ class [[nodiscard]] User {
     User(User&& other) = default;
     User& operator=(User&& other) = default;
 
-    User(int user_id, StringView username, Role role, StringView password)
+    User(unsigned int user_id, StringView username, Role role, StringView password)
         : m_user_id{user_id},
           m_username{username},
           m_role{role},
           m_password{password} {}
 
-    User(int user_id, StringView username, String role, StringView password)
+    User(unsigned int user_id, StringView username, String role, StringView password)
         : m_user_id{user_id},
           m_username{username},
           m_role{stor(role)},
@@ -42,7 +42,7 @@ class [[nodiscard]] User {
                m_role == other.m_role && m_password == other.m_password;
     }
 
-    [[nodiscard]] int id() const { return m_user_id.value(); }
+    [[nodiscard]] unsigned int id() const { return m_user_id.value(); }
     [[nodiscard]] String username() const { return m_username; }
     template <typename T>
     [[nodiscard]] typename std::enable_if<std::is_same<T, String>::value ||
@@ -58,13 +58,13 @@ class [[nodiscard]] User {
 
     [[nodiscard]] String password() const { return m_password; }
 
-    void set_id(int user_id) { m_user_id = user_id; }
+    void set_id(unsigned int user_id) { m_user_id = user_id; }
     void set_username(StringView username) { m_username = username; }
     void set_role(Role role) { m_role = role; }
     void set_password(StringView passwd) { m_password = passwd; }
 
   private:
-    std::optional<int> m_user_id{std::nullopt};
+    std::optional<unsigned int> m_user_id{std::nullopt};
     String m_username{};
     Role m_role{};
     String m_password{};
@@ -83,7 +83,7 @@ class [[nodiscard]] UserDb : public tdl::Database<User> {
     UserDb(StringView db_filepath);
 
     tdl::Result<User, tdl::DbError> get_object_by_id(
-        int id) const noexcept override;
+        unsigned int id) const noexcept override;
 
     tdl::Result<Vector<User>, tdl::DbError> get_all_objects()
         const noexcept override;

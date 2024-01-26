@@ -3,13 +3,22 @@
 #include <chrono>
 #include <filesystem>
 #include <fstream>
+#include <ios>
 #include <iostream>
 #include <stdexcept>
 #include <thread>
+#include "Utils/type.hpp"
 
 namespace fs = std::filesystem;
 
 namespace twodoutils {
+
+void log_to_file(StringView msg, const String& filepath) {
+    std::ofstream file{filepath, std::ios_base::ate};
+    file << "[" << get_current_timestamp<String>() << "] " << msg << '\n';
+    file.close();
+}
+
 std::optional<String> get_base_directory() {
 #ifdef _WIN32
     const auto home = fs::path(getenv("USERPROFILE"));
@@ -103,14 +112,10 @@ void wipe_simple_app_env(const String& folder_name) {
     return hashed_value;
 }
 
-void sleep(int t) noexcept {
+void sleep(unsigned int t) noexcept {
     std::this_thread::sleep_for(std::chrono::milliseconds(t));
 }
 
-[[nodiscard]] TimePoint give_date(int days) noexcept {
-    return std::chrono::time_point_cast<std::chrono::minutes>(
-        std::chrono::system_clock::now() + std::chrono::days{days});
-}
 
 NanoSeconds speed_test(std::function<void()> test) {
     auto start = std::chrono::high_resolution_clock::now();
