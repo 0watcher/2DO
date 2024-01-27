@@ -33,22 +33,22 @@ struct DbTest : testing::Test {
 };
 
 TEST_F(DbTest, CheckUserDbFunctionalities) {
-    tdc::User user{"patryk", tdc::Role::Admin, tdu::hash("Patryk123!")};
+    tdc::User user{"patryk", tdc::Role::Admin, "Patryk123!"};
     EXPECT_TRUE(user_db->add_object(user));
 
-    const auto user_ = user_db->get_object_by_id(user.id());
+    const auto user_ = user_db->get_object(user.id());
     EXPECT_TRUE(user_);
     EXPECT_EQ(user_.unwrap(), user);
 
-    user.set_password(tdu::hash("$SuperSecretPass2"));
+    user.set_password("$SuperSecretPass2");
     user.set_username("SomeNewUser");
     EXPECT_TRUE(user_db->update_object(user));
 
-    const auto user__ = user_db->get_object_by_id(user.id());
+    const auto user__ = user_db->get_object(user.id());
     EXPECT_TRUE(user__);
     EXPECT_EQ(user__.unwrap(), user);
 
-    tdc::User user2{"someguy", tdc::Role::User, tdu::hash("Password123!")};
+    tdc::User user2{"someguy", tdc::Role::User, "Password123!"};
     EXPECT_TRUE(user_db->add_object(user2));
     const auto result = user_db->get_all_objects();
     EXPECT_TRUE(result);
@@ -56,27 +56,22 @@ TEST_F(DbTest, CheckUserDbFunctionalities) {
     EXPECT_EQ(users[0], user);
     EXPECT_EQ(users[1], user2);
 
-    EXPECT_TRUE(user_db->delete_object(user));
-    EXPECT_TRUE(user_db->delete_object(user2));
+    EXPECT_TRUE(user_db->delete_object(user.id()));
+    EXPECT_TRUE(user_db->delete_object(user2.id()));
     EXPECT_TRUE(user_db->is_table_empty());
 }
 
 TEST_F(DbTest, CheckTaskDbFunctionalities) {
-    tdc::User owner{"patryk", tdc::Role::Admin, tdu::hash("Patryk123!")};
-    tdc::User executor{"someguy", tdc::Role::User, tdu::hash("Password123!")};
-    EXPECT_TRUE(user_db->add_object(owner));
-    EXPECT_TRUE(user_db->add_object(executor));
-
     tdc::Task task{"SomeTopic",
                    "There is so much to do!",
                    tdu::get_current_timestamp<TimePoint>(),
                    tdu::get_current_timestamp<TimePoint>(5),
-                   executor.id(),
-                   owner.id(),
+                   1,
+                   2,
                    false};
     EXPECT_TRUE(task_db->add_object(task));
 
-    const auto task_ = task_db->get_object_by_id(task.id());
+    const auto task_ = task_db->get_object(task.id());
     EXPECT_TRUE(task_);
     EXPECT_EQ(task_.unwrap(), task);
 
@@ -85,7 +80,7 @@ TEST_F(DbTest, CheckTaskDbFunctionalities) {
     task.set_deadline(tdu::get_current_timestamp<TimePoint>());
     EXPECT_TRUE(task_db->update_object(task));
 
-    const auto task__ = task_db->get_object_by_id(task.id());
+    const auto task__ = task_db->get_object(task.id());
     EXPECT_TRUE(task__);
     EXPECT_EQ(task__.unwrap(), task);
 
@@ -93,8 +88,8 @@ TEST_F(DbTest, CheckTaskDbFunctionalities) {
                     "........",
                     tdu::get_current_timestamp<TimePoint>(),
                     tdu::get_current_timestamp<TimePoint>(10),
-                    executor.id(),
-                    owner.id(),
+                    1,
+                    2,
                     false};
     EXPECT_TRUE(task_db->add_object(task2));
     const auto result = task_db->get_all_objects();
@@ -103,8 +98,8 @@ TEST_F(DbTest, CheckTaskDbFunctionalities) {
     EXPECT_EQ(tasks[0], task);
     EXPECT_EQ(tasks[1], task2);
 
-    EXPECT_TRUE(task_db->delete_object(task));
-    EXPECT_TRUE(task_db->delete_object(task2));
+    EXPECT_TRUE(task_db->delete_object(task.id()));
+    EXPECT_TRUE(task_db->delete_object(task2.id()));
     EXPECT_TRUE(task_db->is_table_empty());
 }
 

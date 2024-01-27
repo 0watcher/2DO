@@ -2,7 +2,8 @@
 
 #include <stdexcept>
 #include "Utils/database.hpp"
-#include "Utils/util.hpp"
+
+namespace SQL = SQLite;
 
 namespace twodocore {
 [[nodiscard]] String User::rtos(Role role) const {
@@ -31,7 +32,7 @@ namespace twodocore {
     }
 }
 
-UserDb::UserDb(StringView db_filepath) : tdl::Database<User>{db_filepath} {
+UserDb::UserDb(StringView db_filepath) : tdu::Database<User>{db_filepath} {
     if (!is_table_empty()) {
         SQL::Statement query{
             m_db,
@@ -47,23 +48,23 @@ UserDb::UserDb(StringView db_filepath) : tdl::Database<User>{db_filepath} {
     }
 }
 
-tdl::Result<User, tdl::DbError> UserDb::get_object_by_id(
+tdu::Result<User, tdu::DbError> UserDb::get_object(
     unsigned int id) const noexcept {
     SQL::Statement query{m_db, "SELECT * FROM users WHERE user_id = ?"};
     query.bind(1, id);
 
     if (!query.executeStep()) {
-        return tdl::Err(tdl::DbError::SelectFailure);
+        return tdu::Err(tdu::DbError::SelectFailure);
     }
 
     const auto user = User{
         (unsigned)query.getColumn(0).getInt(), query.getColumn(1).getString(),
         query.getColumn(2).getString(), query.getColumn(3).getString()};
 
-    return tdl::Ok(std::move(user));
+    return tdu::Ok(std::move(user));
 }
 
-tdl::Result<Vector<User>, tdl::DbError> UserDb::get_all_objects()
+tdu::Result<Vector<User>, tdu::DbError> UserDb::get_all_objects()
     const noexcept {
     SQL::Statement query{m_db, "SELECT * FROM users"};
 
@@ -76,17 +77,17 @@ tdl::Result<Vector<User>, tdl::DbError> UserDb::get_all_objects()
     }
 
     if (!query.isDone()) {
-        return tdl::Err(tdl::DbError::SelectFailure);
+        return tdu::Err(tdu::DbError::SelectFailure);
     }
 
-    return tdl::Ok(std::move(users));
+    return tdu::Ok(std::move(users));
 }
 
 bool UserDb::is_table_empty() const noexcept {
     return m_db.tableExists("users");
 }
 
-tdl::Result<void, tdl::DbError> UserDb::add_object(User& user) noexcept {
+tdu::Result<void, tdu::DbError> UserDb::add_object(User& user) noexcept {
     SQL::Statement query{
         m_db, "INSERT INTO users (username, role, password) VALUES (?, ?, ?)"};
     query.bind(1, user.username());
@@ -94,26 +95,26 @@ tdl::Result<void, tdl::DbError> UserDb::add_object(User& user) noexcept {
     query.bind(3, user.password());
 
     if (!query.exec()) {
-        return tdl::Err(tdl::DbError::InsertFailure);
+        return tdu::Err(tdu::DbError::InsertFailure);
     }
 
     query = SQL::Statement{
         m_db, "SELECT user_id FROM users ORDER BY user_id DESC LIMIT 1"};
 
     if (!query.executeStep()) {
-        return tdl::Err(tdl::DbError::SelectFailure);
+        return tdu::Err(tdu::DbError::SelectFailure);
     }
 
     if(query.isDone()) {
-        return tdl::Err(tdl::DbError::SelectFailure);
+        return tdu::Err(tdu::DbError::SelectFailure);
     }
 
     user.set_id(std::stoi(query.getColumn(0)));
 
-    return tdl::Ok();
+    return tdu::Ok();
 }
 
-tdl::Result<void, tdl::DbError> UserDb::update_object(
+tdu::Result<void, tdu::DbError> UserDb::update_object(
     const User& user) const noexcept {
     SQL::Statement query{m_db,
                          "UPDATE users SET username = ?, role = ?, "
@@ -125,37 +126,37 @@ tdl::Result<void, tdl::DbError> UserDb::update_object(
 
     query.exec();
     if (!query.isDone()) {
-        return tdl::Err(tdl::DbError::UpdateFailure);
+        return tdu::Err(tdu::DbError::UpdateFailure);
     }
 
-    return tdl::Ok();
+    return tdu::Ok();
 }
 
-tdl::Result<void, tdl::DbError> UserDb::delete_object(
-    const User& user) const noexcept {
+tdu::Result<void, tdu::DbError> UserDb::delete_object(
+    unsigned int id) const noexcept {
     SQL::Statement query{m_db, "DELETE FROM users WHERE user_id = ?"};
-    query.bind(1, std::to_string(user.id()));
+    query.bind(1, std::to_string(id));
 
     query.exec();
     if (!query.isDone()) {
-        return tdl::Err(tdl::DbError::DeleteFailure);
+        return tdu::Err(tdu::DbError::DeleteFailure);
     }
 
-    return tdl::Ok();
+    return tdu::Ok();
 }
-tdl::Result<User, tdl::DbError> UserDb::find_object_by_unique_column(
+tdu::Result<User, tdu::DbError> UserDb::find_object_by_unique_column(
     const String& column_value) const noexcept {
     SQL::Statement query{m_db, "SELECT * FROM users WHERE username = ?"};
     query.bind(1, column_value);
 
     if (!query.executeStep()) {
-        return tdl::Err(tdl::DbError::SelectFailure);
+        return tdu::Err(tdu::DbError::SelectFailure);
     }
 
     const auto user = User{
         (unsigned)query.getColumn(0).getInt(), query.getColumn(1).getString(),
         query.getColumn(2).getString(), query.getColumn(3).getString()};
 
-    return tdl::Ok(std::move(user));
+    return tdu::Ok(std::move(user));
 };
 }  // namespace twodocore

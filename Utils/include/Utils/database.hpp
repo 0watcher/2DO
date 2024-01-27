@@ -22,7 +22,7 @@ class Database {
     Database(StringView db_filepath) : m_db{db_filepath, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE} {}
     virtual ~Database(){};
 
-    virtual Result<ObjectT, DbError> get_object_by_id(
+    virtual Result<ObjectT, DbError> get_object(
         unsigned int id) const noexcept = 0;
     virtual Result<Vector<ObjectT>, DbError> get_all_objects()
         const noexcept = 0;
@@ -32,7 +32,7 @@ class Database {
     virtual Result<void, DbError> update_object(
         const ObjectT& obj) const noexcept = 0;
     virtual Result<void, DbError> delete_object(
-        const ObjectT& obj) const noexcept = 0;
+        unsigned int id) const noexcept = 0;
 
   protected:
     SQL::Database m_db;

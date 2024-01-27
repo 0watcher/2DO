@@ -9,7 +9,7 @@
 #include <Utils/type.hpp>
 #include <Utils/util.hpp>
 
-namespace tdl = twodoutils;
+namespace tdu = twodoutils;
 namespace tdc = twodocore;
 
 namespace twodo {
@@ -63,8 +63,8 @@ class [[nodiscard]] Menu {
     Menu& operator=(const Menu&) = delete;
 
     Menu(std::shared_ptr<Page<TOption>> initial_page,
-         std::unique_ptr<tdl::IPrinter> iprinter,
-         std::unique_ptr<tdl::IUserInputHandler<TOption>> input_handler_)
+         std::unique_ptr<tdu::IPrinter> iprinter,
+         std::unique_ptr<tdu::IUserInputHandler<TOption>> input_handler_)
         : current_page{std::move(initial_page)},
           printer{std::move(iprinter)},
           input_handler{std::move(input_handler_)} {}
@@ -80,14 +80,14 @@ class [[nodiscard]] Menu {
 
             navigate_or_display_error(user_choice, quit_input);
 
-            tdl::clear_term();
+            tdu::clear_term();
         }
     }
 
   private:
     std::shared_ptr<Page<TOption>> current_page;
-    std::unique_ptr<tdl::IPrinter> printer;
-    std::unique_ptr<tdl::IUserInputHandler<TOption>> input_handler;
+    std::unique_ptr<tdu::IPrinter> printer;
+    std::unique_ptr<tdu::IUserInputHandler<TOption>> input_handler;
 
     TOption get_user_choice() const { return input_handler->get_input(); }
 
@@ -125,7 +125,7 @@ class [[nodiscard]] Menu {
 
     void display_invalid_option_error() const {
         printer->msg_print("Invalid option!");
-        tdl::sleep(2000);
+        tdu::sleep(2000);
     }
 
     void perform_page_navigation_or_execution(
@@ -159,22 +159,22 @@ class [[nodiscard]] RegisterManager {
     RegisterManager& operator=(const RegisterManager&) = delete;
 
     RegisterManager(std::shared_ptr<tdc::UserDb> udb,
-                    std::shared_ptr<tdl::IUserInputHandler<String>> ihandler,
-                    std::shared_ptr<tdl::IPrinter> iprinter)
+                    std::shared_ptr<tdu::IUserInputHandler<String>> ihandler,
+                    std::shared_ptr<tdu::IPrinter> iprinter)
         : m_udb{udb}, m_ihandler{ihandler}, m_printer{iprinter} {}
 
-    [[nodiscard]] tdl::Result<tdc::User, AuthErr> singup();
+    [[nodiscard]] tdu::Result<tdc::User, AuthErr> singup();
 
-    [[nodiscard]] tdl::Result<void, AuthErr> username_validation(
+    [[nodiscard]] tdu::Result<void, AuthErr> username_validation(
         StringView username) const;
 
-    [[nodiscard]] tdl::Result<void, AuthErr> password_validation(
+    [[nodiscard]] tdu::Result<void, AuthErr> password_validation(
         const String& password) const;
 
   private:
     std::shared_ptr<tdc::UserDb> m_udb;
-    std::shared_ptr<tdl::IUserInputHandler<String>> m_ihandler;
-    std::shared_ptr<tdl::IPrinter> m_printer;
+    std::shared_ptr<tdu::IUserInputHandler<String>> m_ihandler;
+    std::shared_ptr<tdu::IPrinter> m_printer;
 };
 
 class [[nodiscard]] AuthManager {
@@ -185,20 +185,20 @@ class [[nodiscard]] AuthManager {
     AuthManager& operator=(const AuthManager&) = delete;
 
     AuthManager(std::shared_ptr<tdc::UserDb> udb,
-                std::shared_ptr<tdl::IUserInputHandler<String>> ihandler,
-                std::shared_ptr<tdl::IPrinter> iprinter)
+                std::shared_ptr<tdu::IUserInputHandler<String>> ihandler,
+                std::shared_ptr<tdu::IPrinter> iprinter)
         : m_udb{udb}, m_ihandler{ihandler}, m_printer{iprinter} {}
 
-    [[nodiscard]] tdl::Result<tdc::User, AuthErr> login();
+    [[nodiscard]] tdu::Result<tdc::User, AuthErr> login();
 
-    [[nodiscard]] tdl::Result<void, AuthErr> auth_username();
+    [[nodiscard]] tdu::Result<void, AuthErr> auth_username();
 
-    [[nodiscard]] tdl::Result<tdc::User, AuthErr> auth_password(
+    [[nodiscard]] tdu::Result<tdc::User, AuthErr> auth_password(
         const String& username);
 
   private:
     std::shared_ptr<tdc::UserDb> m_udb;
-    std::shared_ptr<tdl::IUserInputHandler<String>> m_ihandler;
-    std::shared_ptr<tdl::IPrinter> m_printer;
+    std::shared_ptr<tdu::IUserInputHandler<String>> m_ihandler;
+    std::shared_ptr<tdu::IPrinter> m_printer;
 };
 }  // namespace twodo

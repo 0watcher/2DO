@@ -1,9 +1,5 @@
 ## TODO
-- replace result with exception when necessary
-- add hashing inside function
-- replace deletion by object to by id
-- add deletion messages after deletion task
-- make tests
 - make user logs
+- replace result with exception when necessary
+- replace raw int with 
 - finish app
-- make db data signature (optional)

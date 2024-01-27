@@ -1,7 +1,5 @@
 #pragma once
 
-#include <stdexcept>
-
 #include <SQLiteCpp/Database.h>
 #include <SQLiteCpp/Statement.h>
 #include <Utils/database.hpp>
@@ -9,8 +7,7 @@
 #include <Utils/type.hpp>
 #include <Utils/util.hpp>
 
-namespace SQL = SQLite;
-namespace tdl = twodoutils;
+namespace tdu = twodoutils;
 
 namespace twodocore {
 class [[nodiscard]] Task {
@@ -48,8 +45,8 @@ class [[nodiscard]] Task {
         : m_id{id},
           m_topic{topic},
           m_content{content},
-          m_start_date{tdl::stotp(start_date)},
-          m_deadline{tdl::stotp(deadline)},
+          m_start_date{tdu::stotp(start_date)},
+          m_deadline{tdu::stotp(deadline)},
           m_executor_id{executor_id},
           m_owner_id{owner_id},
           m_is_done{static_cast<bool>(is_done)} {}
@@ -88,7 +85,7 @@ class [[nodiscard]] Task {
                                           T>::type
     start_date() const {
         if constexpr (std::is_same<T, String>::value) {
-            return tdl::tptos(m_start_date);
+            return tdu::tptos(m_start_date);
         } else if constexpr (std::is_same<T, TimePoint>::value) {
             return m_start_date;
         }
@@ -100,7 +97,7 @@ class [[nodiscard]] Task {
                                           T>::type
     deadline() const {
         if constexpr (std::is_same<T, String>::value) {
-            return tdl::tptos(m_deadline);
+            return tdu::tptos(m_deadline);
         } else if constexpr (std::is_same<T, TimePoint>::value) {
             return m_deadline;
         }
@@ -129,7 +126,7 @@ class [[nodiscard]] Task {
     bool m_is_done = false;
 };
 
-class [[nodiscard]] TaskDb : protected tdl::Database<Task> {
+class [[nodiscard]] TaskDb : protected tdu::Database<Task> {
   public:
     TaskDb(const TaskDb&) = delete;
     TaskDb& operator=(const TaskDb&) = delete;
@@ -138,21 +135,21 @@ class [[nodiscard]] TaskDb : protected tdl::Database<Task> {
 
     TaskDb(StringView db_filepath);
 
-    tdl::Result<Task, tdl::DbError> get_object_by_id(
+    tdu::Result<Task, tdu::DbError> get_object(
         unsigned int id) const noexcept override;
 
-    tdl::Result<Vector<Task>, tdl::DbError> get_all_objects()
+    tdu::Result<Vector<Task>, tdu::DbError> get_all_objects()
         const noexcept override;
 
     bool is_table_empty() const noexcept override;
 
-    tdl::Result<void, tdl::DbError> add_object(Task& task) noexcept override;
+    tdu::Result<void, tdu::DbError> add_object(Task& task) noexcept override;
 
-    tdl::Result<void, tdl::DbError> update_object(
+    tdu::Result<void, tdu::DbError> update_object(
         const Task& task) const noexcept override;
 
-    tdl::Result<void, tdl::DbError> delete_object(
-        const Task& task) const noexcept override;
+    tdu::Result<void, tdu::DbError> delete_object(
+        unsigned int id) const noexcept override;
 };
 
 class [[nodiscard]] Message {
@@ -189,7 +186,7 @@ class [[nodiscard]] Message {
         : m_task_id{task_id},
           m_sender_name{sender_name},
           m_content{content},
-          m_timestamp{tdl::stotp(timestamp)} {}
+          m_timestamp{tdu::stotp(timestamp)} {}
 
     bool operator==(const Message& other) const {
         return m_message_id == other.m_message_id &&
@@ -214,7 +211,7 @@ class [[nodiscard]] Message {
     TimePoint m_timestamp;
 };
 
-class [[nodiscard]] MessageDb : protected tdl::Database<Message> {
+class [[nodiscard]] MessageDb : protected tdu::Database<Message> {
   public:
     MessageDb(const MessageDb&) = delete;
     MessageDb& operator=(const MessageDb&) = delete;
@@ -223,24 +220,24 @@ class [[nodiscard]] MessageDb : protected tdl::Database<Message> {
 
     MessageDb(StringView db_filepath);
 
-    tdl::Result<Vector<Message>, tdl::DbError> get_all_objects()
+    tdu::Result<Vector<Message>, tdu::DbError> get_all_objects()
         const noexcept override;
 
     bool is_table_empty() const noexcept override;
 
-    tdl::Result<void, tdl::DbError> add_object(
+    tdu::Result<void, tdu::DbError> add_object(
         Message& message) noexcept override;
 
-    tdl::Result<void, tdl::DbError> delete_all_by_task_id(
+    tdu::Result<void, tdu::DbError> delete_all_by_task_id(
         unsigned int task_id) noexcept;
 
-    tdl::Result<Message, tdl::DbError> get_object_by_id(
+    tdu::Result<Message, tdu::DbError> get_object(
         unsigned int id) const noexcept override;
 
-    tdl::Result<void, tdl::DbError> update_object(
+    tdu::Result<void, tdu::DbError> update_object(
         const Message& message) const noexcept override;
 
-    tdl::Result<void, tdl::DbError> delete_object(
-        const Message& message) const noexcept override;
+    tdu::Result<void, tdu::DbError> delete_object(
+        unsigned int id) const noexcept override;
 };
 }  // namespace twodocore

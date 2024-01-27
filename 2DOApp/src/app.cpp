@@ -4,7 +4,7 @@
 
 namespace twodo {
 void App::run() {
-    //tdl::create_simple_app_env("2DO", {DB_NAME, ERR_LOGS_FILE_NAME, USER_LOGS_FILE_NAME});
+    //tdu::create_simple_app_env("2DO", {DB_NAME, ERR_LOGS_FILE_NAME, USER_LOGS_FILE_NAME});
     load_menu().run(QUIT_OPTION);
 }
 

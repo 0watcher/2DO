@@ -1,11 +1,14 @@
 #include "Utils/util.hpp"
 
+#include <algorithm>
 #include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <ios>
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
+#include <string>
 #include <thread>
 #include "Utils/type.hpp"
 
@@ -88,7 +91,7 @@ void wipe_simple_app_env(const String& folder_name) {
     const auto minutes_count = std::stoll(stringified_tp);
 
     const TimePoint tp = std::chrono::time_point<std::chrono::system_clock,
-                                           std::chrono::minutes>(
+                                                 std::chrono::minutes>(
         std::chrono::minutes(minutes_count));
 
     return tp;
@@ -104,18 +107,25 @@ void wipe_simple_app_env(const String& folder_name) {
 }
 
 [[nodiscard]] String hash(const String& str) {
-    std::hash<String> hasher{};
-    const auto hashed_value = std::to_string(hasher(str));
-    if (hashed_value.empty()) {
-        throw std::runtime_error("Failure hashing value.");
+    unsigned int init = 123456789;
+    unsigned int magic = 7654321;
+    unsigned int hash = init;
+
+    for (int i = 0; i < str.length(); ++i) {
+        hash = hash ^ (str[i]);
+        hash = hash * magic;
     }
-    return hashed_value;
+    
+    std::stringstream hex_stream;
+    hex_stream << std::hex << hash;
+    String str_hash = hex_stream.str();
+    
+    return str_hash;
 }
 
 void sleep(unsigned int t) noexcept {
     std::this_thread::sleep_for(std::chrono::milliseconds(t));
 }
-
 
 NanoSeconds speed_test(std::function<void()> test) {
     auto start = std::chrono::high_resolution_clock::now();

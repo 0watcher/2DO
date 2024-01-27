@@ -2,15 +2,17 @@
 
 #include <regex>
 #include "Utils/result.hpp"
+#include "fmt/core.h"
 
 namespace twodo {
-[[nodiscard]] tdl::Result<tdc::User, AuthErr> RegisterManager::singup() {
+[[nodiscard]] tdu::Result<tdc::User, AuthErr> RegisterManager::singup() {
     auto username_ = String{};
 
     const auto username_input = [this, &username_]() {
         while (true) {
             m_printer->msg_print("username: ");
             const auto username = m_ihandler->get_input();
+
             const auto username_result = username_validation(username);
 
             if (!username_result) {
@@ -18,17 +20,19 @@ namespace twodo {
             } else {
                 const auto name_exists =
                     m_udb->find_object_by_unique_column(username);
+
                 if (!name_exists) {
                     username_ = username;
                     break;
                 }
+
                 m_printer->msg_print("User with this name already exists!\n");
             }
         }
     };
 
     const auto password_input =
-        [this, &username_]() -> tdl::Result<tdc::User, AuthErr> {
+        [this, &username_]() -> tdu::Result<tdc::User, AuthErr> {
         while (true) {
             m_printer->msg_print("password: ");
             const auto password = m_ihandler->get_input();
@@ -73,17 +77,19 @@ namespace twodo {
                 }
             } else {
                 tdc::Role usr_role{};
+
                 if (m_udb->is_table_empty()) {
                     usr_role = tdc::Role::Admin;
                 } else {
                     usr_role = tdc::Role::User;
                 }
-                auto user = tdc::User{username_, usr_role, tdl::hash(password)};
+
+                auto user = tdc::User{username_, usr_role, password};
                 if (!m_udb->add_object(user)) {
-                    return tdl::Err(AuthErr::DbErr);
+                    return tdu::Err(AuthErr::DbErr);
                 }
 
-                return tdl::Ok(std::move(user));
+                return tdu::Ok(std::move(user));
             }
         }
     };
@@ -93,16 +99,16 @@ namespace twodo {
     return password_input();
 }
 
-[[nodiscard]] tdl::Result<void, AuthErr> RegisterManager::username_validation(
+[[nodiscard]] tdu::Result<void, AuthErr> RegisterManager::username_validation(
     StringView username) const {
     if (username.length() < 1 || username.length() > 20) {
-        return tdl::Err(AuthErr::InvalidNameLength);
+        return tdu::Err(AuthErr::InvalidNameLength);
     }
 
-    return tdl::Ok();
+    return tdu::Ok();
 }
 
-[[nodiscard]] tdl::Result<void, AuthErr> RegisterManager::password_validation(
+[[nodiscard]] tdu::Result<void, AuthErr> RegisterManager::password_validation(
     const String& password) const {
     const std::regex upper_case_expression{"[A-Z]+"};
     const std::regex lower_case_expression{"[a-z]+"};
@@ -111,31 +117,32 @@ namespace twodo {
         "[!@#$%^&*()_+\\-=\\[\\]{};:\\\",<.>/?]+"};
 
     if (password.length() <= 8 && password.length() > 20) {
-        return tdl::Err(AuthErr::InvalidPassLength);
+        return tdu::Err(AuthErr::InvalidPassLength);
     }
     if (!std::regex_search(password, upper_case_expression)) {
-        return tdl::Err(AuthErr::MissingUpperCase);
+        return tdu::Err(AuthErr::MissingUpperCase);
     }
     if (!std::regex_search(password, lower_case_expression)) {
-        return tdl::Err(AuthErr::MissingLowerCase);
+        return tdu::Err(AuthErr::MissingLowerCase);
     }
     if (!std::regex_search(password, number_expression)) {
-        return tdl::Err(AuthErr::MissingNumber);
+        return tdu::Err(AuthErr::MissingNumber);
     }
     if (!std::regex_search(password, special_char_expression)) {
-        return tdl::Err(AuthErr::MissingSpecialCharacter);
+        return tdu::Err(AuthErr::MissingSpecialCharacter);
     }
 
-    return tdl::Ok();
+    return tdu::Ok();
 }
 
-[[nodiscard]] tdl::Result<tdc::User, AuthErr> AuthManager::login() {
+[[nodiscard]] tdu::Result<tdc::User, AuthErr> AuthManager::login() {
     std::optional<tdc::User> user{};
 
     const auto username_input = [this, &user]() {
         while (true) {
             m_printer->msg_print("username: ");
             const auto username = m_ihandler->get_input();
+
             const auto result = m_udb->find_object_by_unique_column(username);
             if (!result) {
                 m_printer->msg_print("User not found!\n");
@@ -147,18 +154,18 @@ namespace twodo {
     };
 
     const auto password_input = [this,
-                                 &user]() -> tdl::Result<tdc::User, AuthErr> {
-        int tries = 3;
+                                 &user]() -> tdu::Result<tdc::User, AuthErr> {
+        unsigned int tries = 3;
 
         while (true) {
             if (tries <= 0) {
-                return tdl::Err(AuthErr::AllTriesExhausted);
+                return tdu::Err(AuthErr::AllTriesExhausted);
             }
 
             m_printer->msg_print("password: ");
-            const auto password = m_ihandler->get_input();
-            if (tdl::hash(password) == user->password()) {
-                return tdl::Ok(std::move(user.value()));
+            const String password = m_ihandler->get_input();
+            if (tdu::hash(password) == user->password()) {
+                return tdu::Ok(std::move(user.value()));
             }
             m_printer->msg_print("Invalid password!\n");
             tries--;
@@ -170,28 +177,33 @@ namespace twodo {
     return password_input();
 }
 
-[[nodiscard]] tdl::Result<void, AuthErr> AuthManager::auth_username() {
+[[nodiscard]] tdu::Result<void, AuthErr> AuthManager::auth_username() {
     m_printer->msg_print("username: ");
     String username = m_ihandler->get_input();
+
     auto result = m_udb->find_object_by_unique_column(username);
     if (!result) {
-        return tdl::Err(AuthErr::UserNotFound);
+        return tdu::Err(AuthErr::UserNotFound);
     }
-    return tdl::Ok();
+
+    return tdu::Ok();
 }
 
-[[nodiscard]] tdl::Result<tdc::User, AuthErr> AuthManager::auth_password(
+[[nodiscard]] tdu::Result<tdc::User, AuthErr> AuthManager::auth_password(
     const String& username) {
     auto result = m_udb->find_object_by_unique_column(username);
     if (!result) {
-        return tdl::Err(AuthErr::UserNotFound);
+        return tdu::Err(AuthErr::UserNotFound);
     }
+
     while (true) {
         m_printer->msg_print("password: ");
         String password = m_ihandler->get_input();
+
         if (password == result.unwrap().password()) {
-            return tdl::Ok(std::move(result.unwrap()));
+            return tdu::Ok(std::move(result.unwrap()));
         }
+
         m_printer->msg_print("Invalid password!\n");
     }
 }

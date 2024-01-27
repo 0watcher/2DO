@@ -2,10 +2,10 @@ include(GoogleTest)
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 add_subdirectory(../thirdparty/googletest ${CMAKE_BINARY_DIR}/googletest)
 
-#file(GLOB TEST_SRC *.cpp)
 set(TEST_SRC
     result_test.cpp
     database_test.cpp
+    auth_test.cpp
 )
 add_executable(${PROJECT_NAME}_ut ${TEST_SRC})
 

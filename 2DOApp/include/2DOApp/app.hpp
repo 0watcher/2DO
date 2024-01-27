@@ -11,7 +11,7 @@
 #include <Utils/type.hpp>
 
 namespace tdc = twodocore;
-namespace tdl = twodoutils;
+namespace tdu = twodoutils;
 
 #define QUIT_OPTION "0"
 #define FIRST_OPTION "1"
@@ -21,7 +21,7 @@ namespace tdl = twodoutils;
 #define USER_LOGS_FILE_NAME "user-logs.txt"
 
 namespace twodo {
-class UserInput : public tdl::IUserInputHandler<String> {
+class UserInput : public tdu::IUserInputHandler<String> {
   public:
     String get_input() const override {
         auto input = String();
@@ -30,7 +30,7 @@ class UserInput : public tdl::IUserInputHandler<String> {
     }
 };
 
-class MsgDisplayer : public tdl::IPrinter {
+class MsgDisplayer : public tdu::IPrinter {
   public:
     void msg_print(StringView msg) const override { fmt::println("{}", msg); }
 
