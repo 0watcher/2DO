@@ -30,7 +30,7 @@ class [[nodiscard]] Page : public std::enable_shared_from_this<Page<TOption>> {
 
     void execute() const { content(); }
 
-    void add_child(TOption option, std::shared_ptr<Page<TOption>> child) {
+    void attach(TOption option, std::shared_ptr<Page<TOption>> child) {
         childs.insert({option, child});
         child->parent = this->shared_from_this();
     }

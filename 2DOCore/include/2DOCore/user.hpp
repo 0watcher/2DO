@@ -8,7 +8,6 @@
 #include <Utils/result.hpp>
 #include <Utils/type.hpp>
 #include <Utils/util.hpp>
-#include "2DOCore/task.hpp"
 
 namespace tdu = twodoutils;
 
@@ -79,7 +78,7 @@ class [[nodiscard]] User {
     [[nodiscard]] String rtos(Role role) const;
 };
 
-class [[nodiscard]] UserDb : protected tdu::Database<User> {
+class [[nodiscard]] UserDb {
   public:
     UserDb(const UserDb&) = delete;
     UserDb& operator=(const UserDb&) = delete;
@@ -88,23 +87,22 @@ class [[nodiscard]] UserDb : protected tdu::Database<User> {
 
     UserDb(StringView db_filepath);
 
-    tdu::Result<User, tdu::DbError> get_object(
-        unsigned int id) const noexcept override;
+    tdu::Result<User, DbError> get_object(unsigned int id) const noexcept;
 
-    tdu::Result<User, tdu::DbError> find_object_by_unique_column(
+    tdu::Result<User, DbError> find_object_by_unique_column(
         const String& column_value) const noexcept;
 
-    tdu::Result<Vector<User>, tdu::DbError> get_all_objects()
-        const noexcept override;
+    tdu::Result<Vector<User>, DbError> get_all_objects() const noexcept;
 
-    bool is_table_empty() const noexcept override;
+    bool is_table_empty() const noexcept;
 
-    tdu::Result<void, tdu::DbError> add_object(User& user) noexcept override;
+    tdu::Result<void, DbError> add_object(User& user) noexcept;
 
-    tdu::Result<void, tdu::DbError> update_object(
-        const User& user) const noexcept override;
+    tdu::Result<void, DbError> update_object(const User& user) const noexcept;
 
-    tdu::Result<void, tdu::DbError> delete_object(
-        unsigned int id) const noexcept override;
+    tdu::Result<void, DbError> delete_object(unsigned int id) const noexcept;
+
+  private:
+    SQL::Database m_db;
 };
 }  // namespace twodocore

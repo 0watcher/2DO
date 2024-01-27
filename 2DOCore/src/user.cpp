@@ -1,6 +1,7 @@
 #include "2DOCore/user.hpp"
 
 #include <stdexcept>
+#include "SQLiteCpp/Database.h"
 #include "Utils/database.hpp"
 
 namespace SQL = SQLite;
@@ -32,7 +33,7 @@ namespace twodocore {
     }
 }
 
-UserDb::UserDb(StringView db_filepath) : tdu::Database<User>{db_filepath} {
+UserDb::UserDb(StringView db_filepath) : m_db{db_filepath, SQL::OPEN_READWRITE | SQL::OPEN_CREATE} {
     if (!is_table_empty()) {
         SQL::Statement query{
             m_db,
@@ -48,13 +49,13 @@ UserDb::UserDb(StringView db_filepath) : tdu::Database<User>{db_filepath} {
     }
 }
 
-tdu::Result<User, tdu::DbError> UserDb::get_object(
+tdu::Result<User, DbError> UserDb::get_object(
     unsigned int id) const noexcept {
     SQL::Statement query{m_db, "SELECT * FROM users WHERE user_id = ?"};
     query.bind(1, id);
 
     if (!query.executeStep()) {
-        return tdu::Err(tdu::DbError::SelectFailure);
+        return tdu::Err(DbError::SelectFailure);
     }
 
     const auto user = User{
@@ -64,7 +65,7 @@ tdu::Result<User, tdu::DbError> UserDb::get_object(
     return tdu::Ok(std::move(user));
 }
 
-tdu::Result<Vector<User>, tdu::DbError> UserDb::get_all_objects()
+tdu::Result<Vector<User>, DbError> UserDb::get_all_objects()
     const noexcept {
     SQL::Statement query{m_db, "SELECT * FROM users"};
 
@@ -77,7 +78,7 @@ tdu::Result<Vector<User>, tdu::DbError> UserDb::get_all_objects()
     }
 
     if (!query.isDone()) {
-        return tdu::Err(tdu::DbError::SelectFailure);
+        return tdu::Err(DbError::SelectFailure);
     }
 
     return tdu::Ok(std::move(users));
@@ -87,7 +88,7 @@ bool UserDb::is_table_empty() const noexcept {
     return m_db.tableExists("users");
 }
 
-tdu::Result<void, tdu::DbError> UserDb::add_object(User& user) noexcept {
+tdu::Result<void, DbError> UserDb::add_object(User& user) noexcept {
     SQL::Statement query{
         m_db, "INSERT INTO users (username, role, password) VALUES (?, ?, ?)"};
     query.bind(1, user.username());
@@ -95,18 +96,18 @@ tdu::Result<void, tdu::DbError> UserDb::add_object(User& user) noexcept {
     query.bind(3, user.password());
 
     if (!query.exec()) {
-        return tdu::Err(tdu::DbError::InsertFailure);
+        return tdu::Err(DbError::InsertFailure);
     }
 
     query = SQL::Statement{
         m_db, "SELECT user_id FROM users ORDER BY user_id DESC LIMIT 1"};
 
     if (!query.executeStep()) {
-        return tdu::Err(tdu::DbError::SelectFailure);
+        return tdu::Err(DbError::SelectFailure);
     }
 
     if(query.isDone()) {
-        return tdu::Err(tdu::DbError::SelectFailure);
+        return tdu::Err(DbError::SelectFailure);
     }
 
     user.set_id(std::stoi(query.getColumn(0)));
@@ -114,7 +115,7 @@ tdu::Result<void, tdu::DbError> UserDb::add_object(User& user) noexcept {
     return tdu::Ok();
 }
 
-tdu::Result<void, tdu::DbError> UserDb::update_object(
+tdu::Result<void, DbError> UserDb::update_object(
     const User& user) const noexcept {
     SQL::Statement query{m_db,
                          "UPDATE users SET username = ?, role = ?, "
@@ -126,31 +127,31 @@ tdu::Result<void, tdu::DbError> UserDb::update_object(
 
     query.exec();
     if (!query.isDone()) {
-        return tdu::Err(tdu::DbError::UpdateFailure);
+        return tdu::Err(DbError::UpdateFailure);
     }
 
     return tdu::Ok();
 }
 
-tdu::Result<void, tdu::DbError> UserDb::delete_object(
+tdu::Result<void, DbError> UserDb::delete_object(
     unsigned int id) const noexcept {
     SQL::Statement query{m_db, "DELETE FROM users WHERE user_id = ?"};
     query.bind(1, std::to_string(id));
 
     query.exec();
     if (!query.isDone()) {
-        return tdu::Err(tdu::DbError::DeleteFailure);
+        return tdu::Err(DbError::DeleteFailure);
     }
 
     return tdu::Ok();
 }
-tdu::Result<User, tdu::DbError> UserDb::find_object_by_unique_column(
+tdu::Result<User, DbError> UserDb::find_object_by_unique_column(
     const String& column_value) const noexcept {
     SQL::Statement query{m_db, "SELECT * FROM users WHERE username = ?"};
     query.bind(1, column_value);
 
     if (!query.executeStep()) {
-        return tdu::Err(tdu::DbError::SelectFailure);
+        return tdu::Err(DbError::SelectFailure);
     }
 
     const auto user = User{

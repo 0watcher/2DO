@@ -126,7 +126,7 @@ class [[nodiscard]] Task {
     bool m_is_done = false;
 };
 
-class [[nodiscard]] TaskDb : protected tdu::Database<Task> {
+class [[nodiscard]] TaskDb {
   public:
     TaskDb(const TaskDb&) = delete;
     TaskDb& operator=(const TaskDb&) = delete;
@@ -135,21 +135,21 @@ class [[nodiscard]] TaskDb : protected tdu::Database<Task> {
 
     TaskDb(StringView db_filepath);
 
-    tdu::Result<Task, tdu::DbError> get_object(
-        unsigned int id) const noexcept override;
+    tdu::Result<Task, DbError> get_object(unsigned int id) const noexcept;
 
-    tdu::Result<Vector<Task>, tdu::DbError> get_all_objects()
-        const noexcept override;
+    tdu::Result<Vector<Task>, DbError> get_all_objects(
+        unsigned int executor_id) const noexcept;
 
-    bool is_table_empty() const noexcept override;
+    bool is_table_empty() const noexcept;
 
-    tdu::Result<void, tdu::DbError> add_object(Task& task) noexcept override;
+    tdu::Result<void, DbError> add_object(Task& task) noexcept;
 
-    tdu::Result<void, tdu::DbError> update_object(
-        const Task& task) const noexcept override;
+    tdu::Result<void, DbError> update_object(const Task& task) const noexcept;
 
-    tdu::Result<void, tdu::DbError> delete_object(
-        unsigned int id) const noexcept override;
+    tdu::Result<void, DbError> delete_object(unsigned int id) const noexcept;
+
+  private:
+    SQL::Database m_db;
 };
 
 class [[nodiscard]] Message {
@@ -211,7 +211,7 @@ class [[nodiscard]] Message {
     TimePoint m_timestamp;
 };
 
-class [[nodiscard]] MessageDb : protected tdu::Database<Message> {
+class [[nodiscard]] MessageDb {
   public:
     MessageDb(const MessageDb&) = delete;
     MessageDb& operator=(const MessageDb&) = delete;
@@ -220,24 +220,17 @@ class [[nodiscard]] MessageDb : protected tdu::Database<Message> {
 
     MessageDb(StringView db_filepath);
 
-    tdu::Result<Vector<Message>, tdu::DbError> get_all_objects()
-        const noexcept override;
+    tdu::Result<Vector<Message>, DbError> get_all_objects(
+        unsigned int task_id) const noexcept;
 
-    bool is_table_empty() const noexcept override;
+    bool is_table_empty() const noexcept;
 
-    tdu::Result<void, tdu::DbError> add_object(
-        Message& message) noexcept override;
+    tdu::Result<void, DbError> add_object(Message& message) noexcept;
 
-    tdu::Result<void, tdu::DbError> delete_all_by_task_id(
+    tdu::Result<void, DbError> delete_all_by_task_id(
         unsigned int task_id) noexcept;
 
-    tdu::Result<Message, tdu::DbError> get_object(
-        unsigned int id) const noexcept override;
-
-    tdu::Result<void, tdu::DbError> update_object(
-        const Message& message) const noexcept override;
-
-    tdu::Result<void, tdu::DbError> delete_object(
-        unsigned int id) const noexcept override;
+  private:
+    SQL::Database m_db;
 };
 }  // namespace twodocore

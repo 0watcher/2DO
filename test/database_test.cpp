@@ -92,7 +92,7 @@ TEST_F(DbTest, CheckTaskDbFunctionalities) {
                     2,
                     false};
     EXPECT_TRUE(task_db->add_object(task2));
-    const auto result = task_db->get_all_objects();
+    const auto result = task_db->get_all_objects(1);
     EXPECT_TRUE(result);
     const auto tasks = result.unwrap();
     EXPECT_EQ(tasks[0], task);
@@ -116,7 +116,7 @@ TEST_F(DbTest, CheckMessageDbFunctionalities) {
         EXPECT_TRUE(msg_db->add_object(msg));
     }
 
-    auto result = msg_db->get_all_objects();
+    auto result = msg_db->get_all_objects(1);
     EXPECT_TRUE(result);
     const auto selected_messages = result.unwrap();
 

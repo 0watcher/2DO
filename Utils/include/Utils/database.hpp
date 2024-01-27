@@ -8,36 +8,12 @@
 
 namespace SQL = SQLite;
 
-namespace twodoutils {
 enum class DbError {
     SelectFailure = 1,
     InsertFailure,
     UpdateFailure,
     DeleteFailure
 };
-
-template <typename ObjectT>
-class Database {
-  public:
-    Database(StringView db_filepath) : m_db{db_filepath, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE} {}
-    virtual ~Database(){};
-
-    virtual Result<ObjectT, DbError> get_object(
-        unsigned int id) const noexcept = 0;
-    virtual Result<Vector<ObjectT>, DbError> get_all_objects()
-        const noexcept = 0;
-    virtual bool is_table_empty() const noexcept = 0;
-
-    virtual Result<void, DbError> add_object(ObjectT& obj) noexcept = 0;
-    virtual Result<void, DbError> update_object(
-        const ObjectT& obj) const noexcept = 0;
-    virtual Result<void, DbError> delete_object(
-        unsigned int id) const noexcept = 0;
-
-  protected:
-    SQL::Database m_db;
-};
-};  // namespace twodoutils
 
 #ifdef SQLITECPP_ENABLE_ASSERT_HANDLER
 namespace SQLite {
