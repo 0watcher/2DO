@@ -31,15 +31,13 @@ TaskDb::TaskDb(StringView db_filepath)
     }
 }
 
-tdu::Result<Task, DbError> TaskDb::get_object(unsigned int id) const noexcept {
+Task TaskDb::get_object(unsigned int id) const noexcept {
     SQL::Statement query{m_db, "SELECT * FROM tasks WHERE task_id = ?"};
     query.bind(1, id);
 
-    if (!query.executeStep()) {
-        return tdu::Err(DbError::SelectFailure);
-    }
+    query.executeStep();
 
-    const auto task = Task{query.getColumn(0).getInt(),
+    const auto task = Task{(unsigned)query.getColumn(0).getInt(),
                            query.getColumn(1).getString(),
                            query.getColumn(2).getString(),
                            query.getColumn(3).getString(),
@@ -48,37 +46,32 @@ tdu::Result<Task, DbError> TaskDb::get_object(unsigned int id) const noexcept {
                            (unsigned)query.getColumn(6).getInt(),
                            (unsigned)query.getColumn(7).getInt()};
 
-    return tdu::Ok(std::move(task));
+    return task;
 }
 
-tdu::Result<Vector<Task>, DbError> TaskDb::get_all_objects(
-    unsigned int executor_id) const noexcept {
+Vector<Task> TaskDb::get_all_objects(unsigned int executor_id) const noexcept {
     SQL::Statement query{m_db, "SELECT * FROM tasks WHERE executor_id = ?"};
     query.bind(1, executor_id);
 
     Vector<Task> tasks;
     while (query.executeStep()) {
         tasks.push_back(
-            Task{query.getColumn(0).getInt(), query.getColumn(1).getString(),
-                 query.getColumn(2).getString(), query.getColumn(3).getString(),
-                 query.getColumn(4).getString(),
+            Task{(unsigned)query.getColumn(0).getInt(),
+                 query.getColumn(1).getString(), query.getColumn(2).getString(),
+                 query.getColumn(3).getString(), query.getColumn(4).getString(),
                  (unsigned)query.getColumn(5).getInt(),
                  (unsigned)query.getColumn(6).getInt(),
                  (unsigned)query.getColumn(7).getInt()});
     }
 
-    if (!query.isDone()) {
-        return tdu::Err(DbError::SelectFailure);
-    }
-
-    return tdu::Ok(std::move(tasks));
+    return tasks;
 }
 
 bool TaskDb::is_table_empty() const noexcept {
     return m_db.tableExists("tasks");
 }
 
-tdu::Result<void, DbError> TaskDb::add_object(Task& task) noexcept {
+void TaskDb::add_object(Task& task) noexcept {
     SQL::Statement query{
         m_db,
         "INSERT INTO tasks (topic, content, start_date, deadline, "
@@ -92,24 +85,17 @@ tdu::Result<void, DbError> TaskDb::add_object(Task& task) noexcept {
     query.bind(6, task.owner_id());
     query.bind(7, task.is_done());
 
-    if (!query.exec()) {
-        return tdu::Err(DbError::InsertFailure);
-    }
+    query.exec();
 
     query = SQL::Statement{
         m_db, "SELECT task_id FROM tasks ORDER BY task_id DESC LIMIT 1"};
 
-    if (!query.executeStep()) {
-        return tdu::Err(DbError::SelectFailure);
-    }
+    query.executeStep();
 
     task.set_id(std::stoi(query.getColumn(0)));
-
-    return tdu::Ok();
 }
 
-tdu::Result<void, DbError> TaskDb::update_object(
-    const Task& task) const noexcept {
+void TaskDb::update_object(const Task& task) const noexcept {
     SQL::Statement query{
         m_db,
         "UPDATE tasks SET topic = ?, content = ?, start_date = ?, deadline "
@@ -125,24 +111,13 @@ tdu::Result<void, DbError> TaskDb::update_object(
     query.bind(8, task.id());
 
     query.exec();
-    if (!query.isDone()) {
-        return tdu::Err(DbError::UpdateFailure);
-    }
-
-    return tdu::Ok();
 }
 
-tdu::Result<void, DbError> TaskDb::delete_object(
-    unsigned int id) const noexcept {
+void TaskDb::delete_object(unsigned int id) const noexcept {
     SQL::Statement query{m_db, "DELETE FROM tasks WHERE task_id = ?"};
     query.bind(1, std::to_string(id));
 
     query.exec();
-    if (!query.isDone()) {
-        return tdu::Err(DbError::DeleteFailure);
-    }
-
-    return tdu::Ok();
 }
 
 MessageDb::MessageDb(StringView db_filepath)
@@ -163,7 +138,7 @@ MessageDb::MessageDb(StringView db_filepath)
     }
 }
 
-tdu::Result<Vector<Message>, DbError> MessageDb::get_all_objects(
+Vector<Message> MessageDb::get_all_objects(
     unsigned int taks_id) const noexcept {
     SQL::Statement query{m_db, "SELECT * FROM messages WHERE task_id = ?"};
     query.bind(1, taks_id);
@@ -177,18 +152,14 @@ tdu::Result<Vector<Message>, DbError> MessageDb::get_all_objects(
                                    tdu::stotp(query.getColumn(4).getString())});
     }
 
-    if (!query.isDone()) {
-        return tdu::Err(DbError::SelectFailure);
-    }
-
-    return tdu::Ok(std::move(messages));
+    return messages;
 };
 
 bool MessageDb::is_table_empty() const noexcept {
     return m_db.tableExists("messages");
 }
 
-tdu::Result<void, DbError> MessageDb::add_object(Message& message) noexcept {
+void MessageDb::add_object(Message& message) noexcept {
     SQL::Statement query{m_db,
                          "INSERT INTO messages (task_id, sender_name, "
                          "content, timestamp) VALUES (?, ?, ?, ?)"};
@@ -198,37 +169,20 @@ tdu::Result<void, DbError> MessageDb::add_object(Message& message) noexcept {
     query.bind(4, tdu::tptos(message.timestamp()));
 
     query.exec();
-    if (!query.isDone()) {
-        return tdu::Err(DbError::InsertFailure);
-    }
 
     query = SQL::Statement{
         m_db,
         "SELECT message_id FROM messages ORDER BY message_id DESC LIMIT 1"};
 
-    if (!query.executeStep()) {
-        return tdu::Err(DbError::SelectFailure);
-    }
-
-    if (query.isDone()) {
-        return tdu::Err(DbError::SelectFailure);
-    }
+    query.executeStep();
 
     message.set_message_id(std::stoi(query.getColumn(0)));
-
-    return tdu::Ok();
 };
 
-tdu::Result<void, DbError> MessageDb::delete_all_by_task_id(
-    unsigned int task_id) noexcept {
+void MessageDb::delete_all_by_task_id(unsigned int task_id) noexcept {
     SQL::Statement query{m_db, "DELETE FROM messages WHERE task_id = ?"};
     query.bind(1, task_id);
 
     query.exec();
-    if (!query.isDone()) {
-        return tdu::Err(DbError::DeleteFailure);
-    }
-
-    return tdu::Ok();
 }
 }  // namespace twodocore

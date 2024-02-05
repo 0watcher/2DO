@@ -1,8 +1,12 @@
 #include "2DOCore/user.hpp"
 
+#include <optional>
 #include <stdexcept>
+#include <regex>
 #include "SQLiteCpp/Database.h"
-#include "Utils/database.hpp"
+#include "SQLiteCpp/Exception.h"
+#include "Utils/result.hpp"
+#include "Utils/type.hpp"
 
 namespace SQL = SQLite;
 
@@ -33,7 +37,8 @@ namespace twodocore {
     }
 }
 
-UserDb::UserDb(StringView db_filepath) : m_db{db_filepath, SQL::OPEN_READWRITE | SQL::OPEN_CREATE} {
+UserDb::UserDb(StringView db_filepath)
+    : m_db{db_filepath, SQL::OPEN_READWRITE | SQL::OPEN_CREATE} {
     if (!is_table_empty()) {
         SQL::Statement query{
             m_db,
@@ -49,24 +54,21 @@ UserDb::UserDb(StringView db_filepath) : m_db{db_filepath, SQL::OPEN_READWRITE |
     }
 }
 
-tdu::Result<User, DbError> UserDb::get_object(
-    unsigned int id) const noexcept {
+User UserDb::get_object(unsigned int id) const noexcept {
     SQL::Statement query{m_db, "SELECT * FROM users WHERE user_id = ?"};
     query.bind(1, id);
 
-    if (!query.executeStep()) {
-        return tdu::Err(DbError::SelectFailure);
-    }
+    query.executeStep();
 
     const auto user = User{
         (unsigned)query.getColumn(0).getInt(), query.getColumn(1).getString(),
         query.getColumn(2).getString(), query.getColumn(3).getString()};
 
-    return tdu::Ok(std::move(user));
+    // nrvo?
+    return user;
 }
 
-tdu::Result<Vector<User>, DbError> UserDb::get_all_objects()
-    const noexcept {
+Vector<User> UserDb::get_all_objects() const noexcept {
     SQL::Statement query{m_db, "SELECT * FROM users"};
 
     Vector<User> users;
@@ -77,46 +79,31 @@ tdu::Result<Vector<User>, DbError> UserDb::get_all_objects()
                              query.getColumn(3).getString()});
     }
 
-    if (!query.isDone()) {
-        return tdu::Err(DbError::SelectFailure);
-    }
-
-    return tdu::Ok(std::move(users));
+    return users;
 }
 
 bool UserDb::is_table_empty() const noexcept {
     return m_db.tableExists("users");
 }
 
-tdu::Result<void, DbError> UserDb::add_object(User& user) noexcept {
+void UserDb::add_object(User& user) noexcept {
     SQL::Statement query{
         m_db, "INSERT INTO users (username, role, password) VALUES (?, ?, ?)"};
     query.bind(1, user.username());
     query.bind(2, user.role<String>());
     query.bind(3, user.password());
 
-    if (!query.exec()) {
-        return tdu::Err(DbError::InsertFailure);
-    }
+    query.exec();
 
     query = SQL::Statement{
         m_db, "SELECT user_id FROM users ORDER BY user_id DESC LIMIT 1"};
 
-    if (!query.executeStep()) {
-        return tdu::Err(DbError::SelectFailure);
-    }
-
-    if(query.isDone()) {
-        return tdu::Err(DbError::SelectFailure);
-    }
+    query.executeStep();
 
     user.set_id(std::stoi(query.getColumn(0)));
-
-    return tdu::Ok();
 }
 
-tdu::Result<void, DbError> UserDb::update_object(
-    const User& user) const noexcept {
+void UserDb::update_object(const User& user) const noexcept {
     SQL::Statement query{m_db,
                          "UPDATE users SET username = ?, role = ?, "
                          "password = ? WHERE user_id = ?"};
@@ -126,38 +113,78 @@ tdu::Result<void, DbError> UserDb::update_object(
     query.bind(4, std::to_string(user.id()));
 
     query.exec();
-    if (!query.isDone()) {
-        return tdu::Err(DbError::UpdateFailure);
-    }
-
-    return tdu::Ok();
 }
 
-tdu::Result<void, DbError> UserDb::delete_object(
-    unsigned int id) const noexcept {
+void UserDb::delete_object(unsigned int id) const noexcept {
     SQL::Statement query{m_db, "DELETE FROM users WHERE user_id = ?"};
     query.bind(1, std::to_string(id));
 
     query.exec();
-    if (!query.isDone()) {
-        return tdu::Err(DbError::DeleteFailure);
-    }
-
-    return tdu::Ok();
 }
-tdu::Result<User, DbError> UserDb::find_object_by_unique_column(
+
+std::optional<User> UserDb::find_object_by_unique_column(
     const String& column_value) const noexcept {
     SQL::Statement query{m_db, "SELECT * FROM users WHERE username = ?"};
     query.bind(1, column_value);
 
-    if (!query.executeStep()) {
-        return tdu::Err(DbError::SelectFailure);
+    try {
+        query.executeStep();
+    } catch (const SQL::Exception& e) {
+        if (!query.hasRow()) {
+            return std::nullopt;
+        } else {
+            throw e;
+        }
     }
 
     const auto user = User{
         (unsigned)query.getColumn(0).getInt(), query.getColumn(1).getString(),
         query.getColumn(2).getString(), query.getColumn(3).getString()};
 
-    return tdu::Ok(std::move(user));
+    return user;
+};
+
+tdu::Result<void, AuthErr> AuthenticationManager::username_validation(
+    const String& username) {
+    if (username.length() <= 0) {
+        return tdu::Err(AuthErr::InvalidNameLength);
+    }
+
+    if (is_in_db(username)) {
+        return tdu::Err(AuthErr::AlreadyExistingName);
+    }
+
+    return tdu::Ok();
+};
+
+tdu::Result<void, AuthErr> AuthenticationManager::password_validation(
+    const String& password) {
+    const std::regex upper_case_expression{"[A-Z]+"};
+    const std::regex lower_case_expression{"[a-z]+"};
+    const std::regex number_expression{"[0-9]+"};
+    const std::regex special_char_expression{
+        "[!@#$%^&*()_+\\-=\\[\\]{};:\\\",<.>/?]+"};
+
+    if (password.length() <= 8 && password.length() > 20) {
+        return tdu::Err(AuthErr::InvalidPassLength);
+    }
+    if (!std::regex_search(password, upper_case_expression)) {
+        return tdu::Err(AuthErr::MissingUpperCase);
+    }
+    if (!std::regex_search(password, lower_case_expression)) {
+        return tdu::Err(AuthErr::MissingLowerCase);
+    }
+    if (!std::regex_search(password, number_expression)) {
+        return tdu::Err(AuthErr::MissingNumber);
+    }
+    if (!std::regex_search(password, special_char_expression)) {
+        return tdu::Err(AuthErr::MissingSpecialCharacter);
+    }
+
+    return tdu::Ok();
+};
+
+bool AuthenticationManager::is_in_db(const String& username) {
+    return (m_user_db->find_object_by_unique_column(username)) ? true : false;
 };
 }  // namespace twodocore

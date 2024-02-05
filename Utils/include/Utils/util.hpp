@@ -1,8 +1,10 @@
 #pragma once
 
+#include <any>
 #include <chrono>
 #include <functional>
 #include <iomanip>
+#include <memory>
 #include <optional>
 #include <sstream>
 #include <stdexcept>
@@ -30,8 +32,9 @@ class AssertFail : std::runtime_error {
 
     const char* what() const noexcept override {
         std::ostringstream oss;
-        oss << "Assertion failed in file " << file << "at line " << line;
-        return oss.str().c_str();
+        oss << "Assertion failed in file " << file << "at line " << line
+            << "\nError: " << std::runtime_error::what();
+        return std::move(oss.str().c_str());
     }
 
   private:
@@ -90,8 +93,6 @@ void create_simple_app_env(const String& folder_name,
 
 void wipe_simple_app_env(const String& folder_name);
 
-[[nodiscard]] String input();
-
 [[nodiscard]] String hash(const String& str);
 
 void sleep(unsigned int t) noexcept;
@@ -99,17 +100,41 @@ void sleep(unsigned int t) noexcept;
 [[nodiscard]] String tptos(const TimePoint&) noexcept;
 [[nodiscard]] TimePoint stotp(const String&) noexcept;
 
-template <typename T>
-class [[nodiscard]] IUserInputHandler {
+class IUserInputHandler {
   public:
-    virtual T get_input() const = 0;
-    virtual ~IUserInputHandler() = default;
+    virtual String get_input() const = 0;
+    virtual ~IUserInputHandler(){};
 };
 
-class [[nodiscard]] IPrinter {
+class IPrinter {
   public:
     virtual void msg_print(StringView msg) const = 0;
     virtual void err_print(StringView err) const = 0;
-    virtual ~IPrinter() = default;
+    virtual ~IPrinter(){};
 };
+
+class Resource {
+  public:
+    Resource() = default;
+    Resource(const Resource&) = delete;
+    Resource& operator=(const Resource&) = delete;
+    Resource(Resource&&) = default;
+    Resource& operator=(Resource&&) = default;
+
+    void push(std::any&& data) {
+        m_resource = std::make_unique<std::any>(std::move(data));
+    }
+
+    template <typename ResourceT>
+    std::optional<ResourceT> pop() {
+        if (m_resource->has_value()) {
+            return std::move(*std::any_cast<ResourceT>(m_resource.release()));
+        }
+        return std::nullopt;
+    }
+
+  private:
+    std::unique_ptr<std::any> m_resource = nullptr;
+};
+
 }  // namespace twodoutils

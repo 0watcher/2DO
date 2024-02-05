@@ -97,15 +97,6 @@ void wipe_simple_app_env(const String& folder_name) {
     return tp;
 }
 
-[[nodiscard]] String input() {
-    String input{};
-    std::getline(std::cin, input);
-    if (std::cin.fail()) {
-        throw std::runtime_error("Failure getting value.");
-    }
-    return input;
-}
-
 [[nodiscard]] String hash(const String& str) {
     unsigned int init = 123456789;
     unsigned int magic = 7654321;

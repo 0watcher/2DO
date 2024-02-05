@@ -1,7 +1,5 @@
 #pragma once
 
-#include <fmt/core.h>
-#include <iostream>
 #include <memory>
 
 #include <2DOApp/term.hpp>
@@ -9,6 +7,7 @@
 #include <2DOCore/user.hpp>
 #include <Utils/result.hpp>
 #include <Utils/type.hpp>
+#include "Utils/util.hpp"
 
 namespace tdc = twodocore;
 namespace tdu = twodoutils;
@@ -22,24 +21,6 @@ namespace tdu = twodoutils;
 #define USER_LOGS_FILE_NAME "user-logs.txt"
 
 namespace twodo {
-class UserInput : public tdu::IUserInputHandler<String> {
-  public:
-    String get_input() const override {
-        auto input = String();
-        std::getline(std::cin, input);
-        return input;
-    }
-};
-
-class MsgDisplayer : public tdu::IPrinter {
-  public:
-    void msg_print(StringView msg) const override { fmt::println("{}", msg); }
-
-    void err_print(StringView err) const override {
-        fmt::println(stderr, "{}", err);
-    }
-};
-
 class [[nodiscard]] App {
   public:
     App(App&& other) = default;
@@ -47,30 +28,45 @@ class [[nodiscard]] App {
     App(const App&) = delete;
     App& operator=(const App&) = delete;
 
-    static std::shared_ptr<App> getInstance() {
-        if (instance.get() == nullptr) {
-            instance = std::shared_ptr<App>();
-        }
+    App() = default;
 
+    static std::shared_ptr<App> getInstance() {
+        if (!instance) {
+            instance = std::make_shared<App>();
+        }
+        return instance;
+    }
+
+    std::shared_ptr<App> set_dependencies(
+        std::shared_ptr<tdu::IPrinter> iprinter,
+        std::shared_ptr<tdu::IUserInputHandler> inputhandler) {
+        instance->m_printer = iprinter;
+        instance->m_input_handler = inputhandler;
         return instance;
     }
 
     void run();
-    std::shared_ptr<tdc::User> get_current_user() { return current_user; }
 
   private:
     inline static std::shared_ptr<App> instance = nullptr;
-    std::shared_ptr<tdc::User> current_user = nullptr;
-    tdc::UserDb user_db{DB_NAME};
-    tdc::TaskDb task_db{DB_NAME};
-    tdc::MessageDb message_db{DB_NAME};
+    std::shared_ptr<tdc::User> m_current_user = nullptr;
+    std::shared_ptr<tdc::UserDb> m_user_db =
+        std::make_shared<tdc::UserDb>(DB_NAME);
+    std::shared_ptr<tdc::TaskDb> m_task_db =
+        std::make_shared<tdc::TaskDb>(DB_NAME);
+    std::shared_ptr<tdc::MessageDb> m_message_db =
+        std::make_shared<tdc::MessageDb>(DB_NAME);
+    tdc::AuthenticationManager m_amanager{m_user_db};
+    std::shared_ptr<tdu::IPrinter> m_printer = nullptr;
+    std::shared_ptr<tdu::IUserInputHandler> m_input_handler = nullptr;
+    tdu::Resource m_resource{};
 
-    App() = default;
-    Menu<String> load_menu() const;
-    std::shared_ptr<Page<String>> load_main_menu() const;
-    std::shared_ptr<Page<String>> load_tasks_menu() const;
-    std::shared_ptr<Page<String>> load_settings_menu() const;
+    Menu load_menu();
+    std::shared_ptr<Page> load_main_menu() const;
+    std::shared_ptr<Page> load_tasks_menu() const;
+    std::shared_ptr<Page> load_settings_menu();
 
+    std::shared_ptr<tdc::User> get_current_user() { return m_current_user; }
     StringView str_done(bool is_done) const;
 };
 }  // namespace twodo

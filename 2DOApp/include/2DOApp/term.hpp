@@ -1,6 +1,5 @@
 #pragma once
 
-#include <fmt/core.h>
 #include <functional>
 #include <memory>
 
@@ -13,67 +12,61 @@ namespace tdu = twodoutils;
 namespace tdc = twodocore;
 
 namespace twodo {
-template <typename TOption>
-class [[nodiscard]] Page : public std::enable_shared_from_this<Page<TOption>> {
+class [[nodiscard]] Page : std::enable_shared_from_this<Page> {
   public:
     Page(const Page&) = default;
     Page& operator=(const Page&) = default;
-    Page(Page&& other) = default;
-    Page& operator=(Page&& other) = default;
+    Page(Page&&) = default;
+    Page& operator=(Page&&) = default;
 
-    Page(std::function<void()> content,
-         std::shared_ptr<Page> parent = nullptr,
-         bool is_page_event = true)
-        : content{std::move(content)},
-          parent{parent},
-          page_event{is_page_event} {}
+    Page(std::function<void()> content, bool is_menu_event = true)
+        : m_content{std::move(content)}, m_menu_event{is_menu_event} {}
 
-    void execute() const { content(); }
+    void execute() { m_content(); }
 
-    void attach(TOption option, std::shared_ptr<Page<TOption>> child) {
-        childs.insert({option, child});
-        child->parent = this->shared_from_this();
+    void attach(const String& option, std::shared_ptr<Page> child) {
+        m_childs.insert({option, child});
+        child->m_parent = shared_from_this();
     }
 
-    std::shared_ptr<Page> get_parent() const { return parent; }
+    bool is_menu_event() const { return m_menu_event; }
 
-    std::shared_ptr<Page<TOption>> get_page(TOption option) const {
-        auto it = childs.find(option);
-        if (it != childs.end()) {
+    std::shared_ptr<Page> get_page(const String& option) const {
+        auto it = m_childs.find(option);
+        if (it != m_childs.end()) {
             return it->second;
         }
         return nullptr;
     }
 
   private:
-    std::function<void()> content;
-    std::shared_ptr<Page<TOption>> parent;
-    HashMap<TOption, std::shared_ptr<Page<TOption>>> childs;
+    std::function<void()> m_content;
+    HashMap<String, std::shared_ptr<Page>> m_childs;
+    std::shared_ptr<Page> m_parent{};
+    bool m_menu_event;
 
-  public:
-    bool page_event;
+    friend class Menu;
 };
 
-template <typename TOption>
 class [[nodiscard]] Menu {
   public:
-    Menu(Menu&& other) = default;
-    Menu& operator=(Menu&& other) = default;
+    Menu(Menu&&) = default;
+    Menu& operator=(Menu&&) = default;
     Menu(const Menu&) = delete;
     Menu& operator=(const Menu&) = delete;
 
-    Menu(std::shared_ptr<Page<TOption>> initial_page,
-         std::unique_ptr<tdu::IPrinter> iprinter,
-         std::unique_ptr<tdu::IUserInputHandler<TOption>> input_handler_)
+    Menu(std::shared_ptr<Page> initial_page,
+         std::shared_ptr<tdu::IPrinter> iprinter,
+         std::shared_ptr<tdu::IUserInputHandler> input_handler_)
         : current_page{std::move(initial_page)},
-          printer{std::move(iprinter)},
-          input_handler{std::move(input_handler_)} {}
+          printer{iprinter},
+          input_handler{input_handler_} {}
 
-    void run(TOption quit_input = TOption{}) {
+    void run(const String& quit_input = String{}) {
         while (true) {
             execute_current_page();
 
-            TOption user_choice = get_user_choice();
+            String user_choice = get_user_choice();
             if (handle_quit(user_choice, quit_input)) {
                 break;
             }
@@ -85,11 +78,11 @@ class [[nodiscard]] Menu {
     }
 
   private:
-    std::shared_ptr<Page<TOption>> current_page;
-    std::unique_ptr<tdu::IPrinter> printer;
-    std::unique_ptr<tdu::IUserInputHandler<TOption>> input_handler;
+    std::shared_ptr<Page> current_page;
+    std::shared_ptr<tdu::IPrinter> printer;
+    std::shared_ptr<tdu::IUserInputHandler> input_handler;
 
-    TOption get_user_choice() const { return input_handler->get_input(); }
+    String get_user_choice() const { return input_handler->get_input(); }
 
     void execute_current_page() {
         if (current_page) {
@@ -97,7 +90,7 @@ class [[nodiscard]] Menu {
         }
     }
 
-    bool handle_quit(TOption user_choice, TOption quit_input) {
+    bool handle_quit(const String& user_choice, const String& quit_input) {
         if (user_choice == quit_input) {
             return navigate_to_parent_or_exit();
         }
@@ -105,7 +98,7 @@ class [[nodiscard]] Menu {
     }
 
     bool navigate_to_parent_or_exit() {
-        const auto parent_page = current_page->get_parent();
+        const auto parent_page = current_page;
         if (!parent_page) {
             return true;
         }
@@ -113,8 +106,9 @@ class [[nodiscard]] Menu {
         return false;
     }
 
-    void navigate_or_display_error(TOption user_choice, TOption quit_input) {
-        std::shared_ptr<Page<TOption>> selected_page =
+    void navigate_or_display_error(const String& user_choice,
+                                   const String& quit_input) {
+        std::shared_ptr<Page> selected_page =
             current_page->get_page(user_choice);
         if (!selected_page && user_choice != quit_input) {
             display_invalid_option_error();
@@ -124,13 +118,13 @@ class [[nodiscard]] Menu {
     }
 
     void display_invalid_option_error() const {
-        printer->msg_print("Invalid option!");
+        printer->msg_print("Invalid option!\n");
         tdu::sleep(2000);
     }
 
     void perform_page_navigation_or_execution(
-        std::shared_ptr<Page<TOption>> selected_page) {
-        if (selected_page && !selected_page->page_event) {
+        std::shared_ptr<Page> selected_page) {
+        if (selected_page && !selected_page->is_menu_event()) {
             selected_page->execute();
         } else if (selected_page) {
             current_page = selected_page;
@@ -138,67 +132,86 @@ class [[nodiscard]] Menu {
     }
 };
 
-enum class AuthErr {
-    InvalidNameLength = 1,
-    AlreadyExistingName,
-    InvalidPassLength,
-    MissingUpperCase,
-    MissingLowerCase,
-    MissingNumber,
-    MissingSpecialCharacter,
-    UserNotFound,
-    AllTriesExhausted,
-    DbErr,
-};
+// enum class AuthErr {
+//     InvalidNameLength = 1,
+//     AlreadyExistingName,
+//     InvalidPassLength,
+//     MissingUpperCase,
+//     MissingLowerCase,
+//     MissingNumber,
+//     MissingSpecialCharacter,
+//     UserNotFound,
+//     AllTriesExhausted,
+//     DbErr,
+// };
 
-class [[nodiscard]] RegisterManager {
-  public:
-    RegisterManager(RegisterManager&& other) = default;
-    RegisterManager& operator=(RegisterManager&& other) = default;
-    RegisterManager(const RegisterManager&) = delete;
-    RegisterManager& operator=(const RegisterManager&) = delete;
+// class [[nodiscard]] AuthenticationManager {
+//   public:
+//     AuthenticationManager(AuthenticationManager&& other) = default;
+//     AuthenticationManager& operator=(AuthenticationManager&& other) =
+//     default; AuthenticationManager(const AuthenticationManager&) = delete;
+//     AuthenticationManager& operator=(const AuthenticationManager&) = delete;
 
-    RegisterManager(std::shared_ptr<tdc::UserDb> udb,
-                    std::shared_ptr<tdu::IUserInputHandler<String>> ihandler,
-                    std::shared_ptr<tdu::IPrinter> iprinter)
-        : m_udb{udb}, m_ihandler{ihandler}, m_printer{iprinter} {}
+//     AuthenticationManager(std::shared_ptr<tdc::UserDb> user_db)
+//         : m_user_db{user_db} {}
 
-    [[nodiscard]] tdu::Result<tdc::User, AuthErr> singup();
+//     tdu::Result<void, AuthErr> username_validation(StringView username);
+//     tdu::Result<void, AuthErr> password_validation(StringView password);
 
-    [[nodiscard]] tdu::Result<void, AuthErr> username_validation(
-        StringView username) const;
+//   private:
+//     std::shared_ptr<tdc::UserDb> m_user_db;
 
-    [[nodiscard]] tdu::Result<void, AuthErr> password_validation(
-        const String& password) const;
+//     bool is_in_db(const tdc::User& user);
+// };
 
-  private:
-    std::shared_ptr<tdc::UserDb> m_udb;
-    std::shared_ptr<tdu::IUserInputHandler<String>> m_ihandler;
-    std::shared_ptr<tdu::IPrinter> m_printer;
-};
+// class [[nodiscard]] RegisterManager {
+//   public:
+//     RegisterManager(RegisterManager&& other) = default;
+//     RegisterManager& operator=(RegisterManager&& other) = default;
+//     RegisterManager(const RegisterManager&) = delete;
+//     RegisterManager& operator=(const RegisterManager&) = delete;
 
-class [[nodiscard]] AuthManager {
-  public:
-    AuthManager(AuthManager&& other) = default;
-    AuthManager& operator=(AuthManager&& other) = default;
-    AuthManager(const AuthManager&) = delete;
-    AuthManager& operator=(const AuthManager&) = delete;
+//     RegisterManager(std::shared_ptr<tdc::UserDb> udb,
+//                     std::shared_ptr<tdu::IUserInputHandler<String>> ihandler,
+//                     std::shared_ptr<tdu::IPrinter> iprinter)
+//         : m_udb{udb}, m_ihandler{ihandler}, m_printer{iprinter} {}
 
-    AuthManager(std::shared_ptr<tdc::UserDb> udb,
-                std::shared_ptr<tdu::IUserInputHandler<String>> ihandler,
-                std::shared_ptr<tdu::IPrinter> iprinter)
-        : m_udb{udb}, m_ihandler{ihandler}, m_printer{iprinter} {}
+//     [[nodiscard]] tdu::Result<tdc::User, AuthErr> singup();
 
-    [[nodiscard]] tdu::Result<tdc::User, AuthErr> login();
+//     [[nodiscard]] tdu::Result<void, AuthErr> username_validation(
+//         StringView username) const;
 
-    [[nodiscard]] tdu::Result<void, AuthErr> auth_username();
+//     [[nodiscard]] tdu::Result<void, AuthErr> password_validation(
+//         const String& password) const;
 
-    [[nodiscard]] tdu::Result<tdc::User, AuthErr> auth_password(
-        const String& username);
+//   private:
+//     std::shared_ptr<tdc::UserDb> m_udb;
+//     std::shared_ptr<tdu::IUserInputHandler<String>> m_ihandler;
+//     std::shared_ptr<tdu::IPrinter> m_printer;
+// };
 
-  private:
-    std::shared_ptr<tdc::UserDb> m_udb;
-    std::shared_ptr<tdu::IUserInputHandler<String>> m_ihandler;
-    std::shared_ptr<tdu::IPrinter> m_printer;
-};
+// class [[nodiscard]] AuthManager {
+//   public:
+//     AuthManager(AuthManager&& other) = default;
+//     AuthManager& operator=(AuthManager&& other) = default;
+//     AuthManager(const AuthManager&) = delete;
+//     AuthManager& operator=(const AuthManager&) = delete;
+
+//     AuthManager(std::shared_ptr<tdc::UserDb> udb,
+//                 std::shared_ptr<tdu::IUserInputHandler<String>> ihandler,
+//                 std::shared_ptr<tdu::IPrinter> iprinter)
+//         : m_udb{udb}, m_ihandler{ihandler}, m_printer{iprinter} {}
+
+//     [[nodiscard]] tdu::Result<tdc::User, AuthErr> login();
+
+//     [[nodiscard]] tdu::Result<void, AuthErr> auth_username();
+
+//     [[nodiscard]] tdu::Result<tdc::User, AuthErr> auth_password(
+//         const String& username);
+
+//   private:
+//     std::shared_ptr<tdc::UserDb> m_udb;
+//     std::shared_ptr<tdu::IUserInputHandler<String>> m_ihandler;
+//     std::shared_ptr<tdu::IPrinter> m_printer;
+// };
 }  // namespace twodo

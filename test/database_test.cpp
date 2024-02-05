@@ -9,6 +9,7 @@
 #include <gtest/gtest.h>
 #include <filesystem>
 #include <memory>
+#include <optional>
 
 namespace tdc = twodocore;
 namespace tdu = twodoutils;
@@ -34,30 +35,29 @@ struct DbTest : testing::Test {
 
 TEST_F(DbTest, CheckUserDbFunctionalities) {
     tdc::User user{"patryk", tdc::Role::Admin, "Patryk123!"};
-    EXPECT_TRUE(user_db->add_object(user));
+    EXPECT_NO_THROW(user_db->add_object(user));
 
-    const auto user_ = user_db->get_object(user.id());
-    EXPECT_TRUE(user_);
-    EXPECT_EQ(user_.unwrap(), user);
+    std::optional<tdc::User> user_;
+    EXPECT_NO_THROW(user_ = user_db->get_object(user.id()));
+    EXPECT_EQ(user_, user);
 
     user.set_password("$SuperSecretPass2");
     user.set_username("SomeNewUser");
-    EXPECT_TRUE(user_db->update_object(user));
+    EXPECT_NO_THROW(user_db->update_object(user));
 
-    const auto user__ = user_db->get_object(user.id());
-    EXPECT_TRUE(user__);
-    EXPECT_EQ(user__.unwrap(), user);
+    std::optional<tdc::User> user__;
+    EXPECT_NO_THROW(user__ = user_db->get_object(user.id()));
+    EXPECT_EQ(user__, user);
 
     tdc::User user2{"someguy", tdc::Role::User, "Password123!"};
-    EXPECT_TRUE(user_db->add_object(user2));
-    const auto result = user_db->get_all_objects();
-    EXPECT_TRUE(result);
-    const auto users = result.unwrap();
+    EXPECT_NO_THROW(user_db->add_object(user2));
+    Vector<tdc::User> users;
+    EXPECT_NO_THROW(users = user_db->get_all_objects());
     EXPECT_EQ(users[0], user);
     EXPECT_EQ(users[1], user2);
 
-    EXPECT_TRUE(user_db->delete_object(user.id()));
-    EXPECT_TRUE(user_db->delete_object(user2.id()));
+    EXPECT_NO_THROW(user_db->delete_object(user.id()));
+    EXPECT_NO_THROW(user_db->delete_object(user2.id()));
     EXPECT_TRUE(user_db->is_table_empty());
 }
 
@@ -69,20 +69,20 @@ TEST_F(DbTest, CheckTaskDbFunctionalities) {
                    1,
                    2,
                    false};
-    EXPECT_TRUE(task_db->add_object(task));
+    EXPECT_NO_THROW(task_db->add_object(task));
 
-    const auto task_ = task_db->get_object(task.id());
-    EXPECT_TRUE(task_);
-    EXPECT_EQ(task_.unwrap(), task);
+    std::optional<tdc::Task> task_;
+    EXPECT_TRUE(task_= task_db->get_object(task.id()));
+    EXPECT_EQ(task_, task);
 
     task.set_topic("SomeOtherTopic");
     task.set_content("I've added some additional things to do now!");
     task.set_deadline(tdu::get_current_timestamp<TimePoint>());
-    EXPECT_TRUE(task_db->update_object(task));
+    EXPECT_NO_THROW(task_db->update_object(task));
 
-    const auto task__ = task_db->get_object(task.id());
-    EXPECT_TRUE(task__);
-    EXPECT_EQ(task__.unwrap(), task);
+    std::optional<tdc::Task> task__;
+    EXPECT_NO_THROW(task__ = task_db->get_object(task.id()));
+    EXPECT_EQ(task__, task);
 
     tdc::Task task2{"SomeOtherTopic",
                     "........",
@@ -91,15 +91,14 @@ TEST_F(DbTest, CheckTaskDbFunctionalities) {
                     1,
                     2,
                     false};
-    EXPECT_TRUE(task_db->add_object(task2));
-    const auto result = task_db->get_all_objects(1);
-    EXPECT_TRUE(result);
-    const auto tasks = result.unwrap();
+    EXPECT_NO_THROW(task_db->add_object(task2));
+    Vector<tdc::Task> tasks;
+    EXPECT_NO_THROW(tasks = task_db->get_all_objects(1));
     EXPECT_EQ(tasks[0], task);
     EXPECT_EQ(tasks[1], task2);
 
-    EXPECT_TRUE(task_db->delete_object(task.id()));
-    EXPECT_TRUE(task_db->delete_object(task2.id()));
+    EXPECT_NO_THROW(task_db->delete_object(task.id()));
+    EXPECT_NO_THROW(task_db->delete_object(task2.id()));
     EXPECT_TRUE(task_db->is_table_empty());
 }
 
@@ -113,17 +112,16 @@ TEST_F(DbTest, CheckMessageDbFunctionalities) {
                      tdu::get_current_timestamp<TimePoint>()}};
 
     for (auto& msg : messages) {
-        EXPECT_TRUE(msg_db->add_object(msg));
+        EXPECT_NO_THROW(msg_db->add_object(msg));
     }
 
-    auto result = msg_db->get_all_objects(1);
-    EXPECT_TRUE(result);
-    const auto selected_messages = result.unwrap();
+    Vector<tdc::Message> selected_messages;
+    EXPECT_NO_THROW(selected_messages = msg_db->get_all_objects(1));
 
     for (std::size_t i = 0; i < messages.size(); ++i) {
         EXPECT_EQ(messages[i], selected_messages[i]);
     }
 
-    EXPECT_TRUE(msg_db->delete_all_by_task_id(1));
+    EXPECT_NO_THROW(msg_db->delete_all_by_task_id(1));
     EXPECT_TRUE(msg_db->is_table_empty());
 }

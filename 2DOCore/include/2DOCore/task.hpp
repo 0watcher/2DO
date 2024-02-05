@@ -8,6 +8,7 @@
 #include <Utils/util.hpp>
 
 namespace tdu = twodoutils;
+namespace SQL = SQLite;
 
 namespace twodocore {
 class [[nodiscard]] Task {
@@ -17,7 +18,7 @@ class [[nodiscard]] Task {
     Task(Task&& other) = default;
     Task& operator=(Task&& other) = default;
 
-    Task(int id,
+    Task(unsigned int id,
          const String& topic,
          const String& content,
          const TimePoint& start_date,
@@ -34,7 +35,7 @@ class [[nodiscard]] Task {
           m_owner_id{owner_id},
           m_is_done{is_done} {}
 
-    Task(int id,
+    Task(unsigned int id,
          const String& topic,
          const String& content,
          const String& start_date,
@@ -75,7 +76,7 @@ class [[nodiscard]] Task {
                m_owner_id == other.m_owner_id && m_is_done == other.m_is_done;
     }
 
-    [[nodiscard]] unsigned int id() const { return m_id.value(); }
+    [[nodiscard]] unsigned int id() const { return m_id; }
     [[nodiscard]] String topic() const { return m_topic; }
     [[nodiscard]] String content() const { return m_content; }
 
@@ -116,7 +117,7 @@ class [[nodiscard]] Task {
     void set_is_done(bool done) { m_is_done = done; }
 
   private:
-    std::optional<int> m_id{std::nullopt};
+    unsigned int m_id;
     String m_topic{};
     String m_content{};
     TimePoint m_start_date{};
@@ -135,18 +136,18 @@ class [[nodiscard]] TaskDb {
 
     TaskDb(StringView db_filepath);
 
-    tdu::Result<Task, DbError> get_object(unsigned int id) const noexcept;
+    Task get_object(unsigned int id) const noexcept;
 
-    tdu::Result<Vector<Task>, DbError> get_all_objects(
+    Vector<Task> get_all_objects(
         unsigned int executor_id) const noexcept;
 
     bool is_table_empty() const noexcept;
 
-    tdu::Result<void, DbError> add_object(Task& task) noexcept;
+    void add_object(Task& task) noexcept;
 
-    tdu::Result<void, DbError> update_object(const Task& task) const noexcept;
+    void update_object(const Task& task) const noexcept;
 
-    tdu::Result<void, DbError> delete_object(unsigned int id) const noexcept;
+    void delete_object(unsigned int id) const noexcept;
 
   private:
     SQL::Database m_db;
@@ -220,14 +221,14 @@ class [[nodiscard]] MessageDb {
 
     MessageDb(StringView db_filepath);
 
-    tdu::Result<Vector<Message>, DbError> get_all_objects(
+    Vector<Message> get_all_objects(
         unsigned int task_id) const noexcept;
 
     bool is_table_empty() const noexcept;
 
-    tdu::Result<void, DbError> add_object(Message& message) noexcept;
+    void add_object(Message& message) noexcept;
 
-    tdu::Result<void, DbError> delete_all_by_task_id(
+    void delete_all_by_task_id(
         unsigned int task_id) noexcept;
 
   private:
