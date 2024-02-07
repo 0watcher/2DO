@@ -13,9 +13,8 @@
 
 namespace tdc = twodocore;
 namespace tdu = twodoutils;
-namespace fs = std::filesystem;
 
-constexpr StringView TEST_DB_PATH = "../../test/db.db3";
+constexpr StringView TEST_DB_PATH = ":memory:";
 
 struct DbTest : testing::Test {
     std::unique_ptr<tdc::UserDb> user_db =
@@ -28,8 +27,6 @@ struct DbTest : testing::Test {
     void TearDown() override {
         user_db.reset();
         task_db.reset();
-        fs::path filepath = fs::path(TEST_DB_PATH);
-        fs::remove(filepath);
     }
 };
 

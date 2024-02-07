@@ -15,8 +15,8 @@ namespace tdu = twodoutils;
 #define QUIT_OPTION "0"
 #define FIRST_OPTION "1"
 #define SECOND_OPTION "2"
-#define THIRD_OPTION "2"
-#define DB_NAME "2do.db3"
+#define THIRD_OPTION "3"
+#define DB_NAME ":memory:"
 #define ERR_LOGS_FILE_NAME "big-error-logs.txt"
 #define USER_LOGS_FILE_NAME "user-logs.txt"
 

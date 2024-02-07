@@ -6,6 +6,7 @@
 #include <2DOCore/user.hpp>
 #include <Utils/type.hpp>
 #include <Utils/util.hpp>
+#include <memory>
 
 namespace twodo {
 void App::run() {
@@ -15,7 +16,7 @@ void App::run() {
 }
 
 Menu App::load_menu() {
-    auto main = load_main_menu();
+    const auto main = load_main_menu();
     Menu menu{main, m_printer, m_input_handler};
 
     main->attach(FIRST_OPTION, load_tasks_menu());
@@ -63,11 +64,10 @@ std::shared_ptr<Page> App::load_tasks_menu() const {
     const std::shared_ptr<Page> delegated_tasks =
         std::make_shared<Page>([]() { fmt::print(""); });
 
-    const std::shared_ptr<Page> create_task = std::make_shared<Page>(
-        []() {
+    const std::shared_ptr<Page> create_task =
+        std::make_shared<Page>(false, []() {
 
-        },
-        false);
+        });
 
     tasks->attach(FIRST_OPTION, your_tasks);
     tasks->attach(SECOND_OPTION, delegated_tasks);
@@ -95,20 +95,19 @@ std::shared_ptr<Page> App::load_settings_menu() {
             "-> ");
     });
 
-    const std::shared_ptr<Page> update_users =
-        std::make_shared<Page>([this]() {
-            auto users = m_user_db->get_all_objects();
+    const std::shared_ptr<Page> update_users = std::make_shared<Page>([this]() {
+        auto users = m_user_db->get_all_objects();
 
-            unsigned int count = 1;
-            for (const auto& user : users) {
-                m_printer->msg_print(fmt::format("Users:\n[{}] {} ({})\n-> ",
-                                                 count++, user.username(),
-                                                 user.role<String>()));
-            }
-        });
+        unsigned int count = 1;
+        for (const auto& user : users) {
+            m_printer->msg_print(fmt::format("Users:\n[{}] {} <{}>\n-> ",
+                                             count++, user.username(),
+                                             user.role<String>()));
+        }
+    });
 
-    const std::shared_ptr<Page> add_new_user = std::make_shared<Page>(
-        [this]() {
+    const std::shared_ptr<Page> add_new_user =
+        std::make_shared<Page>(false, [this]() {
             if (m_current_user->role<tdc::Role>() == tdc::Role::Admin) {
                 String username;
                 String password;
@@ -144,36 +143,29 @@ std::shared_ptr<Page> App::load_settings_menu() {
 
                 m_printer->msg_print("User has been added successfully!");
             }
-        },
-        false);
+        });
 
     user_manager->attach(FIRST_OPTION, update_users);
     user_manager->attach(SECOND_OPTION, add_new_user);
 
-    const std::shared_ptr<Page> users = std::make_shared<Page>(
-        []() { fmt::print("Advanced:\n[1] Wipe all data\n-> "); });
-
     const std::shared_ptr<Page> advanced = std::make_shared<Page>(
         []() { fmt::print("Advanced:\n[1] Wipe all data\n-> "); });
 
-    const std::shared_ptr<Page> wipe_all_data = std::make_shared<Page>(
-        [this]() {
-            m_printer->msg_print("Are you 100% sure?\n-> ");
+    const std::shared_ptr<Page> wipe_all_data = std::make_shared<
+        Page>(false, [this]() {
+        m_printer->msg_print("Are you 100% sure?\n-> ");
 
-            if (const auto choice = m_input_handler->get_input();
-                choice == "yes") {
-                tdu::wipe_simple_app_env("2DO");
-                tdu::create_simple_app_env("2DO",
-                                           {DB_NAME, ERR_LOGS_FILE_NAME});
-                m_printer->msg_print("Data wiped!");
-            } else if (choice == "no") {
-            } else {
-                m_printer->msg_print("Invalid option!");
-                tdu::sleep(2000);
-                tdu::clear_term();
-            }
-        },
-        false);
+        if (const auto choice = m_input_handler->get_input(); choice == "yes") {
+            tdu::wipe_simple_app_env("2DO");
+            tdu::create_simple_app_env("2DO", {DB_NAME, ERR_LOGS_FILE_NAME});
+            m_printer->msg_print("Data wiped!");
+        } else if (choice == "no") {
+        } else {
+            m_printer->msg_print("Invalid option!");
+            tdu::sleep(2000);
+            tdu::clear_term();
+        }
+    });
 
     advanced->attach(FIRST_OPTION, wipe_all_data);
 
