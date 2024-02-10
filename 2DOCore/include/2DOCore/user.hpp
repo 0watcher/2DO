@@ -88,20 +88,20 @@ class [[nodiscard]] UserDb {
 
     UserDb(StringView db_filepath);
 
-    User get_object(unsigned int id) const noexcept;
+    User get_object(unsigned int id) const;
 
     std::optional<User> find_object_by_unique_column(
-        const String& column_value) const noexcept;
+        const String& column_value) const;
 
-    Vector<User> get_all_objects() const noexcept;
+    Vector<User> get_all_objects() const;
 
-    bool is_table_empty() const noexcept;
+    bool is_table_empty() const;
 
-    void add_object(User& user) noexcept;
+    void add_object(User& user);
 
-    void update_object(const User& user) const noexcept;
+    void update_object(const User& user) const;
 
-    void delete_object(unsigned int id) const noexcept;
+    void delete_object(unsigned int id) const;
 
   private:
     SQL::Database m_db;

@@ -31,7 +31,7 @@ TaskDb::TaskDb(StringView db_filepath)
     }
 }
 
-Task TaskDb::get_object(unsigned int id) const noexcept {
+Task TaskDb::get_object(unsigned int id) const {
     SQL::Statement query{m_db, "SELECT * FROM tasks WHERE task_id = ?"};
     query.bind(1, id);
 
@@ -49,7 +49,7 @@ Task TaskDb::get_object(unsigned int id) const noexcept {
     return task;
 }
 
-Vector<Task> TaskDb::get_all_objects(unsigned int executor_id) const noexcept {
+Vector<Task> TaskDb::get_all_objects(unsigned int executor_id) const {
     SQL::Statement query{m_db, "SELECT * FROM tasks WHERE executor_id = ?"};
     query.bind(1, executor_id);
 
@@ -67,11 +67,11 @@ Vector<Task> TaskDb::get_all_objects(unsigned int executor_id) const noexcept {
     return tasks;
 }
 
-bool TaskDb::is_table_empty() const noexcept {
+bool TaskDb::is_table_empty() const {
     return m_db.tableExists("tasks");
 }
 
-void TaskDb::add_object(Task& task) noexcept {
+void TaskDb::add_object(Task& task) {
     SQL::Statement query{
         m_db,
         "INSERT INTO tasks (topic, content, start_date, deadline, "
@@ -95,7 +95,7 @@ void TaskDb::add_object(Task& task) noexcept {
     task.set_id(std::stoi(query.getColumn(0)));
 }
 
-void TaskDb::update_object(const Task& task) const noexcept {
+void TaskDb::update_object(const Task& task) const {
     SQL::Statement query{
         m_db,
         "UPDATE tasks SET topic = ?, content = ?, start_date = ?, deadline "
@@ -113,7 +113,7 @@ void TaskDb::update_object(const Task& task) const noexcept {
     query.exec();
 }
 
-void TaskDb::delete_object(unsigned int id) const noexcept {
+void TaskDb::delete_object(unsigned int id) const {
     SQL::Statement query{m_db, "DELETE FROM tasks WHERE task_id = ?"};
     query.bind(1, std::to_string(id));
 
@@ -139,7 +139,7 @@ MessageDb::MessageDb(StringView db_filepath)
 }
 
 Vector<Message> MessageDb::get_all_objects(
-    unsigned int taks_id) const noexcept {
+    unsigned int taks_id) const {
     SQL::Statement query{m_db, "SELECT * FROM messages WHERE task_id = ?"};
     query.bind(1, taks_id);
 
@@ -155,11 +155,11 @@ Vector<Message> MessageDb::get_all_objects(
     return messages;
 };
 
-bool MessageDb::is_table_empty() const noexcept {
+bool MessageDb::is_table_empty() const {
     return m_db.tableExists("messages");
 }
 
-void MessageDb::add_object(Message& message) noexcept {
+void MessageDb::add_object(Message& message) {
     SQL::Statement query{m_db,
                          "INSERT INTO messages (task_id, sender_name, "
                          "content, timestamp) VALUES (?, ?, ?, ?)"};
@@ -179,7 +179,7 @@ void MessageDb::add_object(Message& message) noexcept {
     message.set_message_id(std::stoi(query.getColumn(0)));
 };
 
-void MessageDb::delete_all_by_task_id(unsigned int task_id) noexcept {
+void MessageDb::delete_all_by_task_id(unsigned int task_id) {
     SQL::Statement query{m_db, "DELETE FROM messages WHERE task_id = ?"};
     query.bind(1, task_id);
 

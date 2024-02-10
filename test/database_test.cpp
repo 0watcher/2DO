@@ -53,6 +53,10 @@ TEST_F(DbTest, CheckUserDbFunctionalities) {
     EXPECT_EQ(users[0], user);
     EXPECT_EQ(users[1], user2);
 
+    std::optional<tdc::User> user___;
+    EXPECT_NO_THROW(user___ = user_db->find_object_by_unique_column(user.username()));
+    EXPECT_EQ(user___, user);
+
     EXPECT_NO_THROW(user_db->delete_object(user.id()));
     EXPECT_NO_THROW(user_db->delete_object(user2.id()));
     EXPECT_TRUE(user_db->is_table_empty());

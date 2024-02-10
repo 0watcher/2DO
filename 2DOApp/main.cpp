@@ -1,3 +1,4 @@
+#include <conio.h>
 #include <fmt/core.h>
 #include <iostream>
 #include <memory>
@@ -15,6 +16,31 @@ class UserInput : public tdu::IUserInputHandler {
         auto input = String();
         std::getline(std::cin, input);
         return input;
+    }
+
+    String get_secret() const override {
+        String secret;
+
+        char ch;
+#ifdef _WIN32
+        while ((ch = _getch()) != '\r') {
+#else
+        while ((ch = _getch()) != '\n') {
+
+#endif
+            if (ch == '\b') {
+                if (!secret.empty()) {
+                    fmt::print("\b \b");
+
+                    secret.pop_back();
+                }
+            } else {
+                std::cout << '*';
+                secret += ch;
+            }
+        }
+
+        return secret;
     }
 };
 

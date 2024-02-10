@@ -103,6 +103,7 @@ void sleep(unsigned int t) noexcept;
 class IUserInputHandler {
   public:
     virtual String get_input() const = 0;
+    virtual String get_secret() const = 0;
     virtual ~IUserInputHandler(){};
 };
 

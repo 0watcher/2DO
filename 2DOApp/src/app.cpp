@@ -12,6 +12,8 @@ namespace twodo {
 void App::run() {
     // tdu::create_simple_app_env("2DO", {DB_NAME, ERR_LOGS_FILE_NAME,
     // USER_LOGS_FILE_NAME});
+    m_current_user = std::make_shared<tdc::User>(
+        tdc::User{1, "dupa", tdc::Role::Admin, "gowno"});
     load_menu().run(QUIT_OPTION);
 }
 
@@ -55,9 +57,9 @@ std::shared_ptr<Page> App::load_tasks_menu() const {
         unsigned int count = 1;
         for (const auto& task : tasks) {
             const auto owner = m_user_db->get_object(task.owner_id());
-            m_printer->msg_print(fmt::format("[{}] {} from {} ({})", count++,
-                                             task.topic(), owner.username(),
-                                             str_done(task.is_done())));
+            m_printer->msg_print(fmt::format(
+                "[{}] {} from {} ({})", count++, task.topic(), owner.username(),
+                (task.is_done() ? "DONE" : "INCOMPLETE")));
         }
     });
 
@@ -113,15 +115,17 @@ std::shared_ptr<Page> App::load_settings_menu() {
                 String password;
                 tdc::Role role;
 
-                while (!m_amanager.username_validation(username)) {
+                do {
                     tdu::clear_term();
+                    m_printer->msg_print("username: ");
                     username = m_input_handler->get_input();
-                }
-                tdu::clear_term();
+                } while (!m_amanager.username_validation(username));
 
-                while (!m_amanager.password_validation(password)) {
-                    password = m_input_handler->get_input();
-                }
+                do {
+                    tdu::clear_term();
+                    m_printer->msg_print("password: ");
+                    password = m_input_handler->get_secret();
+                } while (!m_amanager.password_validation(password));
                 tdu::clear_term();
 
                 while (true) {
@@ -129,8 +133,10 @@ std::shared_ptr<Page> App::load_settings_menu() {
                     String str_role = m_input_handler->get_input();
                     if (str_role == FIRST_OPTION) {
                         role = tdc::Role::Admin;
+                        break;
                     } else if (str_role == SECOND_OPTION) {
                         role = tdc::Role::User;
+                        break;
                     } else {
                         m_printer->msg_print("Invalid option!");
                         tdu::sleep(2000);

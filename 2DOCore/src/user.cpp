@@ -1,12 +1,13 @@
 #include "2DOCore/user.hpp"
 
 #include <optional>
-#include <stdexcept>
 #include <regex>
+#include <stdexcept>
 #include "SQLiteCpp/Database.h"
 #include "SQLiteCpp/Exception.h"
 #include "Utils/result.hpp"
 #include "Utils/type.hpp"
+
 
 namespace SQL = SQLite;
 
@@ -54,7 +55,7 @@ UserDb::UserDb(StringView db_filepath)
     }
 }
 
-User UserDb::get_object(unsigned int id) const noexcept {
+User UserDb::get_object(unsigned int id) const {
     SQL::Statement query{m_db, "SELECT * FROM users WHERE user_id = ?"};
     query.bind(1, id);
 
@@ -68,7 +69,7 @@ User UserDb::get_object(unsigned int id) const noexcept {
     return user;
 }
 
-Vector<User> UserDb::get_all_objects() const noexcept {
+Vector<User> UserDb::get_all_objects() const {
     SQL::Statement query{m_db, "SELECT * FROM users"};
 
     Vector<User> users;
@@ -82,11 +83,11 @@ Vector<User> UserDb::get_all_objects() const noexcept {
     return users;
 }
 
-bool UserDb::is_table_empty() const noexcept {
+bool UserDb::is_table_empty() const {
     return m_db.tableExists("users");
 }
 
-void UserDb::add_object(User& user) noexcept {
+void UserDb::add_object(User& user) {
     SQL::Statement query{
         m_db, "INSERT INTO users (username, role, password) VALUES (?, ?, ?)"};
     query.bind(1, user.username());
@@ -103,7 +104,7 @@ void UserDb::add_object(User& user) noexcept {
     user.set_id(std::stoi(query.getColumn(0)));
 }
 
-void UserDb::update_object(const User& user) const noexcept {
+void UserDb::update_object(const User& user) const {
     SQL::Statement query{m_db,
                          "UPDATE users SET username = ?, role = ?, "
                          "password = ? WHERE user_id = ?"};
@@ -115,7 +116,7 @@ void UserDb::update_object(const User& user) const noexcept {
     query.exec();
 }
 
-void UserDb::delete_object(unsigned int id) const noexcept {
+void UserDb::delete_object(unsigned int id) const {
     SQL::Statement query{m_db, "DELETE FROM users WHERE user_id = ?"};
     query.bind(1, std::to_string(id));
 
@@ -123,16 +124,16 @@ void UserDb::delete_object(unsigned int id) const noexcept {
 }
 
 std::optional<User> UserDb::find_object_by_unique_column(
-    const String& column_value) const noexcept {
+    const String& column_value) const {
     SQL::Statement query{m_db, "SELECT * FROM users WHERE username = ?"};
     query.bind(1, column_value);
 
     try {
-        query.executeStep();
-    } catch (const SQL::Exception& e) {
-        if (!query.hasRow()) {
+        if(!query.executeStep()) {
             return std::nullopt;
-        } else {
+        };
+    } catch (const SQL::Exception& e) {
+        if (query.hasRow()) {
             throw e;
         }
     }

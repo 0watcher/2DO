@@ -136,18 +136,18 @@ class [[nodiscard]] TaskDb {
 
     TaskDb(StringView db_filepath);
 
-    Task get_object(unsigned int id) const noexcept;
+    Task get_object(unsigned int id) const;
 
     Vector<Task> get_all_objects(
-        unsigned int executor_id) const noexcept;
+        unsigned int executor_id) const;
 
-    bool is_table_empty() const noexcept;
+    bool is_table_empty() const;
 
-    void add_object(Task& task) noexcept;
+    void add_object(Task& task);
 
-    void update_object(const Task& task) const noexcept;
+    void update_object(const Task& task) const;
 
-    void delete_object(unsigned int id) const noexcept;
+    void delete_object(unsigned int id) const;
 
   private:
     SQL::Database m_db;
@@ -222,14 +222,14 @@ class [[nodiscard]] MessageDb {
     MessageDb(StringView db_filepath);
 
     Vector<Message> get_all_objects(
-        unsigned int task_id) const noexcept;
+        unsigned int task_id) const;
 
-    bool is_table_empty() const noexcept;
+    bool is_table_empty() const;
 
-    void add_object(Message& message) noexcept;
+    void add_object(Message& message);
 
     void delete_all_by_task_id(
-        unsigned int task_id) noexcept;
+        unsigned int task_id);
 
   private:
     SQL::Database m_db;
