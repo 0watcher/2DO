@@ -8,6 +8,7 @@
 #include <optional>
 #include <sstream>
 #include <stdexcept>
+#include <thread>
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -16,10 +17,11 @@
 
 #include "Utils/type.hpp"
 
-using TimePoint =
-    std::chrono::time_point<std::chrono::system_clock, std::chrono::minutes>;
+namespace sch = std::chrono;
 
-using NanoSeconds = std::chrono::nanoseconds;
+using TimePoint = sch::time_point<sch::system_clock, sch::minutes>;
+
+using NanoSeconds = sch::nanoseconds;
 
 class AssertFail : std::runtime_error {
   public:
@@ -43,10 +45,11 @@ class AssertFail : std::runtime_error {
 };
 
 #ifndef NDEBUG
-#define ASSERT(expr, msg) \
-    if (!expr)            \
+#define DO_ASSERT(expr, msg) \
+    if (!expr)               \
         throw AssertFail(__FILE__, __LINE__, msg);
 #else
+#define DO_ASSERT(expr, msg)
 #endif
 
 namespace twodoutils {
@@ -60,16 +63,13 @@ template <typename T>
                                       T>::type
 get_current_timestamp(unsigned int additional_days = 0) {
     if constexpr (std::is_same<T, TimePoint>::value) {
-        return std::chrono::time_point_cast<std::chrono::minutes>(
-            std::chrono::system_clock::now() +
-            std::chrono::days{additional_days});
+        return sch::time_point_cast<sch::minutes>(sch::system_clock::now() +
+                                                  sch::days{additional_days});
     } else if constexpr (std::is_same<T, String>::value) {
-        std::chrono::system_clock::time_point timestamp =
-            std::chrono::system_clock::now() +
-            std::chrono::days{additional_days};
+        sch::system_clock::time_point timestamp =
+            sch::system_clock::now() + sch::days{additional_days};
 
-        std::time_t currentTime =
-            std::chrono::system_clock::to_time_t(timestamp);
+        std::time_t currentTime = sch::system_clock::to_time_t(timestamp);
 
         std::stringstream ss;
         ss << std::put_time(std::localtime(&currentTime), "%Y-%m-%d %H:%M:%S");
@@ -80,13 +80,15 @@ get_current_timestamp(unsigned int additional_days = 0) {
 
 inline void clear_term() {
 #ifdef _WIN32
-    system("cls");
+    ::system("cls");
 #else
-    system("clear");
+    ::system("clear");
 #endif
 }
 
-std::optional<String> get_base_directory();
+inline void sleep(unsigned int t) noexcept {
+    std::this_thread::sleep_for(std::chrono::milliseconds(t));
+}
 
 void create_simple_app_env(const String& folder_name,
                            const Vector<String>& files);
@@ -94,8 +96,6 @@ void create_simple_app_env(const String& folder_name,
 void wipe_simple_app_env(const String& folder_name);
 
 [[nodiscard]] String hash(const String& str);
-
-void sleep(unsigned int t) noexcept;
 
 [[nodiscard]] String tptos(const TimePoint&) noexcept;
 [[nodiscard]] TimePoint stotp(const String&) noexcept;
@@ -110,7 +110,6 @@ class IUserInputHandler {
 class IPrinter {
   public:
     virtual void msg_print(StringView msg) const = 0;
-    virtual void err_print(StringView err) const = 0;
     virtual ~IPrinter(){};
 };
 
@@ -136,6 +135,16 @@ class Resource {
 
   private:
     std::unique_ptr<std::any> m_resource = nullptr;
+};
+
+class DbError : public std::runtime_error {
+public:
+    DbError(const std::string& message)
+        : std::runtime_error{message} {}
+
+    const char* what() const noexcept override {
+        return std::runtime_error::what();
+    }
 };
 
 }  // namespace twodoutils

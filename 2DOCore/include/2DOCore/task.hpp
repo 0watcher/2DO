@@ -2,7 +2,7 @@
 
 #include <SQLiteCpp/Database.h>
 #include <SQLiteCpp/Statement.h>
-#include <Utils/database.hpp>
+
 #include <Utils/result.hpp>
 #include <Utils/type.hpp>
 #include <Utils/util.hpp>
@@ -138,8 +138,7 @@ class [[nodiscard]] TaskDb {
 
     Task get_object(unsigned int id) const;
 
-    Vector<Task> get_all_objects(
-        unsigned int executor_id) const;
+    Vector<Task> get_all_objects(unsigned int executor_id) const;
 
     bool is_table_empty() const;
 
@@ -221,15 +220,13 @@ class [[nodiscard]] MessageDb {
 
     MessageDb(StringView db_filepath);
 
-    Vector<Message> get_all_objects(
-        unsigned int task_id) const;
+    Vector<Message> get_all_objects(unsigned int task_id) const;
 
     bool is_table_empty() const;
 
     void add_object(Message& message);
 
-    void delete_all_by_task_id(
-        unsigned int task_id);
+    void delete_all_by_task_id(unsigned int task_id);
 
   private:
     SQL::Database m_db;

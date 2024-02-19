@@ -1,7 +1,6 @@
 #pragma once
 
 #include <functional>
-#include <iostream>
 #include <memory>
 
 #include <2DOCore/user.hpp>
@@ -10,7 +9,6 @@
 #include <Utils/util.hpp>
 
 namespace tdu = twodoutils;
-namespace tdc = twodocore;
 
 namespace twodo {
 class Page : public std::enable_shared_from_this<Page> {
@@ -28,10 +26,12 @@ class Page : public std::enable_shared_from_this<Page> {
         child->m_parent = this->shared_from_this();
     }
 
+    bool has_any_child() { return !m_childs.empty(); }
+
   private:
     std::function<void()> m_content;
     std::shared_ptr<Page> m_parent = nullptr;
-    HashMap<String, std::shared_ptr<Page>> m_childs;
+    HashMap<String, std::shared_ptr<Page>> m_childs{};
     bool m_menu_event;
 
     std::shared_ptr<Page> get_child(const String& option) const {
@@ -61,6 +61,8 @@ class [[nodiscard]] Menu {
 
     void run(const String& quit_input) {
         while (true) {
+            tdu::clear_term();
+
             execute_current_page();
 
             String user_choice = get_user_choice();
@@ -69,8 +71,6 @@ class [[nodiscard]] Menu {
             }
 
             navigate_or_display_error(user_choice, quit_input);
-
-            tdu::clear_term();
         }
     }
 
@@ -95,8 +95,7 @@ class [[nodiscard]] Menu {
     }
 
     bool navigate_to_parent_or_exit() {
-        if (auto parent_page = std::make_shared<Page>(*current_page->m_parent);
-            parent_page) {
+        if (auto parent_page = current_page->m_parent; parent_page) {
             current_page = parent_page;
             return false;
         }

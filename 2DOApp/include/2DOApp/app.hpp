@@ -61,12 +61,16 @@ class [[nodiscard]] App {
     std::shared_ptr<tdu::IUserInputHandler> m_input_handler = nullptr;
     tdu::Resource m_resource{};
 
+    enum class UpdateEvent { UsernameUpdate, PasswordUpdate, RoleUpdate };
+
     Menu load_menu();
     std::shared_ptr<Page> load_main_menu() const;
     std::shared_ptr<Page> load_tasks_menu() const;
     std::shared_ptr<Page> load_settings_menu();
 
+    bool user_update_event(UpdateEvent kind, tdc::User& user);
+    void invalid_option_event() const;
+
     std::shared_ptr<tdc::User> get_current_user() { return m_current_user; }
-    StringView str_done(bool is_done) const;
 };
 }  // namespace twodo

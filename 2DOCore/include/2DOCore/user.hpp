@@ -4,7 +4,7 @@
 
 #include <SQLiteCpp/Database.h>
 #include <SQLiteCpp/Statement.h>
-#include <Utils/database.hpp>
+
 #include <Utils/result.hpp>
 #include <Utils/type.hpp>
 #include <Utils/util.hpp>

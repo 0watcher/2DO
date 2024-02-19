@@ -13,7 +13,19 @@
 
 ## About the project
 
-It's just simple todo list with some additional features.
+2DO is a simple oldschool todo list with some additional features for start-up's with only one PC and no connection to the internet.
+
+## How to build this
+
+After cloning this repo (in terminal):
+
+```
+cd 2DO
+git submodule update --recursive
+mkdir build
+cd build
+cmake .
+```
 
 ## Dependencies
 - googletest

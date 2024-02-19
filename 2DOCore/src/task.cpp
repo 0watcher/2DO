@@ -1,10 +1,11 @@
 #include "2DOCore/task.hpp"
 
 #include <stdexcept>
-#include "SQLiteCpp/Statement.h"
-#include "Utils/database.hpp"
-#include "Utils/result.hpp"
-#include "Utils/type.hpp"
+
+#include <SQLiteCpp/Statement.h>
+
+#include <Utils/result.hpp>
+#include <Utils/type.hpp>
 
 namespace SQL = SQLite;
 

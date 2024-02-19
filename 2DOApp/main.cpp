@@ -1,7 +1,8 @@
 #include <conio.h>
-#include <fmt/core.h>
 #include <iostream>
 #include <memory>
+
+#include <fmt/core.h>
 
 #include <2DOApp/app.hpp>
 #include <Utils/type.hpp>
@@ -9,6 +10,8 @@
 
 namespace td = twodo;
 namespace tdu = twodoutils;
+
+#include <mutex>
 
 class UserInput : public tdu::IUserInputHandler {
   public:
@@ -22,6 +25,7 @@ class UserInput : public tdu::IUserInputHandler {
         String secret;
 
         char ch;
+
 #ifdef _WIN32
         while ((ch = _getch()) != '\r') {
 #else
@@ -47,10 +51,6 @@ class UserInput : public tdu::IUserInputHandler {
 class MsgDisplayer : public tdu::IPrinter {
   public:
     void msg_print(StringView msg) const override { fmt::print("{}", msg); }
-
-    void err_print(StringView err) const override {
-        fmt::print(stderr, "{}", err);
-    }
 };
 
 int main() {
@@ -61,6 +61,6 @@ int main() {
             ->run();
     } catch (const std::runtime_error& e) {
         tdu::log_to_file(e.what(), ERR_LOGS_FILE_NAME);
-        fmt::print(stderr, "{}", e.what());
+        fmt::print(stderr, "{}", std::move(e.what()));
     }
 }

@@ -3,10 +3,12 @@
 #include <optional>
 #include <regex>
 #include <stdexcept>
-#include "SQLiteCpp/Database.h"
-#include "SQLiteCpp/Exception.h"
-#include "Utils/result.hpp"
-#include "Utils/type.hpp"
+
+#include <SQLiteCpp/Database.h>
+#include <SQLiteCpp/Exception.h>
+
+#include <Utils/result.hpp>
+#include <Utils/type.hpp>
 
 
 namespace SQL = SQLite;
@@ -131,7 +133,7 @@ std::optional<User> UserDb::find_object_by_unique_column(
     try {
         if(!query.executeStep()) {
             return std::nullopt;
-        };
+        }
     } catch (const SQL::Exception& e) {
         if (query.hasRow()) {
             throw e;
@@ -166,7 +168,7 @@ tdu::Result<void, AuthErr> AuthenticationManager::password_validation(
     const std::regex special_char_expression{
         "[!@#$%^&*()_+\\-=\\[\\]{};:\\\",<.>/?]+"};
 
-    if (password.length() <= 8 && password.length() > 20) {
+    if (password.length() < 8 && password.length() > 20) {
         return tdu::Err(AuthErr::InvalidPassLength);
     }
     if (!std::regex_search(password, upper_case_expression)) {
