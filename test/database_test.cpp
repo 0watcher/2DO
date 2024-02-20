@@ -53,7 +53,8 @@ TEST_F(DbTest, CheckUserDbFunctionalities) {
     EXPECT_EQ(users[1], user2);
 
     std::optional<tdc::User> user___;
-    EXPECT_NO_THROW(user___ = user_db->find_object_by_unique_column(user.username()));
+    EXPECT_NO_THROW(user___ =
+                        user_db->find_object_by_unique_column(user.username()));
     EXPECT_EQ(user___, user);
 
     EXPECT_NO_THROW(user_db->delete_object(user.id()));
@@ -72,7 +73,7 @@ TEST_F(DbTest, CheckTaskDbFunctionalities) {
     EXPECT_NO_THROW(task_db->add_object(task));
 
     std::optional<tdc::Task> task_;
-    EXPECT_TRUE(task_= task_db->get_object(task.id()));
+    EXPECT_TRUE(task_ = task_db->get_object(task.id()));
     EXPECT_EQ(task_, task);
 
     task.set_topic("SomeOtherTopic");
@@ -93,7 +94,8 @@ TEST_F(DbTest, CheckTaskDbFunctionalities) {
                     false};
     EXPECT_NO_THROW(task_db->add_object(task2));
     Vector<tdc::Task> tasks;
-    EXPECT_NO_THROW(tasks = task_db->get_all_objects(1));
+    EXPECT_NO_THROW(
+        tasks = task_db->get_all_objects<tdc::TaskDb::IdType::Executor>(1));
     EXPECT_EQ(tasks[0], task);
     EXPECT_EQ(tasks[1], task2);
 

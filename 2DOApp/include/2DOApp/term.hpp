@@ -3,6 +3,9 @@
 #include <functional>
 #include <memory>
 
+#include <fmt/color.h>
+#include <fmt/core.h>
+
 #include <2DOCore/user.hpp>
 #include <Utils/result.hpp>
 #include <Utils/type.hpp>
@@ -114,7 +117,7 @@ class [[nodiscard]] Menu {
     }
 
     void display_invalid_option_error() const {
-        printer->msg_print("Invalid option!\n");
+        printer->err_print("Invalid option!");
         tdu::sleep(2000);
     }
 

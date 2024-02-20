@@ -98,6 +98,7 @@ class [[nodiscard]] UserDb {
     bool is_table_empty() const;
 
     void add_object(User& user);
+    void add_object(const User& user) const;
 
     void update_object(const User& user) const;
 

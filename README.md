@@ -2,7 +2,6 @@
 
 # 2DO
 
-***"To do or not to do? That is the question"***
 
 ![Work](https://img.shields.io/badge/work-in_progress-yellow.svg)
 ![Version](https://img.shields.io/badge/version-0.0.1-blue.svg)
@@ -15,6 +14,11 @@
 
 2DO is a simple oldschool todo list with some additional features for start-up's with only one PC and no connection to the internet.
 
+## Dependencies
+- SQLiteCpp
+- fmt
+- googletest
+  
 ## How to build this
 
 After cloning this repo (in terminal):
@@ -26,8 +30,3 @@ mkdir build
 cd build
 cmake .
 ```
-
-## Dependencies
-- googletest
-- SQLiteCpp
-- fmt

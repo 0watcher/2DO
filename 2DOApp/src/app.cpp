@@ -1,7 +1,7 @@
 #include "2DOApp/app.hpp"
 
+#include <fmt/color.h>
 #include <fmt/core.h>
-#include <algorithm>
 #include <memory>
 #include <string>
 
@@ -9,6 +9,7 @@
 #include <2DOCore/user.hpp>
 #include <Utils/type.hpp>
 #include <Utils/util.hpp>
+#include "2DOCore/task.hpp"
 
 namespace twodo {
 void App::run() {
@@ -32,12 +33,13 @@ Menu App::load_menu() {
 
 std::shared_ptr<Page> App::load_main_menu() const {
     const auto main = std::make_shared<Page>([this] {
-        m_printer->msg_print(
-            "Main Menu:\n"
+        m_printer->msg_print(fmt::format(
+            "{}\n"
             "[1] Tasks\n"
             "[2] Setting\n"
             "[0] Exit\n"
-            "-> ");
+            "-> ",
+            fmt::format(fmt::bg(fmt::color::dark_golden_rod), "|2DO|")));
     });
     return std::move(main);
 }
@@ -53,30 +55,133 @@ std::shared_ptr<Page> App::load_tasks_menu() const {
             "-> ");
     });
 
+    tasks->attach(FIRST_OPTION, load_your_tasks_menu());
+    tasks->attach(SECOND_OPTION, load_delegated_tasks_menu());
+    tasks->attach(THIRD_OPTION, load_create_tasks_menu());
+
+    return std::move(tasks);
+}
+
+std::shared_ptr<Page> App::load_your_tasks_menu() const {
     const auto your_tasks = std::make_shared<Page>([this] {
         m_printer->msg_print("Your tasks:\n");
-        auto tasks = m_task_db->get_all_objects(m_current_user->id());
+        auto tasks = m_task_db->get_all_objects<tdc::TaskDb::IdType::Executor>(
+            m_current_user->id());
 
-        unsigned int count = 1;
+        unsigned int count = 0;
         for (const auto& task : tasks) {
             const auto owner = m_user_db->get_object(task.owner_id());
             m_printer->msg_print(fmt::format(
-                "[{}] {} from {} ({})", count++, task.topic(), owner.username(),
-                (task.is_done() ? "DONE" : "INCOMPLETE")));
+                "[{}] {} from {} ({})\n", ++count, task.topic(),
+                owner.username(),
+                (task.is_done()
+                     ? fmt::format(fmt::fg(fmt::color::green), "DONE")
+                     : fmt::format(fmt::fg(fmt::color::red), "INCOMPLETE"))));
         }
+
+        m_printer->msg_print("\n-> ");
     });
 
-    const auto delegated_tasks = std::make_shared<Page>([] { fmt::print(""); });
+    return std::move(your_tasks);
+}
 
-    const auto create_task = std::make_shared<Page>(false, [] {
+std::shared_ptr<Page> App::load_delegated_tasks_menu() const {
+    const auto delegated_tasks = std::make_shared<Page>([this] {
+        m_printer->msg_print("Delegated tasks:\n");
+        auto tasks = m_task_db->get_all_objects<tdc::TaskDb::IdType::Owner>(
+            m_current_user->id());
 
+        unsigned int count = 0;
+        for (const auto& task : tasks) {
+            const auto owner = m_user_db->get_object(task.owner_id());
+            m_printer->msg_print(fmt::format(
+                "[{}] {} from {} ({})\n", ++count, task.topic(),
+                owner.username(),
+                (task.is_done()
+                     ? fmt::format(fmt::fg(fmt::color::green), "DONE")
+                     : fmt::format(fmt::fg(fmt::color::red), "INCOMPLETE"))));
+        }
+
+        m_printer->msg_print("\n-> ");
     });
 
-    tasks->attach(FIRST_OPTION, your_tasks);
-    tasks->attach(SECOND_OPTION, delegated_tasks);
-    tasks->attach(THIRD_OPTION, create_task);
+    return std::move(delegated_tasks);
+}
 
-    return std::move(tasks);
+std::shared_ptr<Page> App::load_create_tasks_menu() const {
+    const auto create_task = std::make_shared<Page>(false, [this] {
+        const auto task_input = [this] -> tdc::Task {
+            tdu::clear_term();
+
+            String topic, content;
+            TimePoint start_date, deadline;
+            unsigned int executor_id;
+
+            m_printer->msg_print("topic: ");
+            topic = m_input_handler->get_input();
+            tdu::clear_term();
+
+            m_printer->msg_print("content: ");
+            content = m_input_handler->get_input();
+            tdu::clear_term();
+
+            while (true) {
+                tdu::clear_term();
+
+                m_printer->msg_print("start_date: ");
+                try {
+                    start_date = tdu::stotp(m_input_handler->get_input());
+                    break;
+                } catch (...) {
+                    invalid_option_event();
+                }
+            }
+
+            while (true) {
+                tdu::clear_term();
+
+                m_printer->msg_print("deadline: ");
+                try {
+                    deadline = tdu::stotp(m_input_handler->get_input());
+                    break;
+                } catch (...) {
+                    invalid_option_event();
+                }
+            }
+
+            const auto users = m_user_db->get_all_objects();
+
+            while (true) {
+                tdu::clear_term();
+                m_printer->msg_print("assign executor:\n");
+                unsigned int count = 0;
+                for (const auto& user : users) {
+                    m_printer->msg_print(fmt::format("[{}] {} <{}>\n", ++count,
+                                                     user.username(),
+                                                     user.role<String>()));
+                }
+                m_printer->msg_print("-> ");
+
+                const auto executor = m_input_handler->get_input();
+                if (unsigned const int executor_number = std::stoi(executor);
+                    executor_number > 0 && executor_number <= count) {
+                    executor_id = users[executor_number - 1].id();
+                    break;
+                }
+
+                invalid_option_event();
+            }
+
+            return tdc::Task{topic,    content,     start_date,
+                             deadline, executor_id, m_current_user->id(),
+                             false};
+        };
+
+        m_task_db->add_object(task_input());
+        m_printer->msg_print("Task has been added successfully!");
+    });
+
+    return std::move(create_task);
 }
 
 std::shared_ptr<Page> App::load_settings_menu() {
@@ -113,6 +218,8 @@ std::shared_ptr<Page> App::load_user_manager_menu() {
 
 std::shared_ptr<Page> App::load_user_update_menu() {
     const auto edit_users = std::make_shared<Page>(false, [this] {
+        bool should_collapse = false;
+
         auto users = m_user_db->get_all_objects();
 
         const auto root_page = std::make_shared<Page>([this, &users] {
@@ -131,7 +238,7 @@ std::shared_ptr<Page> App::load_user_update_menu() {
 
         unsigned int count = 0;
         for (auto& user : users) {
-            const auto chosen_user = std::make_shared<Page>([this] {
+            const auto chosen_user = std::make_shared<Page>([this, &should_collapse] {
                 m_printer->msg_print(
                     "Update user:\n"
                     "[1] Change username\n"
@@ -164,10 +271,12 @@ std::shared_ptr<Page> App::load_user_update_menu() {
                 });
 
             const auto user_deletion =
-                std::make_shared<Page>(false, [this, &user] {
+                std::make_shared<Page>(false, [this, &user, &should_collapse] {
                     if (!privileges_validation_event(user))
                         return;
-                    user_update_event(UpdateEvent::UserDelete, user);
+                    if(user_update_event(UpdateEvent::UserDelete, user)) {
+                        should_collapse = true;
+                    }
                 });
 
             chosen_user->attach(FIRST_OPTION, username_update);
@@ -197,6 +306,7 @@ std::shared_ptr<Page> App::load_new_user_menu() {
 
             tdc::Role role;
             while (true) {
+                tdu::clear_term();
                 m_printer->msg_print("Role:\n[1] Admin\n[2] User\n-> ");
                 String str_role = m_input_handler->get_input();
                 if (str_role == FIRST_OPTION) {
@@ -210,8 +320,7 @@ std::shared_ptr<Page> App::load_new_user_menu() {
                 }
             }
 
-            tdc::User user{username, role, password};
-            m_user_db->add_object(user);
+            m_user_db->add_object(tdc::User{username, role, password});
 
             m_printer->msg_print("User has been added successfully!");
         }
@@ -246,13 +355,7 @@ std::shared_ptr<Page> App::load_advanced_menu() {
     return std::move(advanced);
 }
 
-void App::invalid_option_event() const {
-    m_printer->msg_print("Invalid option!");
-    tdu::sleep(2000);
-    tdu::clear_term();
-};
-
-void App::user_update_event(UpdateEvent kind, tdc::User& user) {
+bool App::user_update_event(UpdateEvent kind, tdc::User& user) {
     tdu::clear_term();
     switch (kind) {
         case UpdateEvent::UsernameUpdate: {
@@ -300,8 +403,9 @@ void App::user_update_event(UpdateEvent kind, tdc::User& user) {
             const auto confirmation = m_input_handler->get_input();
             if (confirmation == YES) {
                 m_user_db->delete_object(user.id());
+                return true;
             } else if (confirmation == NO) {
-                return;
+                return false;
             } else {
                 invalid_option_event();
             }
@@ -329,10 +433,10 @@ String App::username_validation_event() {
 
         switch (result.err()) {
             case tdc::AuthErr::InvalidNameLength:
-                m_printer->msg_print("Name too short!");
+                m_printer->err_print("Name too short!");
                 break;
             case tdc::AuthErr::AlreadyExistingName:
-                m_printer->msg_print("Name already exists!");
+                m_printer->err_print("Name already exists!");
                 break;
         }
 
@@ -357,30 +461,30 @@ String App::password_validation_event() {
 
         switch (result.err()) {
             case tdc::AuthErr::InvalidPassLength:
-                m_printer->msg_print(
+                m_printer->err_print(
                     "\nPassword must contain at "
                     "least 8 characters and max "
                     "20!");
                 break;
             case tdc::AuthErr::MissingUpperCase:
-                m_printer->msg_print(
+                m_printer->err_print(
                     "\nPassword must contain at "
                     "least one uppercase "
                     "letter!");
                 break;
             case tdc::AuthErr::MissingLowerCase:
-                m_printer->msg_print(
+                m_printer->err_print(
                     "\nPassword must contain at "
                     "least one lowercase "
                     "letter!");
                 break;
             case tdc::AuthErr::MissingNumber:
-                m_printer->msg_print(
+                m_printer->err_print(
                     "\nPassword must contain at "
                     "least one number !");
                 break;
             case tdc::AuthErr::MissingSpecialCharacter:
-                m_printer->msg_print(
+                m_printer->err_print(
                     "\nPassword must contain at "
                     "least one special "
                     "character!");
@@ -388,7 +492,7 @@ String App::password_validation_event() {
         }
 
         if (tries >= 3) {
-            m_printer->msg_print("\nAll tries exhausted!");
+            m_printer->err_print("\nAll tries exhausted!");
             tdu::sleep(2000);
             return "";
         }
@@ -400,9 +504,9 @@ String App::password_validation_event() {
 }
 
 bool App::privileges_validation_event(const tdc::User& user) const {
-    if (m_current_user->role<tdc::Role>() != tdc::Role::Admin ||
+    if (m_current_user->role<tdc::Role>() != tdc::Role::Admin &&
         m_current_user->id() != user.id()) {
-        m_printer->msg_print("You're not allowed to do this!");
+        m_printer->err_print("You're not allowed to do this!");
         tdu::sleep(2000);
         return false;
     }
@@ -412,11 +516,17 @@ bool App::privileges_validation_event(const tdc::User& user) const {
 
 bool App::privileges_validation_event() const {
     if (m_current_user->role<tdc::Role>() != tdc::Role::Admin) {
-        m_printer->msg_print("You're not allowed to do this!");
+        m_printer->err_print("You're not allowed to do this!");
         tdu::sleep(2000);
         return false;
     }
 
     return true;
+};
+
+void App::invalid_option_event() const {
+    m_printer->err_print("Invalid option!");
+    tdu::sleep(2000);
+    tdu::clear_term();
 };
 }  // namespace twodo

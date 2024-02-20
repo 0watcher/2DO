@@ -2,11 +2,14 @@
 #include <iostream>
 #include <memory>
 
+#include <fmt/color.h>
 #include <fmt/core.h>
+
 
 #include <2DOApp/app.hpp>
 #include <Utils/type.hpp>
 #include <Utils/util.hpp>
+#include "fmt/color.h"
 
 namespace td = twodo;
 namespace tdu = twodoutils;
@@ -51,6 +54,9 @@ class UserInput : public tdu::IUserInputHandler {
 class MsgDisplayer : public tdu::IPrinter {
   public:
     void msg_print(StringView msg) const override { fmt::print("{}", msg); }
+    void err_print(StringView msg) const override {
+        fmt::print("{}", fmt::format(fmt::fg(fmt::color::red), msg));
+    }
 };
 
 int main() {

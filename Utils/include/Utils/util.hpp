@@ -97,8 +97,8 @@ void wipe_simple_app_env(const String& folder_name);
 
 [[nodiscard]] String hash(const String& str);
 
-[[nodiscard]] String tptos(const TimePoint&) noexcept;
-[[nodiscard]] TimePoint stotp(const String&) noexcept;
+[[nodiscard]] String tptos(const TimePoint&);
+[[nodiscard]] TimePoint stotp(const String&);
 
 class IUserInputHandler {
   public:
@@ -110,6 +110,7 @@ class IUserInputHandler {
 class IPrinter {
   public:
     virtual void msg_print(StringView msg) const = 0;
+    virtual void err_print(StringView msg) const = 0;
     virtual ~IPrinter(){};
 };
 

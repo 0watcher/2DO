@@ -50,24 +50,6 @@ Task TaskDb::get_object(unsigned int id) const {
     return task;
 }
 
-Vector<Task> TaskDb::get_all_objects(unsigned int executor_id) const {
-    SQL::Statement query{m_db, "SELECT * FROM tasks WHERE executor_id = ?"};
-    query.bind(1, executor_id);
-
-    Vector<Task> tasks;
-    while (query.executeStep()) {
-        tasks.push_back(
-            Task{(unsigned)query.getColumn(0).getInt(),
-                 query.getColumn(1).getString(), query.getColumn(2).getString(),
-                 query.getColumn(3).getString(), query.getColumn(4).getString(),
-                 (unsigned)query.getColumn(5).getInt(),
-                 (unsigned)query.getColumn(6).getInt(),
-                 (unsigned)query.getColumn(7).getInt()});
-    }
-
-    return tasks;
-}
-
 bool TaskDb::is_table_empty() const {
     return m_db.tableExists("tasks");
 }
@@ -94,6 +76,28 @@ void TaskDb::add_object(Task& task) {
     query.executeStep();
 
     task.set_id(std::stoi(query.getColumn(0)));
+}
+
+void TaskDb::add_object(const Task& task) const {
+    SQL::Statement query{
+        m_db,
+        "INSERT INTO tasks (topic, content, start_date, deadline, "
+        "executor_id, owner_id, is_done) VALUES (?, ?, ?, ?, "
+        "?, ?, ?)"};
+    query.bind(1, task.topic());
+    query.bind(2, task.content());
+    query.bind(3, task.start_date<String>());
+    query.bind(4, task.deadline<String>());
+    query.bind(5, task.executor_id());
+    query.bind(6, task.owner_id());
+    query.bind(7, task.is_done());
+
+    query.exec();
+
+    query = SQL::Statement{
+        m_db, "SELECT task_id FROM tasks ORDER BY task_id DESC LIMIT 1"};
+
+    query.executeStep();
 }
 
 void TaskDb::update_object(const Task& task) const {
@@ -139,8 +143,7 @@ MessageDb::MessageDb(StringView db_filepath)
     }
 }
 
-Vector<Message> MessageDb::get_all_objects(
-    unsigned int taks_id) const {
+Vector<Message> MessageDb::get_all_objects(unsigned int taks_id) const {
     SQL::Statement query{m_db, "SELECT * FROM messages WHERE task_id = ?"};
     query.bind(1, taks_id);
 

@@ -78,7 +78,7 @@ void wipe_simple_app_env(const String& folder_name) {
     }
 }
 
-[[nodiscard]] String tptos(const TimePoint& tp) noexcept {
+[[nodiscard]] String tptos(const TimePoint& tp) {
     std::time_t time = std::chrono::system_clock::to_time_t(tp);
 
     const std::chrono::minutes minutes =
@@ -87,7 +87,7 @@ void wipe_simple_app_env(const String& folder_name) {
     return std::to_string(minutes.count());
 }
 
-[[nodiscard]] TimePoint stotp(const String& stringified_tp) noexcept {
+[[nodiscard]] TimePoint stotp(const String& stringified_tp) {
     const auto minutes_count = std::stoll(stringified_tp);
 
     const TimePoint tp = std::chrono::time_point<std::chrono::system_clock,

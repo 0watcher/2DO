@@ -129,6 +129,8 @@ class [[nodiscard]] Task {
 
 class [[nodiscard]] TaskDb {
   public:
+    enum class IdType { Owner, Executor };
+
     TaskDb(const TaskDb&) = delete;
     TaskDb& operator=(const TaskDb&) = delete;
     TaskDb(TaskDb&& other) = default;
@@ -138,15 +140,42 @@ class [[nodiscard]] TaskDb {
 
     Task get_object(unsigned int id) const;
 
-    Vector<Task> get_all_objects(unsigned int executor_id) const;
-
     bool is_table_empty() const;
 
     void add_object(Task& task);
+    void add_object(const Task& task) const;
 
     void update_object(const Task& task) const;
 
     void delete_object(unsigned int id) const;
+
+    template <IdType T>
+    Vector<Task> get_all_objects(unsigned int id) const {
+        SQL::Statement query{m_db, ""};
+
+        if constexpr (T == IdType::Executor) {
+            query = SQL::Statement{m_db,
+                                   "SELECT * FROM tasks WHERE executor_id = ?"};
+        } else {
+            query =
+                SQL::Statement{m_db, "SELECT * FROM tasks WHERE owner_id = ?"};
+        }
+
+        query.bind(1, id);
+
+        Vector<Task> tasks;
+        while (query.executeStep()) {
+            tasks.push_back(Task{
+                (unsigned)query.getColumn(0).getInt(),
+                query.getColumn(1).getString(), query.getColumn(2).getString(),
+                query.getColumn(3).getString(), query.getColumn(4).getString(),
+                (unsigned)query.getColumn(5).getInt(),
+                (unsigned)query.getColumn(6).getInt(),
+                (unsigned)query.getColumn(7).getInt()});
+        }
+
+        return tasks;
+    }
 
   private:
     SQL::Database m_db;

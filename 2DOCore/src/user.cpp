@@ -9,7 +9,7 @@
 
 #include <Utils/result.hpp>
 #include <Utils/type.hpp>
-
+#include "2DOCore/task.hpp"
 
 namespace SQL = SQLite;
 
@@ -106,6 +106,21 @@ void UserDb::add_object(User& user) {
     user.set_id(std::stoi(query.getColumn(0)));
 }
 
+void UserDb::add_object(const User& user) const {
+    SQL::Statement query{
+        m_db, "INSERT INTO users (username, role, password) VALUES (?, ?, ?)"};
+    query.bind(1, user.username());
+    query.bind(2, user.role<String>());
+    query.bind(3, user.password());
+
+    query.exec();
+
+    query = SQL::Statement{
+        m_db, "SELECT user_id FROM users ORDER BY user_id DESC LIMIT 1"};
+
+    query.executeStep();
+}
+
 void UserDb::update_object(const User& user) const {
     SQL::Statement query{m_db,
                          "UPDATE users SET username = ?, role = ?, "
@@ -131,7 +146,7 @@ std::optional<User> UserDb::find_object_by_unique_column(
     query.bind(1, column_value);
 
     try {
-        if(!query.executeStep()) {
+        if (!query.executeStep()) {
             return std::nullopt;
         }
     } catch (const SQL::Exception& e) {

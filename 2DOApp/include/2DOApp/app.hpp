@@ -73,16 +73,21 @@ class [[nodiscard]] App {
 
     Menu load_menu();
     std::shared_ptr<Page> load_main_menu() const;
+
     std::shared_ptr<Page> load_tasks_menu() const;
+    std::shared_ptr<Page> load_your_tasks_menu() const;
+    std::shared_ptr<Page> load_delegated_tasks_menu() const;
+    std::shared_ptr<Page> load_create_tasks_menu() const;
+
     std::shared_ptr<Page> load_settings_menu();
     std::shared_ptr<Page> load_user_manager_menu();
     std::shared_ptr<Page> load_user_update_menu();
     std::shared_ptr<Page> load_new_user_menu();
     std::shared_ptr<Page> load_advanced_menu();
 
-    void user_update_event(UpdateEvent kind, tdc::User& user);
-    String username_validation_event(); 
-    String password_validation_event(); 
+    bool user_update_event(UpdateEvent kind, tdc::User& user);
+    String username_validation_event();
+    String password_validation_event();
     void invalid_option_event() const;
     bool privileges_validation_event() const;
     bool privileges_validation_event(const tdc::User& user) const;
