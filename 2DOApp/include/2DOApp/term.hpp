@@ -53,10 +53,10 @@ class [[nodiscard]] Menu {
     Menu& operator=(const Menu&) = delete;
 
     Menu(std::shared_ptr<Page> initial_page,
-         std::shared_ptr<tdu::IPrinter> iprinter,
+         std::shared_ptr<tdu::IPrinter> iprinter_,
          std::shared_ptr<tdu::IUserInputHandler> input_handler_)
         : current_page{std::move(initial_page)},
-          printer{iprinter},
+          printer{iprinter_},
           input_handler{input_handler_} {}
 
     void run(const String& quit_input) {
@@ -127,88 +127,4 @@ class [[nodiscard]] Menu {
         }
     }
 };
-
-// enum class AuthErr {
-//     InvalidNameLength = 1,
-//     AlreadyExistingName,
-//     InvalidPassLength,
-//     MissingUpperCase,
-//     MissingLowerCase,
-//     MissingNumber,
-//     MissingSpecialCharacter,
-//     UserNotFound,
-//     AllTriesExhausted,
-//     DbErr,
-// };
-
-// class [[nodiscard]] AuthenticationManager {
-//   public:
-//     AuthenticationManager(AuthenticationManager&& other) = default;
-//     AuthenticationManager& operator=(AuthenticationManager&& other) =
-//     default; AuthenticationManager(const AuthenticationManager&) =
-//     delete; AuthenticationManager& operator=(const
-//     AuthenticationManager&) = delete;
-
-//     AuthenticationManager(std::shared_ptr<tdc::UserDb> user_db)
-//         : m_user_db{user_db} {}
-
-//     tdu::Result<void, AuthErr> username_validation(StringView username);
-//     tdu::Result<void, AuthErr> password_validation(StringView password);
-
-//   private:
-//     std::shared_ptr<tdc::UserDb> m_user_db;
-
-//     bool is_in_db(const tdc::User& user);
-// };
-
-// class [[nodiscard]] RegisterManager {
-//   public:
-//     RegisterManager(RegisterManager&& other) = default;
-//     RegisterManager& operator=(RegisterManager&& other) = default;
-//     RegisterManager(const RegisterManager&) = delete;
-//     RegisterManager& operator=(const RegisterManager&) = delete;
-
-//     RegisterManager(std::shared_ptr<tdc::UserDb> udb,
-//                     std::shared_ptr<tdu::IUserInputHandler<String>>
-//                     ihandler, std::shared_ptr<tdu::IPrinter> iprinter)
-//         : m_udb{udb}, m_ihandler{ihandler}, m_printer{iprinter} {}
-
-//     [[nodiscard]] tdu::Result<tdc::User, AuthErr> singup();
-
-//     [[nodiscard]] tdu::Result<void, AuthErr> username_validation(
-//         StringView username) const;
-
-//     [[nodiscard]] tdu::Result<void, AuthErr> password_validation(
-//         const String& password) const;
-
-//   private:
-//     std::shared_ptr<tdc::UserDb> m_udb;
-//     std::shared_ptr<tdu::IUserInputHandler<String>> m_ihandler;
-//     std::shared_ptr<tdu::IPrinter> m_printer;
-// };
-
-// class [[nodiscard]] AuthManager {
-//   public:
-//     AuthManager(AuthManager&& other) = default;
-//     AuthManager& operator=(AuthManager&& other) = default;
-//     AuthManager(const AuthManager&) = delete;
-//     AuthManager& operator=(const AuthManager&) = delete;
-
-//     AuthManager(std::shared_ptr<tdc::UserDb> udb,
-//                 std::shared_ptr<tdu::IUserInputHandler<String>> ihandler,
-//                 std::shared_ptr<tdu::IPrinter> iprinter)
-//         : m_udb{udb}, m_ihandler{ihandler}, m_printer{iprinter} {}
-
-//     [[nodiscard]] tdu::Result<tdc::User, AuthErr> login();
-
-//     [[nodiscard]] tdu::Result<void, AuthErr> auth_username();
-
-//     [[nodiscard]] tdu::Result<tdc::User, AuthErr> auth_password(
-//         const String& username);
-
-//   private:
-//     std::shared_ptr<tdc::UserDb> m_udb;
-//     std::shared_ptr<tdu::IUserInputHandler<String>> m_ihandler;
-//     std::shared_ptr<tdu::IPrinter> m_printer;
-// };
 }  // namespace twodo

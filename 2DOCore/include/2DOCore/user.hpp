@@ -116,8 +116,6 @@ enum class AuthErr {
     MissingNumber,
     MissingSpecialCharacter,
     UserNotFound,
-    AllTriesExhausted,
-    DbErr,
 };
 
 class [[nodiscard]] AuthenticationManager {

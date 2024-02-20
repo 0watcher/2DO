@@ -16,6 +16,9 @@ namespace tdu = twodoutils;
 #define FIRST_OPTION "1"
 #define SECOND_OPTION "2"
 #define THIRD_OPTION "3"
+#define FOURTH_OPTION "4"
+#define YES "y"
+#define NO "n"
 #define DB_NAME ":memory:"
 #define ERR_LOGS_FILE_NAME "big-error-logs.txt"
 #define USER_LOGS_FILE_NAME "user-logs.txt"
@@ -61,15 +64,28 @@ class [[nodiscard]] App {
     std::shared_ptr<tdu::IUserInputHandler> m_input_handler = nullptr;
     tdu::Resource m_resource{};
 
-    enum class UpdateEvent { UsernameUpdate, PasswordUpdate, RoleUpdate };
+    enum class UpdateEvent {
+        UsernameUpdate,
+        PasswordUpdate,
+        RoleUpdate,
+        UserDelete
+    };
 
     Menu load_menu();
     std::shared_ptr<Page> load_main_menu() const;
     std::shared_ptr<Page> load_tasks_menu() const;
     std::shared_ptr<Page> load_settings_menu();
+    std::shared_ptr<Page> load_user_manager_menu();
+    std::shared_ptr<Page> load_user_update_menu();
+    std::shared_ptr<Page> load_new_user_menu();
+    std::shared_ptr<Page> load_advanced_menu();
 
-    bool user_update_event(UpdateEvent kind, tdc::User& user);
+    void user_update_event(UpdateEvent kind, tdc::User& user);
+    String username_validation_event(); 
+    String password_validation_event(); 
     void invalid_option_event() const;
+    bool privileges_validation_event() const;
+    bool privileges_validation_event(const tdc::User& user) const;
 
     std::shared_ptr<tdc::User> get_current_user() { return m_current_user; }
 };
