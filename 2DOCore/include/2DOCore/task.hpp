@@ -228,7 +228,18 @@ class [[nodiscard]] Message {
     [[nodiscard]] int task_id() const { return m_task_id; }
     [[nodiscard]] String sender_name() const { return m_sender_name; }
     [[nodiscard]] String content() const { return m_content; }
-    [[nodiscard]] TimePoint timestamp() const { return m_timestamp; }
+
+    template <typename T>
+    [[nodiscard]] typename std::enable_if<std::is_same<T, String>::value ||
+                                              std::is_same<T, TimePoint>::value,
+                                          T>::type
+    timestamp() const {
+        if constexpr (std::is_same<T, String>::value) {
+            return tdu::tptos(m_timestamp);
+        } else if constexpr (std::is_same<T, TimePoint>::value) {
+            return m_timestamp;
+        }
+    }
 
     void set_message_id(unsigned int id) { m_message_id = id; }
 
@@ -254,6 +265,7 @@ class [[nodiscard]] MessageDb {
     bool is_table_empty() const;
 
     void add_object(Message& message);
+    void add_object(const Message& message);
 
     void delete_all_by_task_id(unsigned int task_id);
 

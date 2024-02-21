@@ -63,23 +63,106 @@ std::shared_ptr<Page> App::load_tasks_menu() const {
 }
 
 std::shared_ptr<Page> App::load_your_tasks_menu() const {
-    const auto your_tasks = std::make_shared<Page>([this] {
-        m_printer->msg_print("Your tasks:\n");
+    const auto your_tasks = std::make_shared<Page>(false, [this] {
         auto tasks = m_task_db->get_all_objects<tdc::TaskDb::IdType::Executor>(
             m_current_user->id());
 
+        const auto tasks_page = std::make_shared<Page>([this, &tasks] {
+            m_printer->msg_print("Your tasks:\n");
+
+            unsigned int count = 0;
+            for (const auto& task : tasks) {
+                const auto owner = m_user_db->get_object(task.owner_id());
+                m_printer->msg_print(fmt::format(
+                    "[{}] {} from {} ({})\n", ++count, task.topic(),
+                    owner.username(),
+                    (task.is_done()
+                         ? fmt::format(fmt::fg(fmt::color::green), "DONE")
+                         : fmt::format(fmt::fg(fmt::color::red),
+                                       "INCOMPLETE"))));
+            }
+            m_printer->msg_print("\n-> ");
+        });
+
         unsigned int count = 0;
-        for (const auto& task : tasks) {
-            const auto owner = m_user_db->get_object(task.owner_id());
-            m_printer->msg_print(fmt::format(
-                "[{}] {} from {} ({})\n", ++count, task.topic(),
-                owner.username(),
-                (task.is_done()
-                     ? fmt::format(fmt::fg(fmt::color::green), "DONE")
-                     : fmt::format(fmt::fg(fmt::color::red), "INCOMPLETE"))));
+        for (auto& task : tasks) {
+            const auto chosen_task = std::make_shared<Page>([this, &task] {
+                m_printer->msg_print(fmt::format(
+                    "Topic: {}\nContent: {}\nStart Date: {}\nDeadline: "
+                    "{}\nStatus: {}\n",
+                    task.topic(), task.content(), task.start_date<String>(),
+                    task.deadline<String>(),
+                    (task.is_done()
+                         ? fmt::format(fmt::fg(fmt::color::green), "DONE")
+                         : fmt::format(fmt::fg(fmt::color::red),
+                                       "INCOMPLETE"))));
+
+                m_printer->msg_print(
+                    "Update user:\n"
+                    "[1] Mark as complete\n"
+                    "[2] Discussion\n"
+                    "[0] Back\n"
+                    "-> ");
+            });
+
+            const auto change_status = std::make_shared<Page>(false, [this,
+                                                                      &task] {
+                tdu::clear_term();
+                m_printer->msg_print("Are you 100% sure ? [y/n]\n");
+                const auto choice = m_input_handler->get_input();
+                if (choice == "y") {
+                    task.set_is_done(true);
+                    m_task_db->update_object(task);
+                    m_printer->msg_print("Congrats you've completed the task!");
+                } else if (choice == "n") {
+                    return;
+                } else {
+                    invalid_option_event();
+                    return;
+                }
+            });
+
+            const auto discussion = std::make_shared<Page>(false, [this,
+                                                                   &task] {
+                while (true) {
+                    tdu::clear_term();
+
+                    const auto messages =
+                        m_message_db->get_all_objects(task.id());
+
+                    for (const auto& msg : messages) {
+                        m_printer->msg_print(fmt::format(
+                            "[{}] <{}>: {}\n", msg.timestamp<String>(),
+                            msg.sender_name(), msg.content()));
+                    }
+
+                    m_printer->msg_print(
+                        fmt::format("<{}>: ", m_current_user->username()));
+                    String sended_message = m_input_handler->get_input();
+                    if (sended_message == "0") {
+                        break;
+                    }
+
+                    const auto prepared_msg = tdc::Message{
+                        task.id(), m_current_user->username(), sended_message,
+                        tdu::get_current_timestamp<TimePoint>()};
+                    m_message_db->add_object(prepared_msg);
+
+                    m_printer->msg_print(fmt::format(
+                        "[{}] <{}>: {}\n", prepared_msg.timestamp<String>(),
+                        prepared_msg.sender_name(), prepared_msg.content()));
+                }
+            });
+
+            chosen_task->attach(FIRST_OPTION, change_status);
+            chosen_task->attach(SECOND_OPTION, discussion);
+
+            tasks_page->attach(std::to_string(++count), chosen_task);
         }
 
-        m_printer->msg_print("\n-> ");
+        auto your_tasks_menu = Menu{tasks_page, m_printer, m_input_handler};
+
+        your_tasks_menu.run(QUIT_OPTION);
     });
 
     return std::move(your_tasks);
@@ -238,16 +321,17 @@ std::shared_ptr<Page> App::load_user_update_menu() {
 
         unsigned int count = 0;
         for (auto& user : users) {
-            const auto chosen_user = std::make_shared<Page>([this, &should_collapse] {
-                m_printer->msg_print(
-                    "Update user:\n"
-                    "[1] Change username\n"
-                    "[2] Change password\n"
-                    "[3] Change role\n"
-                    "[4] Delete user\n"
-                    "[0] Back\n"
-                    "-> ");
-            });
+            const auto chosen_user =
+                std::make_shared<Page>([this, &should_collapse] {
+                    m_printer->msg_print(
+                        "Update user:\n"
+                        "[1] Change username\n"
+                        "[2] Change password\n"
+                        "[3] Change role\n"
+                        "[4] Delete user\n"
+                        "[0] Back\n"
+                        "-> ");
+                });
 
             const auto username_update =
                 std::make_shared<Page>(false, [this, &user] {
@@ -274,7 +358,7 @@ std::shared_ptr<Page> App::load_user_update_menu() {
                 std::make_shared<Page>(false, [this, &user, &should_collapse] {
                     if (!privileges_validation_event(user))
                         return;
-                    if(user_update_event(UpdateEvent::UserDelete, user)) {
+                    if (user_update_event(UpdateEvent::UserDelete, user)) {
                         should_collapse = true;
                     }
                 });
@@ -287,10 +371,9 @@ std::shared_ptr<Page> App::load_user_update_menu() {
             root_page->attach(std::to_string(++count), chosen_user);
         }
 
-        const auto users_menu =
-            std::make_shared<Menu>(root_page, m_printer, m_input_handler);
+        auto users_menu = Menu{root_page, m_printer, m_input_handler};
 
-        users_menu->run(QUIT_OPTION);
+        users_menu.run(QUIT_OPTION);
     });
 
     return std::move(edit_users);

@@ -170,7 +170,7 @@ void MessageDb::add_object(Message& message) {
     query.bind(1, message.task_id());
     query.bind(2, message.sender_name());
     query.bind(3, message.content());
-    query.bind(4, tdu::tptos(message.timestamp()));
+    query.bind(4, message.timestamp<String>());
 
     query.exec();
 
@@ -182,6 +182,24 @@ void MessageDb::add_object(Message& message) {
 
     message.set_message_id(std::stoi(query.getColumn(0)));
 };
+
+void MessageDb::add_object(const Message& message) {
+    SQL::Statement query{m_db,
+                         "INSERT INTO messages (task_id, sender_name, "
+                         "content, timestamp) VALUES (?, ?, ?, ?)"};
+    query.bind(1, message.task_id());
+    query.bind(2, message.sender_name());
+    query.bind(3, message.content());
+    query.bind(4, message.timestamp<String>());
+
+    query.exec();
+
+    query = SQL::Statement{
+        m_db,
+        "SELECT message_id FROM messages ORDER BY message_id DESC LIMIT 1"};
+
+    query.executeStep();
+}
 
 void MessageDb::delete_all_by_task_id(unsigned int task_id) {
     SQL::Statement query{m_db, "DELETE FROM messages WHERE task_id = ?"};
