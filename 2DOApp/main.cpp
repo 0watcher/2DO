@@ -5,7 +5,6 @@
 #include <fmt/color.h>
 #include <fmt/core.h>
 
-
 #include <2DOApp/app.hpp>
 #include <Utils/type.hpp>
 #include <Utils/util.hpp>
@@ -13,8 +12,6 @@
 
 namespace td = twodo;
 namespace tdu = twodoutils;
-
-#include <mutex>
 
 class UserInput : public tdu::IUserInputHandler {
   public:

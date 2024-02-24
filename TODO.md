@@ -1,8 +1,10 @@
 ## TODO
+- add size_t when possible and improve some for loops
+- add const when possible
+- improve menu class
 - fix backing to users menu after user deletion
 - add menu_print in IPrinter
 - make user logs
-- replace raw int with
 - finish app
 
 ## UI SCHEMA
