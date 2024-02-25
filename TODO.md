@@ -1,9 +1,9 @@
 ## TODO
-- add size_t when possible and improve some for loops
-- add const when possible
 - improve menu class
-- fix backing to users menu after user deletion
 - add menu_print in IPrinter
+- fix exception after not numeric input
+- decrease code repetition
+- fix backing to users menu after user deletion
 - make user logs
 - finish app
 

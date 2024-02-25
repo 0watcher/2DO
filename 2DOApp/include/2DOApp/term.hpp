@@ -29,8 +29,6 @@ class Page : public std::enable_shared_from_this<Page> {
         child->m_parent = this->shared_from_this();
     }
 
-    bool has_any_child() { return !m_childs.empty(); }
-
   private:
     std::function<void()> m_content;
     std::shared_ptr<Page> m_parent = nullptr;
@@ -84,7 +82,7 @@ class [[nodiscard]] Menu {
 
     String get_user_choice() const { return input_handler->get_input(); }
 
-    void execute_current_page() {
+    void execute_current_page() const {
         if (current_page) {
             current_page->execute();
         }

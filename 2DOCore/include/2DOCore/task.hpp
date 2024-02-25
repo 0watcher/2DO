@@ -142,7 +142,7 @@ class [[nodiscard]] TaskDb {
 
     bool is_table_empty() const;
 
-    void add_object(Task& task);
+    void add_object(Task& task) const;
     void add_object(const Task& task) const;
 
     void update_object(const Task& task) const;
@@ -264,8 +264,8 @@ class [[nodiscard]] MessageDb {
 
     bool is_table_empty() const;
 
-    void add_object(Message& message);
-    void add_object(const Message& message);
+    void add_object(Message& message) const;
+    void add_object(const Message& message) const;
 
     void delete_all_by_task_id(unsigned int task_id);
 

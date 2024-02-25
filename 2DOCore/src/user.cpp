@@ -9,7 +9,6 @@
 
 #include <Utils/result.hpp>
 #include <Utils/type.hpp>
-#include "2DOCore/task.hpp"
 
 namespace SQL = SQLite;
 
@@ -163,7 +162,7 @@ std::optional<User> UserDb::find_object_by_unique_column(
 };
 
 tdu::Result<void, AuthErr> AuthenticationManager::username_validation(
-    const String& username) {
+    const String& username) const {
     if (username.length() <= 0) {
         return tdu::Err(AuthErr::InvalidNameLength);
     }
@@ -176,7 +175,7 @@ tdu::Result<void, AuthErr> AuthenticationManager::username_validation(
 };
 
 tdu::Result<void, AuthErr> AuthenticationManager::password_validation(
-    const String& password) {
+    const String& password) const {
     const std::regex upper_case_expression{"[A-Z]+"};
     const std::regex lower_case_expression{"[a-z]+"};
     const std::regex number_expression{"[0-9]+"};
@@ -202,7 +201,7 @@ tdu::Result<void, AuthErr> AuthenticationManager::password_validation(
     return tdu::Ok();
 };
 
-bool AuthenticationManager::is_in_db(const String& username) {
+bool AuthenticationManager::is_in_db(const String& username) const {
     return (m_user_db->find_object_by_unique_column(username)) ? true : false;
 };
 }  // namespace twodocore

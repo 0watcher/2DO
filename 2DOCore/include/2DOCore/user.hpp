@@ -129,12 +129,12 @@ class [[nodiscard]] AuthenticationManager {
     AuthenticationManager(std::shared_ptr<UserDb> user_db)
         : m_user_db{user_db} {}
 
-    tdu::Result<void, AuthErr> username_validation(const String& username);
-    tdu::Result<void, AuthErr> password_validation(const String& password);
+    tdu::Result<void, AuthErr> username_validation(const String& username) const;
+    tdu::Result<void, AuthErr> password_validation(const String& password) const;
 
   private:
     std::shared_ptr<UserDb> m_user_db;
 
-    bool is_in_db(const String& username);
+    bool is_in_db(const String& username) const;
 };
 }  // namespace twodocore

@@ -43,7 +43,7 @@ class [[nodiscard]] App {
 
     std::shared_ptr<App> set_dependencies(
         std::shared_ptr<tdu::IPrinter> iprinter,
-        std::shared_ptr<tdu::IUserInputHandler> inputhandler) {
+        std::shared_ptr<tdu::IUserInputHandler> inputhandler) const {
         instance->m_printer = iprinter;
         instance->m_input_handler = inputhandler;
         return instance;
@@ -60,7 +60,7 @@ class [[nodiscard]] App {
         std::make_shared<tdc::TaskDb>(DB_NAME);
     std::shared_ptr<tdc::MessageDb> m_message_db =
         std::make_shared<tdc::MessageDb>(DB_NAME);
-    tdc::AuthenticationManager m_amanager{m_user_db};
+    tdc::AuthenticationManager m_auth_manager{m_user_db};
     std::shared_ptr<tdu::IPrinter> m_printer = nullptr;
     std::shared_ptr<tdu::IUserInputHandler> m_input_handler = nullptr;
     tdu::Resource m_resource{};
@@ -274,10 +274,10 @@ class [[nodiscard]] App {
 
                             m_printer->msg_print("assign executor:\n");
 
-                            for (size_t count = 1; count < users.size();
+                            for (size_t count = 0; count < users.size();
                                  ++count) {
                                 m_printer->msg_print(
-                                    fmt::format("[{}] {} <{}>\n", count,
+                                    fmt::format("[{}] {} <{}>\n", count+1,
                                                 users[count].username(),
                                                 users[count].role<String>()));
                             }
@@ -316,19 +316,19 @@ class [[nodiscard]] App {
         your_tasks_menu.run(QUIT_OPTION);
     }
 
-    std::shared_ptr<Page> load_settings_menu();
-    std::shared_ptr<Page> load_user_manager_menu();
-    std::shared_ptr<Page> load_user_update_menu();
-    std::shared_ptr<Page> load_new_user_menu();
-    std::shared_ptr<Page> load_advanced_menu();
+    std::shared_ptr<Page> load_settings_menu() const;
+    std::shared_ptr<Page> load_user_manager_menu() const;
+    std::shared_ptr<Page> load_user_update_menu() const;
+    std::shared_ptr<Page> load_new_user_menu() const;
+    std::shared_ptr<Page> load_advanced_menu() const;
 
-    bool user_update_event(UpdateEvent kind, tdc::User& user);
-    String username_validation_event();
-    String password_validation_event();
+    bool user_update_event(UpdateEvent kind, tdc::User& user) const;
+    String username_validation_event() const;
+    String password_validation_event() const;
     void invalid_option_event() const;
     bool privileges_validation_event() const;
     bool privileges_validation_event(const tdc::User& user) const;
 
-    std::shared_ptr<tdc::User> get_current_user() { return m_current_user; }
+    std::shared_ptr<tdc::User> get_current_user() const { return m_current_user; }
 };
 }  // namespace twodo

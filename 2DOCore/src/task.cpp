@@ -54,7 +54,7 @@ bool TaskDb::is_table_empty() const {
     return m_db.tableExists("tasks");
 }
 
-void TaskDb::add_object(Task& task) {
+void TaskDb::add_object(Task& task) const {
     SQL::Statement query{
         m_db,
         "INSERT INTO tasks (topic, content, start_date, deadline, "
@@ -163,7 +163,7 @@ bool MessageDb::is_table_empty() const {
     return m_db.tableExists("messages");
 }
 
-void MessageDb::add_object(Message& message) {
+void MessageDb::add_object(Message& message) const {
     SQL::Statement query{m_db,
                          "INSERT INTO messages (task_id, sender_name, "
                          "content, timestamp) VALUES (?, ?, ?, ?)"};
@@ -183,7 +183,7 @@ void MessageDb::add_object(Message& message) {
     message.set_message_id(std::stoi(query.getColumn(0)));
 };
 
-void MessageDb::add_object(const Message& message) {
+void MessageDb::add_object(const Message& message) const {
     SQL::Statement query{m_db,
                          "INSERT INTO messages (task_id, sender_name, "
                          "content, timestamp) VALUES (?, ?, ?, ?)"};

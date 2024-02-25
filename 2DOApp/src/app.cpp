@@ -2,6 +2,7 @@
 
 #include <fmt/color.h>
 #include <fmt/core.h>
+#include <cstddef>
 #include <memory>
 #include <string>
 
@@ -124,8 +125,9 @@ std::shared_ptr<Page> App::load_create_tasks_menu() const {
             while (true) {
                 tdu::clear_term();
                 m_printer->msg_print("assign executor:\n");
-                unsigned int count = 0;
-                for (const auto& user : users) {
+
+                unsigned count = 0;
+                for (const auto user : users) {
                     m_printer->msg_print(fmt::format("[{}] {} <{}>\n", ++count,
                                                      user.username(),
                                                      user.role<String>()));
@@ -154,7 +156,7 @@ std::shared_ptr<Page> App::load_create_tasks_menu() const {
     return std::move(create_task);
 }
 
-std::shared_ptr<Page> App::load_settings_menu() {
+std::shared_ptr<Page> App::load_settings_menu() const {
     const auto settings = std::make_shared<Page>([this] {
         m_printer->msg_print(
             "Settings:\n"
@@ -170,7 +172,7 @@ std::shared_ptr<Page> App::load_settings_menu() {
     return std::move(settings);
 }
 
-std::shared_ptr<Page> App::load_user_manager_menu() {
+std::shared_ptr<Page> App::load_user_manager_menu() const {
     const auto user_manager = std::make_shared<Page>([this] {
         m_printer->msg_print(
             "User Manager:\n"
@@ -186,7 +188,7 @@ std::shared_ptr<Page> App::load_user_manager_menu() {
     return std::move(user_manager);
 }
 
-std::shared_ptr<Page> App::load_user_update_menu() {
+std::shared_ptr<Page> App::load_user_update_menu() const {
     const auto edit_users = std::make_shared<Page>(false, [this] {
         bool should_collapse = false;
 
@@ -195,11 +197,10 @@ std::shared_ptr<Page> App::load_user_update_menu() {
         const auto root_page = std::make_shared<Page>([this, &users] {
             m_printer->msg_print("Users:\n");
 
-            unsigned int count = 0;
-            for (const auto& user : users) {
-                m_printer->msg_print(fmt::format("[{}] {} <{}>\n", ++count,
-                                                 user.username(),
-                                                 user.role<String>()));
+            for (size_t count = 0; count < users.size(); ++count) {
+                m_printer->msg_print(fmt::format("[{}] {} <{}>\n", count + 1,
+                                                 users[count].username(),
+                                                 users[count].role<String>()));
             }
             m_printer->msg_print(
                 "[0] Back\n"
@@ -210,6 +211,9 @@ std::shared_ptr<Page> App::load_user_update_menu() {
         for (auto& user : users) {
             const auto chosen_user =
                 std::make_shared<Page>([this, &should_collapse] {
+                    if (should_collapse)
+                        return;
+
                     m_printer->msg_print(
                         "Update user:\n"
                         "[1] Change username\n"
@@ -258,15 +262,13 @@ std::shared_ptr<Page> App::load_user_update_menu() {
             root_page->attach(std::to_string(++count), chosen_user);
         }
 
-        auto users_menu = Menu{root_page, m_printer, m_input_handler};
-
-        users_menu.run(QUIT_OPTION);
+        Menu{root_page, m_printer, m_input_handler}.run(QUIT_OPTION);
     });
 
     return std::move(edit_users);
 }
 
-std::shared_ptr<Page> App::load_new_user_menu() {
+std::shared_ptr<Page> App::load_new_user_menu() const {
     const auto add_new_user = std::make_shared<Page>(false, [this] {
         if (m_current_user->role<tdc::Role>() == tdc::Role::Admin) {
             const String username = username_validation_event();
@@ -299,7 +301,7 @@ std::shared_ptr<Page> App::load_new_user_menu() {
     return std::move(add_new_user);
 }
 
-std::shared_ptr<Page> App::load_advanced_menu() {
+std::shared_ptr<Page> App::load_advanced_menu() const {
     const auto advanced = std::make_shared<Page>(
         [] { fmt::print("Advanced:\n[1] Wipe all data\n-> "); });
 
@@ -325,7 +327,7 @@ std::shared_ptr<Page> App::load_advanced_menu() {
     return std::move(advanced);
 }
 
-bool App::user_update_event(UpdateEvent kind, tdc::User& user) {
+bool App::user_update_event(UpdateEvent kind, tdc::User& user) const {
     tdu::clear_term();
     switch (kind) {
         case UpdateEvent::UsernameUpdate: {
@@ -333,7 +335,7 @@ bool App::user_update_event(UpdateEvent kind, tdc::User& user) {
             do {
                 m_printer->msg_print("new username: ");
                 username = m_input_handler->get_input();
-            } while (!m_amanager.username_validation(username));
+            } while (!m_auth_manager.username_validation(username));
             user.set_username(username);
             m_user_db->update_object(user);
         } break;
@@ -343,7 +345,7 @@ bool App::user_update_event(UpdateEvent kind, tdc::User& user) {
             do {
                 m_printer->msg_print("new password: ");
                 password = m_input_handler->get_secret();
-            } while (!m_amanager.password_validation(password));
+            } while (!m_auth_manager.password_validation(password));
             user.set_password(password);
             m_user_db->update_object(user);
 
@@ -386,7 +388,7 @@ bool App::user_update_event(UpdateEvent kind, tdc::User& user) {
     tdu::sleep(2000);
 };
 
-String App::username_validation_event() {
+String App::username_validation_event() const {
     tdu::clear_term();
     String username;
 
@@ -396,7 +398,7 @@ String App::username_validation_event() {
         m_printer->msg_print("username: ");
         username = m_input_handler->get_input();
 
-        const auto result = m_amanager.username_validation(username);
+        const auto result = m_auth_manager.username_validation(username);
         if (result) {
             return username;
         }
@@ -414,7 +416,7 @@ String App::username_validation_event() {
     }
 }
 
-String App::password_validation_event() {
+String App::password_validation_event() const {
     String password;
 
     unsigned short tries = 0;
@@ -424,7 +426,7 @@ String App::password_validation_event() {
         m_printer->msg_print("password: ");
         password = m_input_handler->get_secret();
 
-        const auto result = m_amanager.password_validation(password);
+        const auto result = m_auth_manager.password_validation(password);
         if (result) {
             return password;
         }
