@@ -1,16 +1,6 @@
 #include "2DOCore/user.hpp"
 
-#include <optional>
 #include <regex>
-#include <stdexcept>
-
-#include <SQLiteCpp/Database.h>
-#include <SQLiteCpp/Exception.h>
-
-#include <Utils/result.hpp>
-#include <Utils/type.hpp>
-
-namespace SQL = SQLite;
 
 namespace twodocore {
 [[nodiscard]] String User::rtos(Role role) const {
@@ -56,21 +46,38 @@ UserDb::UserDb(StringView db_filepath)
     }
 }
 
-User UserDb::get_object(unsigned int id) const {
+[[nodiscard]] User UserDb::get_object(unsigned int id) const {
     SQL::Statement query{m_db, "SELECT * FROM users WHERE user_id = ?"};
     query.bind(1, id);
 
     query.executeStep();
 
-    const auto user = User{
-        (unsigned)query.getColumn(0).getInt(), query.getColumn(1).getString(),
-        query.getColumn(2).getString(), query.getColumn(3).getString()};
-
-    // nrvo?
-    return user;
+    return User{(unsigned)query.getColumn(0).getInt(),
+                query.getColumn(1).getString(), query.getColumn(2).getString(),
+                query.getColumn(3).getString()};
 }
 
-Vector<User> UserDb::get_all_objects() const {
+[[nodiscard]] std::optional<User> UserDb::find_object_by_unique_column(
+    const String& column_value) const {
+    SQL::Statement query{m_db, "SELECT * FROM users WHERE username = ?"};
+    query.bind(1, column_value);
+
+    try {
+        if (!query.executeStep()) {
+            return std::nullopt;
+        }
+    } catch (const SQL::Exception& e) {
+        if (query.hasRow()) {
+            throw e;
+        }
+    }
+
+    return User{(unsigned)query.getColumn(0).getInt(),
+                query.getColumn(1).getString(), query.getColumn(2).getString(),
+                query.getColumn(3).getString()};
+};
+
+[[nodiscard]] Vector<User> UserDb::get_all_objects() const {
     SQL::Statement query{m_db, "SELECT * FROM users"};
 
     Vector<User> users;
@@ -84,7 +91,7 @@ Vector<User> UserDb::get_all_objects() const {
     return users;
 }
 
-bool UserDb::is_table_empty() const {
+[[nodiscard]] bool UserDb::is_table_empty() const {
     return m_db.tableExists("users");
 }
 
@@ -139,30 +146,8 @@ void UserDb::delete_object(unsigned int id) const {
     query.exec();
 }
 
-std::optional<User> UserDb::find_object_by_unique_column(
-    const String& column_value) const {
-    SQL::Statement query{m_db, "SELECT * FROM users WHERE username = ?"};
-    query.bind(1, column_value);
-
-    try {
-        if (!query.executeStep()) {
-            return std::nullopt;
-        }
-    } catch (const SQL::Exception& e) {
-        if (query.hasRow()) {
-            throw e;
-        }
-    }
-
-    const auto user = User{
-        (unsigned)query.getColumn(0).getInt(), query.getColumn(1).getString(),
-        query.getColumn(2).getString(), query.getColumn(3).getString()};
-
-    return user;
-};
-
-tdu::Result<void, AuthErr> AuthenticationManager::username_validation(
-    const String& username) const {
+[[nodiscard]] tdu::Result<void, AuthErr>
+AuthenticationManager::username_validation(const String& username) const {
     if (username.length() <= 0) {
         return tdu::Err(AuthErr::InvalidNameLength);
     }
@@ -174,8 +159,8 @@ tdu::Result<void, AuthErr> AuthenticationManager::username_validation(
     return tdu::Ok();
 };
 
-tdu::Result<void, AuthErr> AuthenticationManager::password_validation(
-    const String& password) const {
+[[nodiscard]] tdu::Result<void, AuthErr>
+AuthenticationManager::password_validation(const String& password) const {
     const std::regex upper_case_expression{"[A-Z]+"};
     const std::regex lower_case_expression{"[a-z]+"};
     const std::regex number_expression{"[0-9]+"};
@@ -201,7 +186,8 @@ tdu::Result<void, AuthErr> AuthenticationManager::password_validation(
     return tdu::Ok();
 };
 
-bool AuthenticationManager::is_in_db(const String& username) const {
+[[nodiscard]] bool AuthenticationManager::is_in_db(
+    const String& username) const {
     return (m_user_db->find_object_by_unique_column(username)) ? true : false;
 };
 }  // namespace twodocore

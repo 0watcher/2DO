@@ -1,6 +1,5 @@
 #pragma once
 
-#include <functional>
 #include <memory>
 
 #include <fmt/color.h>
@@ -19,8 +18,14 @@ class Page : public std::enable_shared_from_this<Page> {
     Page(std::function<void()> content)
         : m_content{std::move(content)}, m_menu_event{true} {}
 
+    Page(StringView page_name, std::function<void()> content)
+        : m_content{std::move(content)}, m_page_name{page_name}, m_menu_event{true} {}
+
     Page(bool is_menu_event, std::function<void()> content)
-        : m_menu_event{is_menu_event}, m_content{std::move(content)} {}
+        : m_content{std::move(content)}, m_menu_event{is_menu_event} {}
+
+    Page(StringView page_name, bool is_menu_event, std::function<void()> content)
+        : m_content{std::move(content)}, m_page_name{page_name}, m_menu_event{is_menu_event} {}
 
     void execute() const { m_content(); }
 
@@ -32,6 +37,7 @@ class Page : public std::enable_shared_from_this<Page> {
   private:
     std::function<void()> m_content;
     std::shared_ptr<Page> m_parent = nullptr;
+    StringView m_page_name;
     HashMap<String, std::shared_ptr<Page>> m_childs{};
     bool m_menu_event;
 
@@ -64,14 +70,14 @@ class [[nodiscard]] Menu {
         while (true) {
             tdu::clear_term();
 
-            execute_current_page();
+            current_page->execute();
 
-            String user_choice = get_user_choice();
+            const String user_choice = input_handler->get_input();
             if (handle_quit(user_choice, quit_input)) {
                 break;
             }
 
-            navigate_or_display_error(user_choice, quit_input);
+            navigate_to_page(user_choice, quit_input);
         }
     }
 
@@ -79,14 +85,6 @@ class [[nodiscard]] Menu {
     std::shared_ptr<Page> current_page;
     std::shared_ptr<tdu::IPrinter> printer;
     std::shared_ptr<tdu::IUserInputHandler> input_handler;
-
-    String get_user_choice() const { return input_handler->get_input(); }
-
-    void execute_current_page() const {
-        if (current_page) {
-            current_page->execute();
-        }
-    }
 
     bool handle_quit(const String& user_choice, const String& quit_input) {
         if (user_choice == quit_input) {
@@ -96,14 +94,14 @@ class [[nodiscard]] Menu {
     }
 
     bool navigate_to_parent_or_exit() {
-        if (auto parent_page = current_page->m_parent; parent_page) {
+        if (const auto parent_page = current_page->m_parent; parent_page) {
             current_page = parent_page;
             return false;
         }
         return true;
     }
 
-    void navigate_or_display_error(const String& user_choice,
+    void navigate_to_page(const String& user_choice,
                                    const String& quit_input) {
         std::shared_ptr<Page> selected_page =
             current_page->get_child(user_choice);

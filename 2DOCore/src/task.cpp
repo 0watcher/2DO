@@ -1,13 +1,6 @@
 #include "2DOCore/task.hpp"
 
-#include <stdexcept>
-
 #include <SQLiteCpp/Statement.h>
-
-#include <Utils/result.hpp>
-#include <Utils/type.hpp>
-
-namespace SQL = SQLite;
 
 namespace twodocore {
 TaskDb::TaskDb(StringView db_filepath)
@@ -32,25 +25,23 @@ TaskDb::TaskDb(StringView db_filepath)
     }
 }
 
-Task TaskDb::get_object(unsigned int id) const {
+[[nodiscard]] Task TaskDb::get_object(unsigned int id) const {
     SQL::Statement query{m_db, "SELECT * FROM tasks WHERE task_id = ?"};
     query.bind(1, id);
 
     query.executeStep();
 
-    const auto task = Task{(unsigned)query.getColumn(0).getInt(),
-                           query.getColumn(1).getString(),
-                           query.getColumn(2).getString(),
-                           query.getColumn(3).getString(),
-                           query.getColumn(4).getString(),
-                           (unsigned)query.getColumn(5).getInt(),
-                           (unsigned)query.getColumn(6).getInt(),
-                           (unsigned)query.getColumn(7).getInt()};
-
-    return task;
+    return Task{(unsigned)query.getColumn(0).getInt(),
+                query.getColumn(1).getString(),
+                query.getColumn(2).getString(),
+                query.getColumn(3).getString(),
+                query.getColumn(4).getString(),
+                (unsigned)query.getColumn(5).getInt(),
+                (unsigned)query.getColumn(6).getInt(),
+                (unsigned)query.getColumn(7).getInt()};
 }
 
-bool TaskDb::is_table_empty() const {
+[[nodiscard]] bool TaskDb::is_table_empty() const {
     return m_db.tableExists("tasks");
 }
 
@@ -143,7 +134,8 @@ MessageDb::MessageDb(StringView db_filepath)
     }
 }
 
-Vector<Message> MessageDb::get_all_objects(unsigned int taks_id) const {
+[[nodiscard]] Vector<Message> MessageDb::get_all_objects(
+    unsigned int taks_id) const {
     SQL::Statement query{m_db, "SELECT * FROM messages WHERE task_id = ?"};
     query.bind(1, taks_id);
 
@@ -159,7 +151,7 @@ Vector<Message> MessageDb::get_all_objects(unsigned int taks_id) const {
     return messages;
 };
 
-bool MessageDb::is_table_empty() const {
+[[nodiscard]] bool MessageDb::is_table_empty() const {
     return m_db.tableExists("messages");
 }
 
@@ -201,7 +193,7 @@ void MessageDb::add_object(const Message& message) const {
     query.executeStep();
 }
 
-void MessageDb::delete_all_by_task_id(unsigned int task_id) {
+void MessageDb::delete_all_by_task_id(unsigned int task_id) const {
     SQL::Statement query{m_db, "DELETE FROM messages WHERE task_id = ?"};
     query.bind(1, task_id);
 

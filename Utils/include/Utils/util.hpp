@@ -3,19 +3,17 @@
 #include <any>
 #include <chrono>
 #include <functional>
-#include <iomanip>
-#include <memory>
 #include <optional>
 #include <sstream>
-#include <stdexcept>
 #include <thread>
+
 #ifdef _WIN32
 #include <windows.h>
 #else
 #include <cstdlib>
 #endif
 
-#include "Utils/type.hpp"
+#include <Utils/type.hpp>
 
 namespace sch = std::chrono;
 
@@ -23,39 +21,33 @@ using TimePoint = sch::time_point<sch::system_clock, sch::minutes>;
 
 using NanoSeconds = sch::nanoseconds;
 
-class AssertFail : std::runtime_error {
-  public:
-    AssertFail(const char* file, int line, const String& message)
-        : std::runtime_error{message}, file{file}, line{line} {}
-
-    const char* get_file() const { return file; }
-
-    int get_line() { return line; }
-
-    const char* what() const noexcept override {
-        std::ostringstream oss;
-        oss << "Assertion failed in file " << file << "at line " << line
-            << "\nError: " << std::runtime_error::what();
-        return std::move(oss.str().c_str());
-    }
-
-  private:
-    const char* file;
-    int line;
-};
-
-#ifndef NDEBUG
-#define DO_ASSERT(expr, msg) \
-    if (!expr)               \
-        throw AssertFail(__FILE__, __LINE__, msg);
-#else
-#define DO_ASSERT(expr, msg)
-#endif
-
 namespace twodoutils {
-NanoSeconds speed_test(std::function<void()> test);
+[[nodiscard]] NanoSeconds speed_test(std::function<void()> test);
 
 void log_to_file(StringView msg, const String& filepath);
+
+void create_simple_app_env(const String& folder_name,
+                           const Vector<String>& files);
+
+void wipe_simple_app_env(const String& folder_name);
+
+[[nodiscard]] String hash(const String& str);
+
+[[nodiscard]] String tptos(const TimePoint&);
+
+[[nodiscard]] TimePoint stotp(const String&);
+
+inline void clear_term() {
+#ifdef _WIN32
+    ::system("cls");
+#else
+    ::system("clear");
+#endif
+}
+
+inline void sleep(unsigned int t) noexcept {
+    std::this_thread::sleep_for(std::chrono::milliseconds(t));
+}
 
 template <typename T>
 [[nodiscard]] typename std::enable_if<std::is_same<T, String>::value ||
@@ -78,28 +70,6 @@ get_current_timestamp(unsigned int additional_days = 0) {
     }
 }
 
-inline void clear_term() {
-#ifdef _WIN32
-    ::system("cls");
-#else
-    ::system("clear");
-#endif
-}
-
-inline void sleep(unsigned int t) noexcept {
-    std::this_thread::sleep_for(std::chrono::milliseconds(t));
-}
-
-void create_simple_app_env(const String& folder_name,
-                           const Vector<String>& files);
-
-void wipe_simple_app_env(const String& folder_name);
-
-[[nodiscard]] String hash(const String& str);
-
-[[nodiscard]] String tptos(const TimePoint&);
-[[nodiscard]] TimePoint stotp(const String&);
-
 class IUserInputHandler {
   public:
     virtual String get_input() const = 0;
@@ -114,7 +84,7 @@ class IPrinter {
     virtual ~IPrinter(){};
 };
 
-class Resource {
+class [[nodiscard]] Resource {
   public:
     Resource() = default;
     Resource(const Resource&) = delete;
@@ -127,7 +97,7 @@ class Resource {
     }
 
     template <typename ResourceT>
-    std::optional<ResourceT> pop() {
+    [[nodiscard]] std::optional<ResourceT> pop() {
         if (m_resource->has_value()) {
             return std::move(*std::any_cast<ResourceT>(m_resource.release()));
         }
@@ -139,9 +109,8 @@ class Resource {
 };
 
 class DbError : public std::runtime_error {
-public:
-    DbError(const std::string& message)
-        : std::runtime_error{message} {}
+  public:
+    DbError(const std::string& message) : std::runtime_error{message} {}
 
     const char* what() const noexcept override {
         return std::runtime_error::what();
@@ -149,3 +118,32 @@ public:
 };
 
 }  // namespace twodoutils
+
+class AssertFail : public std::runtime_error {
+  public:
+    AssertFail(const char* file, int line, const String& message)
+        : std::runtime_error{message}, file{file}, line{line} {}
+
+    const char* get_file() const { return file; }
+
+    int get_line() const { return line; }
+
+    const char* what() const noexcept override {
+        std::ostringstream oss;
+        oss << "Assertion failed in file " << file << " at line " << line
+            << "\nError: " << std::runtime_error::what();
+        return std::move(oss.str().c_str());
+    }
+
+  private:
+    const char* file;
+    const int line;
+};
+
+#ifndef NDEBUG
+#define TDASSERT(expr, msg) \
+    if (!(expr))            \
+        throw AssertFail(__FILE__, __LINE__, (msg));
+#else
+#define TDASSERT(expr, msg)
+#endif

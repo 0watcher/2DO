@@ -2,15 +2,6 @@
 
 #include <fmt/color.h>
 #include <fmt/core.h>
-#include <cstddef>
-#include <memory>
-#include <string>
-
-#include <2DOApp/term.hpp>
-#include <2DOCore/user.hpp>
-#include <Utils/type.hpp>
-#include <Utils/util.hpp>
-#include "2DOCore/task.hpp"
 
 namespace twodo {
 void App::run() {

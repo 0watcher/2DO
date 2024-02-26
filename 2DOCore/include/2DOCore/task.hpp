@@ -1,7 +1,6 @@
 #pragma once
 
 #include <SQLiteCpp/Database.h>
-#include <SQLiteCpp/Statement.h>
 
 #include <Utils/result.hpp>
 #include <Utils/type.hpp>
@@ -79,6 +78,9 @@ class [[nodiscard]] Task {
     [[nodiscard]] unsigned int id() const { return m_id; }
     [[nodiscard]] String topic() const { return m_topic; }
     [[nodiscard]] String content() const { return m_content; }
+    [[nodiscard]] unsigned int executor_id() const { return m_executor_id; }
+    [[nodiscard]] unsigned int owner_id() const { return m_owner_id; }
+    [[nodiscard]] bool is_done() const { return m_is_done; }
 
     template <typename T>
     [[nodiscard]] typename std::enable_if<std::is_same<T, String>::value ||
@@ -103,9 +105,6 @@ class [[nodiscard]] Task {
             return m_deadline;
         }
     }
-    [[nodiscard]] unsigned int executor_id() const { return m_executor_id; }
-    [[nodiscard]] unsigned int owner_id() const { return m_owner_id; }
-    [[nodiscard]] bool is_done() const { return m_is_done; }
 
     void set_id(unsigned int id) { m_id = id; };
     void set_topic(StringView topic) { m_topic = topic; }
@@ -117,7 +116,7 @@ class [[nodiscard]] Task {
     void set_is_done(bool done) { m_is_done = done; }
 
   private:
-    unsigned int m_id;
+    unsigned int m_id{};
     String m_topic{};
     String m_content{};
     TimePoint m_start_date{};
@@ -138,9 +137,9 @@ class [[nodiscard]] TaskDb {
 
     TaskDb(StringView db_filepath);
 
-    Task get_object(unsigned int id) const;
+    [[nodiscard]] Task get_object(unsigned int id) const;
 
-    bool is_table_empty() const;
+    [[nodiscard]] bool is_table_empty() const;
 
     void add_object(Task& task) const;
     void add_object(const Task& task) const;
@@ -150,7 +149,7 @@ class [[nodiscard]] TaskDb {
     void delete_object(unsigned int id) const;
 
     template <IdType T>
-    Vector<Task> get_all_objects(unsigned int id) const {
+    [[nodiscard]] Vector<Task> get_all_objects(unsigned int id) const {
         SQL::Statement query{m_db, ""};
 
         if constexpr (T == IdType::Executor) {
@@ -260,14 +259,14 @@ class [[nodiscard]] MessageDb {
 
     MessageDb(StringView db_filepath);
 
-    Vector<Message> get_all_objects(unsigned int task_id) const;
+    [[nodiscard]] Vector<Message> get_all_objects(unsigned int task_id) const;
 
-    bool is_table_empty() const;
+    [[nodiscard]] bool is_table_empty() const;
 
     void add_object(Message& message) const;
     void add_object(const Message& message) const;
 
-    void delete_all_by_task_id(unsigned int task_id);
+    void delete_all_by_task_id(unsigned int task_id) const;
 
   private:
     SQL::Database m_db;

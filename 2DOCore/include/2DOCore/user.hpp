@@ -3,7 +3,6 @@
 #include <optional>
 
 #include <SQLiteCpp/Database.h>
-#include <SQLiteCpp/Statement.h>
 
 #include <Utils/result.hpp>
 #include <Utils/type.hpp>
@@ -13,7 +12,7 @@ namespace tdu = twodoutils;
 namespace SQL = SQLite;
 
 namespace twodocore {
-enum class [[nodiscard]] Role{User, Admin};
+enum class Role { User, Admin };
 
 class [[nodiscard]] User {
   public:
@@ -50,6 +49,8 @@ class [[nodiscard]] User {
 
     [[nodiscard]] unsigned int id() const { return m_user_id; }
     [[nodiscard]] String username() const { return m_username; }
+    [[nodiscard]] String password() const { return m_password; }
+
     template <typename T>
     [[nodiscard]] typename std::enable_if<std::is_same<T, String>::value ||
                                               std::is_same<T, Role>::value,
@@ -62,15 +63,13 @@ class [[nodiscard]] User {
         }
     }
 
-    [[nodiscard]] String password() const { return m_password; }
-
     void set_id(unsigned int user_id) { m_user_id = user_id; }
     void set_username(StringView username) { m_username = username; }
     void set_role(Role role) { m_role = role; }
     void set_password(const String& passwd) { m_password = tdu::hash(passwd); }
 
   private:
-    unsigned int m_user_id;
+    unsigned int m_user_id{};
     String m_username{};
     Role m_role{};
     String m_password{};
@@ -88,14 +87,14 @@ class [[nodiscard]] UserDb {
 
     UserDb(StringView db_filepath);
 
-    User get_object(unsigned int id) const;
+    [[nodiscard]] User get_object(unsigned int id) const;
 
-    std::optional<User> find_object_by_unique_column(
+    [[nodiscard]] std::optional<User> find_object_by_unique_column(
         const String& column_value) const;
 
-    Vector<User> get_all_objects() const;
+    [[nodiscard]] Vector<User> get_all_objects() const;
 
-    bool is_table_empty() const;
+    [[nodiscard]] bool is_table_empty() const;
 
     void add_object(User& user);
     void add_object(const User& user) const;
@@ -129,12 +128,14 @@ class [[nodiscard]] AuthenticationManager {
     AuthenticationManager(std::shared_ptr<UserDb> user_db)
         : m_user_db{user_db} {}
 
-    tdu::Result<void, AuthErr> username_validation(const String& username) const;
-    tdu::Result<void, AuthErr> password_validation(const String& password) const;
+    [[nodiscard]] tdu::Result<void, AuthErr> username_validation(
+        const String& username) const;
+    [[nodiscard]] tdu::Result<void, AuthErr> password_validation(
+        const String& password) const;
 
   private:
     std::shared_ptr<UserDb> m_user_db;
 
-    bool is_in_db(const String& username) const;
+    [[nodiscard]] bool is_in_db(const String& username) const;
 };
 }  // namespace twodocore
