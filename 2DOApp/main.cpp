@@ -1,4 +1,5 @@
 #include <conio.h>
+#include <cstddef>
 #include <iostream>
 #include <memory>
 
@@ -8,7 +9,7 @@
 #include <2DOApp/app.hpp>
 #include <Utils/type.hpp>
 #include <Utils/util.hpp>
-#include "fmt/color.h"
+#include <string>
 
 namespace td = twodo;
 namespace tdu = twodoutils;
@@ -51,8 +52,25 @@ class UserInput : public tdu::IUserInputHandler {
 class MsgDisplayer : public tdu::IPrinter {
   public:
     void msg_print(StringView msg) const override { fmt::print("{}", msg); }
+
     void err_print(StringView msg) const override {
         fmt::print("{}", fmt::format(fmt::fg(fmt::color::red), msg));
+    }
+
+    void menu_print(StringView page_name,
+                    const Vector<StringView>& menu_pages) const override {
+        fmt::println("{}", fmt::format(fg(fmt::color::beige), page_name));
+
+        for (size_t count = 0; count < menu_pages.size(); ++count) {
+            fmt::println(
+                "[{}] {}",
+                fmt::format(fg(fmt::color::alice_blue),
+                            std::to_string(count + 1)),
+                fmt::format(fg(fmt::color::alice_blue), menu_pages[count]));
+        }
+        fmt::println("[{}] {}", fmt::format(fg(fmt::color::alice_blue), "0"),
+                     fmt::format(fg(fmt::color::alice_blue), "Back"));
+        fmt::print("-> ");
     }
 };
 

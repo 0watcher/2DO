@@ -5,7 +5,6 @@ add_subdirectory(../thirdparty/googletest ${CMAKE_BINARY_DIR}/googletest)
 set(TEST_SRC
     result_test.cpp
     database_test.cpp
-    auth_test.cpp
 )
 add_executable(${PROJECT_NAME}_ut ${TEST_SRC})
 

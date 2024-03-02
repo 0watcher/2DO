@@ -6,7 +6,7 @@
 namespace fs = std::filesystem;
 
 namespace twodoutils {
-[[nodiscard]] NanoSeconds speed_test(std::function<void()> test) {
+NanoSeconds speed_test(std::function<void()> test) {
     auto start = std::chrono::high_resolution_clock::now();
 
     test();
@@ -80,7 +80,7 @@ void wipe_simple_app_env(const String& folder_name) {
     }
 }
 
-[[nodiscard]] String hash(const String& str) {
+String hash(const String& str) {
     unsigned int init = 123456789;
     unsigned int magic = 7654321;
     unsigned int hash = init;
@@ -97,7 +97,7 @@ void wipe_simple_app_env(const String& folder_name) {
     return str_hash;
 }
 
-[[nodiscard]] String tptos(const TimePoint& tp) {
+String tptos(const TimePoint& tp) {
     std::time_t time = std::chrono::system_clock::to_time_t(tp);
 
     const std::chrono::minutes minutes =
@@ -106,7 +106,7 @@ void wipe_simple_app_env(const String& folder_name) {
     return std::to_string(minutes.count());
 }
 
-[[nodiscard]] TimePoint stotp(const String& stringified_tp) {
+TimePoint stotp(const String& stringified_tp) {
     const auto minutes_count = std::stoll(stringified_tp);
 
     const TimePoint tp = std::chrono::time_point<std::chrono::system_clock,

@@ -3,7 +3,7 @@
 #include <regex>
 
 namespace twodocore {
-[[nodiscard]] String User::rtos(Role role) const {
+String User::rtos(const Role role) const {
     switch (role) {
         case Role::Admin:
             return "Admin";
@@ -17,7 +17,7 @@ namespace twodocore {
     }
 }
 
-[[nodiscard]] Role User::stor(const String& role_str) const {
+Role User::stor(const String& role_str) const {
     static const std::map<std::string, Role> role_map = {
         {"User", Role::User}, {"Admin", Role::Admin}};
 
@@ -46,7 +46,7 @@ UserDb::UserDb(StringView db_filepath)
     }
 }
 
-[[nodiscard]] User UserDb::get_object(unsigned int id) const {
+User UserDb::get_object(const unsigned int id) const {
     SQL::Statement query{m_db, "SELECT * FROM users WHERE user_id = ?"};
     query.bind(1, id);
 
@@ -57,7 +57,7 @@ UserDb::UserDb(StringView db_filepath)
                 query.getColumn(3).getString()};
 }
 
-[[nodiscard]] std::optional<User> UserDb::find_object_by_unique_column(
+std::optional<User> UserDb::find_object_by_unique_column(
     const String& column_value) const {
     SQL::Statement query{m_db, "SELECT * FROM users WHERE username = ?"};
     query.bind(1, column_value);
@@ -77,7 +77,7 @@ UserDb::UserDb(StringView db_filepath)
                 query.getColumn(3).getString()};
 };
 
-[[nodiscard]] Vector<User> UserDb::get_all_objects() const {
+Vector<User> UserDb::get_all_objects() const {
     SQL::Statement query{m_db, "SELECT * FROM users"};
 
     Vector<User> users;
@@ -91,7 +91,7 @@ UserDb::UserDb(StringView db_filepath)
     return users;
 }
 
-[[nodiscard]] bool UserDb::is_table_empty() const {
+bool UserDb::is_table_empty() const {
     return m_db.tableExists("users");
 }
 
@@ -139,14 +139,14 @@ void UserDb::update_object(const User& user) const {
     query.exec();
 }
 
-void UserDb::delete_object(unsigned int id) const {
+void UserDb::delete_object(const unsigned int id) const {
     SQL::Statement query{m_db, "DELETE FROM users WHERE user_id = ?"};
     query.bind(1, std::to_string(id));
 
     query.exec();
 }
 
-[[nodiscard]] tdu::Result<void, AuthErr>
+tdu::Result<void, AuthErr>
 AuthenticationManager::username_validation(const String& username) const {
     if (username.length() <= 0) {
         return tdu::Err(AuthErr::InvalidNameLength);
@@ -159,7 +159,7 @@ AuthenticationManager::username_validation(const String& username) const {
     return tdu::Ok();
 };
 
-[[nodiscard]] tdu::Result<void, AuthErr>
+tdu::Result<void, AuthErr>
 AuthenticationManager::password_validation(const String& password) const {
     const std::regex upper_case_expression{"[A-Z]+"};
     const std::regex lower_case_expression{"[a-z]+"};
@@ -186,7 +186,7 @@ AuthenticationManager::password_validation(const String& password) const {
     return tdu::Ok();
 };
 
-[[nodiscard]] bool AuthenticationManager::is_in_db(
+bool AuthenticationManager::is_in_db(
     const String& username) const {
     return (m_user_db->find_object_by_unique_column(username)) ? true : false;
 };

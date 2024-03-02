@@ -22,9 +22,9 @@ class [[nodiscard]] Task {
          const String& content,
          const TimePoint& start_date,
          const TimePoint& deadline,
-         unsigned int executor_id,
-         unsigned int owner_id,
-         bool is_done)
+         const unsigned int executor_id,
+         const unsigned int owner_id,
+         const bool is_done)
         : m_id{id},
           m_topic{topic},
           m_content{content},
@@ -39,9 +39,9 @@ class [[nodiscard]] Task {
          const String& content,
          const String& start_date,
          const String& deadline,
-         unsigned int executor_id,
-         unsigned int owner_id,
-         unsigned int is_done)
+         const unsigned int executor_id,
+         const unsigned int owner_id,
+         const unsigned int is_done)
         : m_id{id},
           m_topic{topic},
           m_content{content},
@@ -55,9 +55,9 @@ class [[nodiscard]] Task {
          const String& content,
          const TimePoint& start_date,
          const TimePoint& deadline,
-         unsigned int executor_id,
-         unsigned int owner_id,
-         bool is_done)
+         const unsigned int executor_id,
+         const unsigned int owner_id,
+         const bool is_done)
         : m_topic{topic},
           m_content{content},
           m_start_date{start_date},
@@ -106,14 +106,14 @@ class [[nodiscard]] Task {
         }
     }
 
-    void set_id(unsigned int id) { m_id = id; };
+    void set_id(const unsigned int id) { m_id = id; };
     void set_topic(StringView topic) { m_topic = topic; }
     void set_content(StringView content) { m_content = content; }
     void set_start_date(TimePoint date) { m_start_date = date; }
-    void set_deadline(TimePoint date) { m_deadline = date; }
-    void set_executor(unsigned int id) { m_executor_id = id; }
-    void set_owner(unsigned int id) { m_owner_id = id; }
-    void set_is_done(bool done) { m_is_done = done; }
+    void set_deadline(const TimePoint date) { m_deadline = date; }
+    void set_executor(const unsigned int id) { m_executor_id = id; }
+    void set_owner(const unsigned int id) { m_owner_id = id; }
+    void set_is_done(const bool done) { m_is_done = done; }
 
   private:
     unsigned int m_id{};
@@ -137,7 +137,7 @@ class [[nodiscard]] TaskDb {
 
     TaskDb(StringView db_filepath);
 
-    [[nodiscard]] Task get_object(unsigned int id) const;
+    [[nodiscard]] Task get_object(const unsigned int id) const;
 
     [[nodiscard]] bool is_table_empty() const;
 
@@ -146,10 +146,10 @@ class [[nodiscard]] TaskDb {
 
     void update_object(const Task& task) const;
 
-    void delete_object(unsigned int id) const;
+    void delete_object(const unsigned int id) const;
 
     template <IdType T>
-    [[nodiscard]] Vector<Task> get_all_objects(unsigned int id) const {
+    [[nodiscard]] Vector<Task> get_all_objects(const unsigned int id) const {
         SQL::Statement query{m_db, ""};
 
         if constexpr (T == IdType::Executor) {
@@ -187,27 +187,27 @@ class [[nodiscard]] Message {
     Message(Message&& other) = default;
     Message& operator=(Message&& other) = default;
 
-    Message(unsigned int message_id,
-            unsigned int task_id,
+    Message(const unsigned int message_id,
+            const unsigned int task_id,
             StringView sender_name,
             StringView content,
-            TimePoint timestamp)
+            const TimePoint timestamp)
         : m_message_id{message_id},
           m_task_id{task_id},
           m_sender_name{sender_name},
           m_content{content},
           m_timestamp{timestamp} {}
 
-    Message(unsigned int task_id,
+    Message(const unsigned int task_id,
             StringView sender_name,
             StringView content,
-            TimePoint timestamp)
+            const TimePoint timestamp)
         : m_task_id{task_id},
           m_sender_name{sender_name},
           m_content{content},
           m_timestamp{timestamp} {}
 
-    Message(unsigned int task_id,
+    Message(const unsigned int task_id,
             StringView sender_name,
             StringView content,
             const String& timestamp)
@@ -240,7 +240,7 @@ class [[nodiscard]] Message {
         }
     }
 
-    void set_message_id(unsigned int id) { m_message_id = id; }
+    void set_message_id(const unsigned int id) { m_message_id = id; }
 
   private:
     unsigned int m_message_id;
@@ -259,14 +259,14 @@ class [[nodiscard]] MessageDb {
 
     MessageDb(StringView db_filepath);
 
-    [[nodiscard]] Vector<Message> get_all_objects(unsigned int task_id) const;
+    [[nodiscard]] Vector<Message> get_all_objects(const unsigned int task_id) const;
 
     [[nodiscard]] bool is_table_empty() const;
 
     void add_object(Message& message) const;
     void add_object(const Message& message) const;
 
-    void delete_all_by_task_id(unsigned int task_id) const;
+    void delete_all_by_task_id(const unsigned int task_id) const;
 
   private:
     SQL::Database m_db;

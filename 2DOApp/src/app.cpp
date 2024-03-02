@@ -2,76 +2,49 @@
 
 #include <fmt/color.h>
 #include <fmt/core.h>
+#include "2DOCore/user.hpp"
 
 namespace twodo {
 void App::run() {
     // tdu::create_simple_app_env("2DO", {DB_NAME, ERR_LOGS_FILE_NAME,
     // USER_LOGS_FILE_NAME});
+
     m_current_user = std::make_shared<tdc::User>(
         tdc::User{1, "dupa", tdc::Role::Admin, "gowno"});
     m_user_db->add_object(*m_current_user);
+
     load_menu().run(QUIT_OPTION);
 }
 
 Menu App::load_menu() {
-    const auto main = load_main_menu();
-    Menu menu{main, m_printer, m_input_handler};
+    const auto main = std::make_shared<Page>("2DO");
 
     main->attach(FIRST_OPTION, load_tasks_menu());
     main->attach(SECOND_OPTION, load_settings_menu());
 
-    return std::move(menu);
-}
-
-std::shared_ptr<Page> App::load_main_menu() const {
-    const auto main = std::make_shared<Page>([this] {
-        m_printer->msg_print(fmt::format(
-            "{}\n"
-            "[1] Tasks\n"
-            "[2] Setting\n"
-            "[0] Exit\n"
-            "-> ",
-            fmt::format(fmt::bg(fmt::color::dark_golden_rod), "|2DO|")));
-    });
-    return std::move(main);
+    return Menu{main, m_printer, m_input_handler};
 }
 
 std::shared_ptr<Page> App::load_tasks_menu() const {
-    const auto tasks = std::make_shared<Page>([this] {
-        m_printer->msg_print(
-            "Tasks:\n"
-            "[1] Your tasks\n"
-            "[2] Delegated tasks\n"
-            "[3] Create task\n"
-            "[0] Back\n"
-            "-> ");
-    });
+    const auto tasks = std::make_shared<Page>("Tasks");
 
-    tasks->attach(FIRST_OPTION, load_your_tasks_menu());
-    tasks->attach(SECOND_OPTION, load_delegated_tasks_menu());
+    tasks->attach(FIRST_OPTION,
+                  std::make_shared<Page>("Your tasks", false, [this] {
+                      load_update_tasks_menu<tdc::TaskDb::IdType::Executor>();
+                  }));
+
+    tasks->attach(SECOND_OPTION,
+                  std::make_shared<Page>("Delegated tasks", false, [this] {
+                      load_update_tasks_menu<tdc::TaskDb::IdType::Owner>();
+                  }));
+
     tasks->attach(THIRD_OPTION, load_create_tasks_menu());
 
     return std::move(tasks);
 }
 
-std::shared_ptr<Page> App::load_your_tasks_menu() const {
-    const auto your_tasks = std::make_shared<Page>(false, [this] {
-        load_update_tasks_menu<tdc::TaskDb::IdType::Executor>();
-    });
-
-    return std::move(your_tasks);
-}
-
-std::shared_ptr<Page> App::load_delegated_tasks_menu() const {
-    const auto delegated_tasks = std::make_shared<Page>(false, [this] {
-        load_update_tasks_menu<tdc::TaskDb::IdType::Owner>();
-    });
-
-    return std::move(delegated_tasks);
-}
-
 std::shared_ptr<Page> App::load_create_tasks_menu() const {
-    const auto create_task = std::make_shared<Page>(false, [this] {
+    return std::make_shared<Page>("Create Task", false, [this] {
         const auto task_input = [this] -> tdc::Task {
             tdu::clear_term();
 
@@ -143,19 +116,10 @@ std::shared_ptr<Page> App::load_create_tasks_menu() const {
         m_task_db->add_object(task_input());
         m_printer->msg_print("Task has been added successfully!");
     });
-
-    return std::move(create_task);
 }
 
 std::shared_ptr<Page> App::load_settings_menu() const {
-    const auto settings = std::make_shared<Page>([this] {
-        m_printer->msg_print(
-            "Settings:\n"
-            "[1] User Manager\n"
-            "[2] Advanced\n"
-            "[0] Back\n"
-            "-> ");
-    });
+    const auto settings = std::make_shared<Page>("Settings");
 
     settings->attach(FIRST_OPTION, load_user_manager_menu());
     settings->attach(SECOND_OPTION, load_advanced_menu());
@@ -164,14 +128,7 @@ std::shared_ptr<Page> App::load_settings_menu() const {
 }
 
 std::shared_ptr<Page> App::load_user_manager_menu() const {
-    const auto user_manager = std::make_shared<Page>([this] {
-        m_printer->msg_print(
-            "User Manager:\n"
-            "[1] Manage users\n"
-            "[2] Create new user\n"
-            "[0] Back\n"
-            "-> ");
-    });
+    const auto user_manager = std::make_shared<Page>("User Manager");
 
     user_manager->attach(FIRST_OPTION, load_user_update_menu());
     user_manager->attach(SECOND_OPTION, load_new_user_menu());
@@ -180,64 +137,47 @@ std::shared_ptr<Page> App::load_user_manager_menu() const {
 }
 
 std::shared_ptr<Page> App::load_user_update_menu() const {
-    const auto edit_users = std::make_shared<Page>(false, [this] {
+    return std::make_shared<Page>("Manage Users", false, [this] {
         bool should_collapse = false;
 
         auto users = m_user_db->get_all_objects();
 
-        const auto root_page = std::make_shared<Page>([this, &users] {
-            m_printer->msg_print("Users:\n");
-
-            for (size_t count = 0; count < users.size(); ++count) {
-                m_printer->msg_print(fmt::format("[{}] {} <{}>\n", count + 1,
-                                                 users[count].username(),
-                                                 users[count].role<String>()));
-            }
-            m_printer->msg_print(
-                "[0] Back\n"
-                "-> ");
-        });
+        const auto root_page = std::make_shared<Page>("Users");
 
         unsigned int count = 0;
         for (auto& user : users) {
             const auto chosen_user =
-                std::make_shared<Page>([this, &should_collapse] {
-                    if (should_collapse)
-                        return;
-
-                    m_printer->msg_print(
-                        "Update user:\n"
-                        "[1] Change username\n"
-                        "[2] Change password\n"
-                        "[3] Change role\n"
-                        "[4] Delete user\n"
-                        "[0] Back\n"
-                        "-> ");
-                });
+                std::make_shared<Page>(fmt::format("[{}] {} <{}>\n", count + 1,
+                                                   users[count].username(),
+                                                   users[count].role<String>()),
+                                       [this, &should_collapse] {
+                                           if (should_collapse)
+                                               return;
+                                       });
 
             const auto username_update =
-                std::make_shared<Page>(false, [this, &user] {
+                std::make_shared<Page>("Change username", false, [this, &user] {
                     if (!privileges_validation_event(user))
                         return;
                     user_update_event(UpdateEvent::UsernameUpdate, user);
                 });
 
             const auto password_update =
-                std::make_shared<Page>(false, [this, &user] {
+                std::make_shared<Page>("Change password", false, [this, &user] {
                     if (!privileges_validation_event(user))
                         return;
                     user_update_event(UpdateEvent::PasswordUpdate, user);
                 });
 
             const auto role_update =
-                std::make_shared<Page>(false, [this, &user] {
+                std::make_shared<Page>("Change role", false, [this, &user] {
                     if (!privileges_validation_event(user))
                         return;
                     user_update_event(UpdateEvent::RoleUpdate, user);
                 });
 
-            const auto user_deletion =
-                std::make_shared<Page>(false, [this, &user, &should_collapse] {
+            const auto user_deletion = std::make_shared<Page>(
+                "Delete user", false, [this, &user, &should_collapse] {
                     if (!privileges_validation_event(user))
                         return;
                     if (user_update_event(UpdateEvent::UserDelete, user)) {
@@ -255,48 +195,30 @@ std::shared_ptr<Page> App::load_user_update_menu() const {
 
         Menu{root_page, m_printer, m_input_handler}.run(QUIT_OPTION);
     });
-
-    return std::move(edit_users);
 }
 
 std::shared_ptr<Page> App::load_new_user_menu() const {
-    const auto add_new_user = std::make_shared<Page>(false, [this] {
+    return std::make_shared<Page>("Create User", false, [this] {
         if (m_current_user->role<tdc::Role>() == tdc::Role::Admin) {
             const String username = username_validation_event();
             const String password = password_validation_event();
-            if (password.empty())
+            if (password.empty()) {
                 return;
-
-            tdc::Role role;
-            while (true) {
-                tdu::clear_term();
-                m_printer->msg_print("Role:\n[1] Admin\n[2] User\n-> ");
-                String str_role = m_input_handler->get_input();
-                if (str_role == FIRST_OPTION) {
-                    role = tdc::Role::Admin;
-                    break;
-                } else if (str_role == SECOND_OPTION) {
-                    role = tdc::Role::User;
-                    break;
-                } else {
-                    invalid_option_event();
-                }
             }
+            const tdc::Role role = role_choosing_event();
 
             m_user_db->add_object(tdc::User{username, role, password});
 
             m_printer->msg_print("User has been added successfully!");
         }
     });
-
-    return std::move(add_new_user);
 }
 
 std::shared_ptr<Page> App::load_advanced_menu() const {
-    const auto advanced = std::make_shared<Page>(
-        [] { fmt::print("Advanced:\n[1] Wipe all data\n-> "); });
+    const auto advanced = std::make_shared<Page>("Advanced");
 
-    const auto wipe_all_data = std::make_shared<Page>(false, [this] {
+    const auto wipe_all_data = std::make_shared<
+        Page>("Wipe All Data", false, [this] {
         if (!privileges_validation_event())
             return;
 
@@ -327,6 +249,7 @@ bool App::user_update_event(UpdateEvent kind, tdc::User& user) const {
                 m_printer->msg_print("new username: ");
                 username = m_input_handler->get_input();
             } while (!m_auth_manager.username_validation(username));
+
             user.set_username(username);
             m_user_db->update_object(user);
         } break;
@@ -337,26 +260,14 @@ bool App::user_update_event(UpdateEvent kind, tdc::User& user) const {
                 m_printer->msg_print("new password: ");
                 password = m_input_handler->get_secret();
             } while (!m_auth_manager.password_validation(password));
+
             user.set_password(password);
             m_user_db->update_object(user);
 
         } break;
 
         case UpdateEvent::RoleUpdate: {
-            tdc::Role role;
-            while (true) {
-                m_printer->msg_print("Role:\n[1] Admin\n[2] User\n-> ");
-                String str_role = m_input_handler->get_input();
-                if (str_role == FIRST_OPTION) {
-                    role = tdc::Role::Admin;
-                    break;
-                } else if (str_role == SECOND_OPTION) {
-                    role = tdc::Role::User;
-                    break;
-                } else {
-                    invalid_option_event();
-                }
-            }
+            const tdc::Role role = role_choosing_event();
             user.set_role(role);
             m_user_db->update_object(user);
         } break;
@@ -465,6 +376,23 @@ String App::password_validation_event() const {
         ++tries;
     }
 }
+
+tdc::Role App::role_choosing_event() const {
+    while (true) {
+        tdu::clear_term();
+        m_printer->msg_print("Role:\n[1] Admin\n[2] User\n-> ");
+        String str_role = m_input_handler->get_input();
+        if (str_role == FIRST_OPTION) {
+            return tdc::Role::Admin;
+            break;
+        } else if (str_role == SECOND_OPTION) {
+            return tdc::Role::User;
+            break;
+        } else {
+            invalid_option_event();
+        }
+    }
+};
 
 bool App::privileges_validation_event(const tdc::User& user) const {
     if (m_current_user->role<tdc::Role>() != tdc::Role::Admin &&

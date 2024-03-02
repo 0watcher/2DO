@@ -25,7 +25,7 @@ TaskDb::TaskDb(StringView db_filepath)
     }
 }
 
-[[nodiscard]] Task TaskDb::get_object(unsigned int id) const {
+Task TaskDb::get_object(const unsigned int id) const {
     SQL::Statement query{m_db, "SELECT * FROM tasks WHERE task_id = ?"};
     query.bind(1, id);
 
@@ -41,7 +41,7 @@ TaskDb::TaskDb(StringView db_filepath)
                 (unsigned)query.getColumn(7).getInt()};
 }
 
-[[nodiscard]] bool TaskDb::is_table_empty() const {
+bool TaskDb::is_table_empty() const {
     return m_db.tableExists("tasks");
 }
 
@@ -109,7 +109,7 @@ void TaskDb::update_object(const Task& task) const {
     query.exec();
 }
 
-void TaskDb::delete_object(unsigned int id) const {
+void TaskDb::delete_object(const unsigned int id) const {
     SQL::Statement query{m_db, "DELETE FROM tasks WHERE task_id = ?"};
     query.bind(1, std::to_string(id));
 
@@ -134,8 +134,8 @@ MessageDb::MessageDb(StringView db_filepath)
     }
 }
 
-[[nodiscard]] Vector<Message> MessageDb::get_all_objects(
-    unsigned int taks_id) const {
+Vector<Message> MessageDb::get_all_objects(
+    const unsigned int taks_id) const {
     SQL::Statement query{m_db, "SELECT * FROM messages WHERE task_id = ?"};
     query.bind(1, taks_id);
 
@@ -151,7 +151,7 @@ MessageDb::MessageDb(StringView db_filepath)
     return messages;
 };
 
-[[nodiscard]] bool MessageDb::is_table_empty() const {
+bool MessageDb::is_table_empty() const {
     return m_db.tableExists("messages");
 }
 
@@ -193,7 +193,7 @@ void MessageDb::add_object(const Message& message) const {
     query.executeStep();
 }
 
-void MessageDb::delete_all_by_task_id(unsigned int task_id) const {
+void MessageDb::delete_all_by_task_id(const unsigned int task_id) const {
     SQL::Statement query{m_db, "DELETE FROM messages WHERE task_id = ?"};
     query.bind(1, task_id);
 

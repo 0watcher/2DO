@@ -13,19 +13,27 @@
 namespace tdu = twodoutils;
 
 namespace twodo {
-class Page : public std::enable_shared_from_this<Page> {
+class [[nodiscard]] Page : public std::enable_shared_from_this<Page> {
   public:
-    Page(std::function<void()> content)
+    Page(StringView page_name) : m_page_name{page_name} {}
+
+    Page(const std::function<void()>& content)
         : m_content{std::move(content)}, m_menu_event{true} {}
 
-    Page(StringView page_name, std::function<void()> content)
-        : m_content{std::move(content)}, m_page_name{page_name}, m_menu_event{true} {}
+    Page(StringView page_name, const std::function<void()>& content)
+        : m_content{std::move(content)},
+          m_page_name{page_name},
+          m_menu_event{true} {}
 
-    Page(bool is_menu_event, std::function<void()> content)
+    Page(bool is_menu_event, const std::function<void()>& content)
         : m_content{std::move(content)}, m_menu_event{is_menu_event} {}
 
-    Page(StringView page_name, bool is_menu_event, std::function<void()> content)
-        : m_content{std::move(content)}, m_page_name{page_name}, m_menu_event{is_menu_event} {}
+    Page(StringView page_name,
+         const bool is_menu_event,
+         const std::function<void()>& content)
+        : m_content{std::move(content)},
+          m_page_name{page_name},
+          m_menu_event{is_menu_event} {}
 
     void execute() const { m_content(); }
 
@@ -37,7 +45,7 @@ class Page : public std::enable_shared_from_this<Page> {
   private:
     std::function<void()> m_content;
     std::shared_ptr<Page> m_parent = nullptr;
-    StringView m_page_name;
+    StringView m_page_name{};
     HashMap<String, std::shared_ptr<Page>> m_childs{};
     bool m_menu_event;
 
@@ -62,17 +70,21 @@ class [[nodiscard]] Menu {
     Menu(std::shared_ptr<Page> initial_page,
          std::shared_ptr<tdu::IPrinter> iprinter_,
          std::shared_ptr<tdu::IUserInputHandler> input_handler_)
-        : current_page{std::move(initial_page)},
-          printer{iprinter_},
-          input_handler{input_handler_} {}
+        : m_current_page{std::move(initial_page)},
+          m_printer{iprinter_},
+          m_input_handler{input_handler_} {}
 
     void run(const String& quit_input) {
         while (true) {
             tdu::clear_term();
 
-            current_page->execute();
+            print_menu();
 
-            const String user_choice = input_handler->get_input();
+            if (m_current_page->m_content) {
+                m_current_page->execute();
+            }
+
+            const String user_choice = m_input_handler->get_input();
             if (handle_quit(user_choice, quit_input)) {
                 break;
             }
@@ -82,9 +94,18 @@ class [[nodiscard]] Menu {
     }
 
   private:
-    std::shared_ptr<Page> current_page;
-    std::shared_ptr<tdu::IPrinter> printer;
-    std::shared_ptr<tdu::IUserInputHandler> input_handler;
+    std::shared_ptr<Page> m_current_page;
+    std::shared_ptr<tdu::IPrinter> m_printer;
+    std::shared_ptr<tdu::IUserInputHandler> m_input_handler;
+
+    void print_menu() {
+        Vector<StringView> names;
+        for (const auto& page : m_current_page->m_childs) {
+            names.push_back(page.second->m_page_name);
+        }
+
+        m_printer->menu_print(m_current_page->m_page_name, names);
+    }
 
     bool handle_quit(const String& user_choice, const String& quit_input) {
         if (user_choice == quit_input) {
@@ -94,17 +115,16 @@ class [[nodiscard]] Menu {
     }
 
     bool navigate_to_parent_or_exit() {
-        if (const auto parent_page = current_page->m_parent; parent_page) {
-            current_page = parent_page;
+        if (const auto parent_page = m_current_page->m_parent; parent_page) {
+            m_current_page = parent_page;
             return false;
         }
         return true;
     }
 
-    void navigate_to_page(const String& user_choice,
-                                   const String& quit_input) {
+    void navigate_to_page(const String& user_choice, const String& quit_input) {
         std::shared_ptr<Page> selected_page =
-            current_page->get_child(user_choice);
+            m_current_page->get_child(user_choice);
         if (!selected_page && user_choice != quit_input) {
             display_invalid_option_error();
         } else {
@@ -113,7 +133,7 @@ class [[nodiscard]] Menu {
     }
 
     void display_invalid_option_error() const {
-        printer->err_print("Invalid option!");
+        m_printer->err_print("Invalid option!");
         tdu::sleep(2000);
     }
 
@@ -122,7 +142,7 @@ class [[nodiscard]] Menu {
         if (selected_page && !selected_page->m_menu_event) {
             selected_page->execute();
         } else if (selected_page) {
-            current_page = selected_page;
+            m_current_page = selected_page;
         }
     }
 };

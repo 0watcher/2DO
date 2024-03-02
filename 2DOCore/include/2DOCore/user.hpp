@@ -21,16 +21,16 @@ class [[nodiscard]] User {
     User(User&& other) = default;
     User& operator=(User&& other) = default;
 
-    User(unsigned int user_id,
+    User(const unsigned int user_id,
          StringView username,
-         Role role,
+         const Role role,
          const String& password)
         : m_user_id{user_id},
           m_username{username},
           m_role{role},
           m_password{tdu::hash(password)} {}
 
-    User(unsigned int user_id,
+    User(const unsigned int user_id,
          StringView username,
          const String& role,
          const String& password)
@@ -39,7 +39,7 @@ class [[nodiscard]] User {
           m_role{stor(role)},
           m_password{password} {}
 
-    User(StringView username, Role role, const String& password)
+    User(StringView username, const Role role, const String& password)
         : m_username{username}, m_role{role}, m_password{tdu::hash(password)} {}
 
     bool operator==(const User& other) const {
@@ -63,9 +63,9 @@ class [[nodiscard]] User {
         }
     }
 
-    void set_id(unsigned int user_id) { m_user_id = user_id; }
+    void set_id(const unsigned int user_id) { m_user_id = user_id; }
     void set_username(StringView username) { m_username = username; }
-    void set_role(Role role) { m_role = role; }
+    void set_role(const Role role) { m_role = role; }
     void set_password(const String& passwd) { m_password = tdu::hash(passwd); }
 
   private:
@@ -75,7 +75,7 @@ class [[nodiscard]] User {
     String m_password{};
 
     [[nodiscard]] Role stor(const String& role_str) const;
-    [[nodiscard]] String rtos(Role role) const;
+    [[nodiscard]] String rtos(const Role role) const;
 };
 
 class [[nodiscard]] UserDb {
@@ -87,7 +87,7 @@ class [[nodiscard]] UserDb {
 
     UserDb(StringView db_filepath);
 
-    [[nodiscard]] User get_object(unsigned int id) const;
+    [[nodiscard]] User get_object(const unsigned int id) const;
 
     [[nodiscard]] std::optional<User> find_object_by_unique_column(
         const String& column_value) const;
@@ -101,7 +101,7 @@ class [[nodiscard]] UserDb {
 
     void update_object(const User& user) const;
 
-    void delete_object(unsigned int id) const;
+    void delete_object(const unsigned int id) const;
 
   private:
     SQL::Database m_db;

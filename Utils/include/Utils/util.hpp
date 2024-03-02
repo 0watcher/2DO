@@ -45,15 +45,15 @@ inline void clear_term() {
 #endif
 }
 
-inline void sleep(unsigned int t) noexcept {
-    std::this_thread::sleep_for(std::chrono::milliseconds(t));
+inline void sleep(const unsigned int time_ms) noexcept {
+    std::this_thread::sleep_for(std::chrono::milliseconds(time_ms));
 }
 
 template <typename T>
 [[nodiscard]] typename std::enable_if<std::is_same<T, String>::value ||
                                           std::is_same<T, TimePoint>::value,
                                       T>::type
-get_current_timestamp(unsigned int additional_days = 0) {
+get_current_timestamp(const unsigned int additional_days = 0) {
     if constexpr (std::is_same<T, TimePoint>::value) {
         return sch::time_point_cast<sch::minutes>(sch::system_clock::now() +
                                                   sch::days{additional_days});
@@ -81,42 +81,9 @@ class IPrinter {
   public:
     virtual void msg_print(StringView msg) const = 0;
     virtual void err_print(StringView msg) const = 0;
+    virtual void menu_print(StringView page_name,const Vector<StringView>& menu_pages) const = 0;
     virtual ~IPrinter(){};
 };
-
-class [[nodiscard]] Resource {
-  public:
-    Resource() = default;
-    Resource(const Resource&) = delete;
-    Resource& operator=(const Resource&) = delete;
-    Resource(Resource&&) = default;
-    Resource& operator=(Resource&&) = default;
-
-    void push(std::any&& data) {
-        m_resource = std::make_unique<std::any>(std::move(data));
-    }
-
-    template <typename ResourceT>
-    [[nodiscard]] std::optional<ResourceT> pop() {
-        if (m_resource->has_value()) {
-            return std::move(*std::any_cast<ResourceT>(m_resource.release()));
-        }
-        return std::nullopt;
-    }
-
-  private:
-    std::unique_ptr<std::any> m_resource = nullptr;
-};
-
-class DbError : public std::runtime_error {
-  public:
-    DbError(const std::string& message) : std::runtime_error{message} {}
-
-    const char* what() const noexcept override {
-        return std::runtime_error::what();
-    }
-};
-
 }  // namespace twodoutils
 
 class AssertFail : public std::runtime_error {
