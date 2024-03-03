@@ -1,6 +1,5 @@
 #pragma once
 
-#include <any>
 #include <chrono>
 #include <functional>
 #include <optional>
@@ -36,6 +35,11 @@ void wipe_simple_app_env(const String& folder_name);
 [[nodiscard]] String tptos(const TimePoint&);
 
 [[nodiscard]] TimePoint stotp(const String&);
+
+[[nodiscard]] String format_datetime(TimePoint tp);
+
+[[nodiscard]] std::optional<TimePoint> parse_datetime(
+    const String& datetime_str);
 
 inline void clear_term() {
 #ifdef _WIN32
@@ -81,7 +85,9 @@ class IPrinter {
   public:
     virtual void msg_print(StringView msg) const = 0;
     virtual void err_print(StringView msg) const = 0;
-    virtual void menu_print(StringView page_name,const Vector<StringView>& menu_pages) const = 0;
+    virtual void menu_print(
+        StringView page_name,
+        const HashMap<StringView, StringView>& menu_pages) const = 0;
     virtual ~IPrinter(){};
 };
 }  // namespace twodoutils

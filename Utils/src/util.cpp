@@ -1,7 +1,9 @@
 #include "Utils/util.hpp"
 
 #include <filesystem>
+#include <format>
 #include <fstream>
+#include <sstream>
 
 namespace fs = std::filesystem;
 
@@ -81,9 +83,8 @@ void wipe_simple_app_env(const String& folder_name) {
 }
 
 String hash(const String& str) {
-    unsigned int init = 123456789;
     unsigned int magic = 7654321;
-    unsigned int hash = init;
+    unsigned int hash = 123456789;
 
     for (int i = 0; i < str.length(); ++i) {
         hash = hash ^ (str[i]);
@@ -98,21 +99,48 @@ String hash(const String& str) {
 }
 
 String tptos(const TimePoint& tp) {
-    std::time_t time = std::chrono::system_clock::to_time_t(tp);
-
-    const std::chrono::minutes minutes =
-        std::chrono::duration_cast<std::chrono::minutes>(tp.time_since_epoch());
-
-    return std::to_string(minutes.count());
+    return std::to_string(
+        std::chrono::duration_cast<std::chrono::minutes>(tp.time_since_epoch())
+            .count());
 }
 
 TimePoint stotp(const String& stringified_tp) {
-    const auto minutes_count = std::stoll(stringified_tp);
+    return std::chrono::time_point<std::chrono::system_clock,
+                                   std::chrono::minutes>(
+        std::chrono::minutes(std::stoll(stringified_tp)));
+}
 
-    const TimePoint tp = std::chrono::time_point<std::chrono::system_clock,
-                                                 std::chrono::minutes>(
-        std::chrono::minutes(minutes_count));
+String format_datetime(TimePoint tp) {
+    return std::format("{:%Y.%m.%d %H:%M}", tp);
+}
 
-    return tp;
+std::optional<TimePoint> parse_datetime(const String& datetime_str) {
+    std::istringstream iss{datetime_str};
+
+    unsigned int year, month, day, hours, minutes;
+    char colon, dot, space;
+
+    iss >> year >> dot >> month >> dot >> day >> space >> hours >> colon >>
+        minutes;
+
+    const auto date_evaluation = [year, month, day, hours, minutes] {
+        return year >= 1970 && month >= 1 && month <= 12 && day >= 1 &&
+               day <= 31 && hours >= 0 && hours <= 23 && minutes >= 0 &&
+               minutes <= 59;
+    };
+
+    const auto chars_evaluation = [colon, dot, space] {
+        return colon == ':' && dot == '.' && space == '-';
+    };
+
+    if (!date_evaluation() || !chars_evaluation() || iss.fail() || iss.bad()) {
+        return std::nullopt;
+    }
+
+    return TimePoint{sch::minutes(minutes) +
+                     sch::duration_cast<sch::minutes>(sch::hours(hours)) +
+                     sch::duration_cast<sch::minutes>(sch::days(day - 1)) +
+                     sch::duration_cast<sch::minutes>(sch::months(month - 1)) +
+                     sch::duration_cast<sch::minutes>(sch::years(year - 1970))};
 }
 }  // namespace twodoutils

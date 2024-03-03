@@ -3,6 +3,7 @@
 #include <fmt/color.h>
 #include <fmt/core.h>
 #include "2DOCore/user.hpp"
+#include "Utils/util.hpp"
 
 namespace twodo {
 void App::run() {
@@ -64,10 +65,12 @@ std::shared_ptr<Page> App::load_create_tasks_menu() const {
                 tdu::clear_term();
 
                 m_printer->msg_print("start_date: ");
-                try {
-                    start_date = tdu::stotp(m_input_handler->get_input());
-                    break;
-                } catch (...) {
+
+                if (const auto datetime =
+                        tdu::parse_datetime(m_input_handler->get_input());
+                    datetime) {
+                    start_date = datetime.value();
+                } else {
                     invalid_option_event();
                 }
             }
@@ -76,10 +79,11 @@ std::shared_ptr<Page> App::load_create_tasks_menu() const {
                 tdu::clear_term();
 
                 m_printer->msg_print("deadline: ");
-                try {
-                    deadline = tdu::stotp(m_input_handler->get_input());
-                    break;
-                } catch (...) {
+                if (const auto datetime =
+                        tdu::parse_datetime(m_input_handler->get_input());
+                    datetime.has_value()) {
+                    deadline = datetime.value();
+                } else {
                     invalid_option_event();
                 }
             }

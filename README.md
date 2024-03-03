@@ -21,7 +21,7 @@
   
 ## How to build this
 
-After cloning this repo (in terminal):
+After cloning this repo:
 
 ```
 cd 2DO

@@ -1,5 +1,4 @@
 #include <conio.h>
-#include <cstddef>
 #include <iostream>
 #include <memory>
 
@@ -18,7 +17,10 @@ class UserInput : public tdu::IUserInputHandler {
   public:
     String get_input() const override {
         auto input = String();
+
+        std::cin.clear();
         std::getline(std::cin, input);
+
         return input;
     }
 
@@ -57,16 +59,17 @@ class MsgDisplayer : public tdu::IPrinter {
         fmt::print("{}", fmt::format(fmt::fg(fmt::color::red), msg));
     }
 
-    void menu_print(StringView page_name,
-                    const Vector<StringView>& menu_pages) const override {
-        fmt::println("{}", fmt::format(fg(fmt::color::beige), page_name));
+    void menu_print(
+        StringView page_name,
+        const HashMap<StringView, StringView>& menu_pages) const override {
+        if (!page_name.empty()) {
+            fmt::println("{}", fmt::format(fg(fmt::color::beige), page_name));
+        }
 
-        for (size_t count = 0; count < menu_pages.size(); ++count) {
-            fmt::println(
-                "[{}] {}",
-                fmt::format(fg(fmt::color::alice_blue),
-                            std::to_string(count + 1)),
-                fmt::format(fg(fmt::color::alice_blue), menu_pages[count]));
+        for (const auto& page : menu_pages) {
+            fmt::println("[{}] {}",
+                         fmt::format(fg(fmt::color::alice_blue), page.first),
+                         fmt::format(fg(fmt::color::alice_blue), page.second));
         }
         fmt::println("[{}] {}", fmt::format(fg(fmt::color::alice_blue), "0"),
                      fmt::format(fg(fmt::color::alice_blue), "Back"));
