@@ -59,9 +59,8 @@ class MsgDisplayer : public tdu::IPrinter {
         fmt::print("{}", fmt::format(fmt::fg(fmt::color::red), msg));
     }
 
-    void menu_print(
-        StringView page_name,
-        const HashMap<StringView, StringView>& menu_pages) const override {
+    void menu_print(StringView page_name,
+                    const HashMap<String, String>& menu_pages) const override {
         if (!page_name.empty()) {
             fmt::println("{}", fmt::format(fg(fmt::color::beige), page_name));
         }

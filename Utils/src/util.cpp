@@ -8,7 +8,7 @@
 namespace fs = std::filesystem;
 
 namespace twodoutils {
-NanoSeconds speed_test(std::function<void()> test) {
+NanoSeconds speed_test(const std::function<void()>& test) {
     auto start = std::chrono::high_resolution_clock::now();
 
     test();
@@ -20,7 +20,8 @@ NanoSeconds speed_test(std::function<void()> test) {
 
 void log_to_file(StringView msg, const String& filepath) {
     std::ofstream file{filepath, std::ios_base::ate};
-    file << "[" << get_current_timestamp<String>() << "] " << msg << '\n';
+    file << "[" << format_datetime(get_current_timestamp()) << "] " << msg
+         << '\n';
     file.close();
 }
 
@@ -98,19 +99,24 @@ String hash(const String& str) {
     return str_hash;
 }
 
-String tptos(const TimePoint& tp) {
+TimePoint get_current_timestamp(const unsigned int additional_days) {
+    return sch::time_point_cast<sch::minutes>(sch::system_clock::now() +
+                                              sch::days{additional_days});
+}
+
+String tptos(const TimePoint tp) {
     return std::to_string(
         std::chrono::duration_cast<std::chrono::minutes>(tp.time_since_epoch())
             .count());
 }
 
-TimePoint stotp(const String& stringified_tp) {
+TimePoint stotp(const String& tp_str) {
     return std::chrono::time_point<std::chrono::system_clock,
                                    std::chrono::minutes>(
-        std::chrono::minutes(std::stoll(stringified_tp)));
+        std::chrono::minutes(std::stoll(tp_str)));
 }
 
-String format_datetime(TimePoint tp) {
+String format_datetime(const TimePoint tp) {
     return std::format("{:%Y.%m.%d %H:%M}", tp);
 }
 
@@ -137,8 +143,8 @@ std::optional<TimePoint> parse_datetime(const String& datetime_str) {
         return std::nullopt;
     }
 
-    return TimePoint{sch::minutes(minutes) +
-                     sch::duration_cast<sch::minutes>(sch::hours(hours)) +
+    return TimePoint{sch::minutes(minutes - 24) +
+                     sch::duration_cast<sch::minutes>(sch::hours(hours - 5)) +
                      sch::duration_cast<sch::minutes>(sch::days(day - 1)) +
                      sch::duration_cast<sch::minutes>(sch::months(month - 1)) +
                      sch::duration_cast<sch::minutes>(sch::years(year - 1970))};

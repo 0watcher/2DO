@@ -3,6 +3,7 @@
 #include <fmt/color.h>
 #include <fmt/core.h>
 #include "2DOCore/user.hpp"
+#include "Utils/type.hpp"
 #include "Utils/util.hpp"
 
 namespace twodo {
@@ -64,12 +65,13 @@ std::shared_ptr<Page> App::load_create_tasks_menu() const {
             while (true) {
                 tdu::clear_term();
 
-                m_printer->msg_print("start_date: ");
+                m_printer->msg_print("start_date [YYYY.MM.DD-hh:mm]: ");
 
                 if (const auto datetime =
                         tdu::parse_datetime(m_input_handler->get_input());
                     datetime) {
                     start_date = datetime.value();
+                    break;
                 } else {
                     invalid_option_event();
                 }
@@ -78,11 +80,12 @@ std::shared_ptr<Page> App::load_create_tasks_menu() const {
             while (true) {
                 tdu::clear_term();
 
-                m_printer->msg_print("deadline: ");
+                m_printer->msg_print("deadline [YYYY.MM.DD-hh:mm]: ");
                 if (const auto datetime =
                         tdu::parse_datetime(m_input_handler->get_input());
                     datetime.has_value()) {
                     deadline = datetime.value();
+                    break;
                 } else {
                     invalid_option_event();
                 }
@@ -142,51 +145,45 @@ std::shared_ptr<Page> App::load_user_manager_menu() const {
 
 std::shared_ptr<Page> App::load_user_update_menu() const {
     return std::make_shared<Page>("Manage Users", false, [this] {
-        bool should_collapse = false;
-
-        auto users = m_user_db->get_all_objects();
-
         const auto root_page = std::make_shared<Page>("Users");
+
+        Vector<tdc::User> users = m_user_db->get_all_objects();
 
         unsigned int count = 0;
         for (auto& user : users) {
-            const auto chosen_user =
-                std::make_shared<Page>(fmt::format("[{}] {} <{}>\n", count + 1,
-                                                   users[count].username(),
-                                                   users[count].role<String>()),
-                                       [this, &should_collapse] {
-                                           if (should_collapse)
-                                               return;
-                                       });
+            const auto chosen_user = std::make_shared<Page>(
+                fmt::format("{} <{}>", user.username(), user.role<String>()));
 
             const auto username_update =
                 std::make_shared<Page>("Change username", false, [this, &user] {
-                    if (!privileges_validation_event(user))
+                    if (!privileges_validation_event(user)) {
                         return;
+                    }
                     user_update_event(UpdateEvent::UsernameUpdate, user);
                 });
 
             const auto password_update =
                 std::make_shared<Page>("Change password", false, [this, &user] {
-                    if (!privileges_validation_event(user))
+                    if (!privileges_validation_event(user)) {
                         return;
+                    }
                     user_update_event(UpdateEvent::PasswordUpdate, user);
                 });
 
             const auto role_update =
                 std::make_shared<Page>("Change role", false, [this, &user] {
-                    if (!privileges_validation_event(user))
+                    if (!privileges_validation_event(user)) {
                         return;
+                    }
                     user_update_event(UpdateEvent::RoleUpdate, user);
                 });
 
-            const auto user_deletion = std::make_shared<Page>(
-                "Delete user", false, [this, &user, &should_collapse] {
-                    if (!privileges_validation_event(user))
+            const auto user_deletion =
+                std::make_shared<Page>("Delete user", false, [this, &user] {
+                    if (!privileges_validation_event(user)) {
                         return;
-                    if (user_update_event(UpdateEvent::UserDelete, user)) {
-                        should_collapse = true;
                     }
+                    user_update_event(UpdateEvent::UserDelete, user);
                 });
 
             chosen_user->attach(FIRST_OPTION, username_update);
@@ -244,7 +241,7 @@ std::shared_ptr<Page> App::load_advanced_menu() const {
     return std::move(advanced);
 }
 
-bool App::user_update_event(UpdateEvent kind, tdc::User& user) const {
+void App::user_update_event(UpdateEvent kind, tdc::User& user) const {
     tdu::clear_term();
     switch (kind) {
         case UpdateEvent::UsernameUpdate: {
@@ -256,7 +253,8 @@ bool App::user_update_event(UpdateEvent kind, tdc::User& user) const {
 
             user.set_username(username);
             m_user_db->update_object(user);
-        } break;
+            break;
+        }
 
         case UpdateEvent::PasswordUpdate: {
             String password{};
@@ -267,27 +265,29 @@ bool App::user_update_event(UpdateEvent kind, tdc::User& user) const {
 
             user.set_password(password);
             m_user_db->update_object(user);
-
-        } break;
+            break;
+        }
 
         case UpdateEvent::RoleUpdate: {
             const tdc::Role role = role_choosing_event();
             user.set_role(role);
             m_user_db->update_object(user);
-        } break;
+            break;
+        }
 
         case UpdateEvent::UserDelete: {
             m_printer->msg_print("Are you 100% sure ? [y/n]\n");
             const auto confirmation = m_input_handler->get_input();
             if (confirmation == YES) {
                 m_user_db->delete_object(user.id());
-                return true;
             } else if (confirmation == NO) {
-                return false;
+                return;
             } else {
                 invalid_option_event();
+                return;
             }
-        } break;
+            break;
+        }
     }
 
     m_printer->msg_print("Db updated successfully!");

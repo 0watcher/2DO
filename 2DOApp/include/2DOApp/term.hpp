@@ -2,9 +2,6 @@
 
 #include <memory>
 
-#include <fmt/color.h>
-#include <fmt/core.h>
-
 #include <2DOCore/user.hpp>
 #include <Utils/result.hpp>
 #include <Utils/type.hpp>
@@ -15,18 +12,18 @@ namespace tdu = twodoutils;
 namespace twodo {
 class [[nodiscard]] Page : public std::enable_shared_from_this<Page> {
   public:
-    explicit Page(StringView page_name) : m_page_name{page_name} {}
+    explicit Page(const String& page_name) : m_page_name{page_name} {}
 
     explicit Page(const std::function<void()>& content)
         : m_content{std::move(content)} {}
 
-    explicit Page(StringView page_name, const std::function<void()>& content)
+    explicit Page(const String& page_name, const std::function<void()>& content)
         : m_content{std::move(content)}, m_page_name{page_name} {}
 
     explicit Page(bool is_menu_event, const std::function<void()>& content)
         : m_content{std::move(content)}, m_menu_event{is_menu_event} {}
 
-    explicit Page(StringView page_name,
+    explicit Page(const String& page_name,
                   const bool is_menu_event,
                   const std::function<void()>& content)
         : m_content{std::move(content)},
@@ -43,7 +40,7 @@ class [[nodiscard]] Page : public std::enable_shared_from_this<Page> {
   private:
     std::function<void()> m_content{};
     std::shared_ptr<Page> m_parent = nullptr;
-    StringView m_page_name{};
+    const String m_page_name;
     HashMap<String, std::shared_ptr<Page>> m_childs{};
     bool m_menu_event = true;
 
@@ -97,7 +94,7 @@ class [[nodiscard]] Menu {
     std::shared_ptr<tdu::IUserInputHandler> m_input_handler;
 
     void print_menu() {
-        HashMap<StringView, StringView> names;
+        HashMap<String, String> names;
         for (const auto& page : m_current_page->m_childs) {
             names.insert({page.first, page.second->m_page_name});
         }

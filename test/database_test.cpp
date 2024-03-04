@@ -64,8 +64,8 @@ TEST_F(DbTest, CheckUserDbFunctionalities) {
 TEST_F(DbTest, CheckTaskDbFunctionalities) {
     tdc::Task task{"SomeTopic",
                    "There is so much to do!",
-                   tdu::get_current_timestamp<TimePoint>(),
-                   tdu::get_current_timestamp<TimePoint>(5),
+                   tdu::get_current_timestamp(),
+                   tdu::get_current_timestamp(5),
                    1,
                    2,
                    false};
@@ -77,7 +77,7 @@ TEST_F(DbTest, CheckTaskDbFunctionalities) {
 
     task.set_topic("SomeOtherTopic");
     task.set_content("I've added some additional things to do now!");
-    task.set_deadline(tdu::get_current_timestamp<TimePoint>());
+    task.set_deadline(tdu::get_current_timestamp());
     EXPECT_NO_THROW(task_db->update_object(task));
 
     std::optional<tdc::Task> task__;
@@ -86,8 +86,8 @@ TEST_F(DbTest, CheckTaskDbFunctionalities) {
 
     tdc::Task task2{"SomeOtherTopic",
                     "........",
-                    tdu::get_current_timestamp<TimePoint>(),
-                    tdu::get_current_timestamp<TimePoint>(10),
+                    tdu::get_current_timestamp(),
+                    tdu::get_current_timestamp(10),
                     1,
                     2,
                     false};
@@ -106,11 +106,11 @@ TEST_F(DbTest, CheckTaskDbFunctionalities) {
 TEST_F(DbTest, CheckMessageDbFunctionalities) {
     Array<tdc::Message, 3> messages = {
         tdc::Message{1, "someguy", "Hello!",
-                     tdu::get_current_timestamp<TimePoint>()},
+                     tdu::get_current_timestamp()},
         tdc::Message{1, "someotherguy", "Hi!",
-                     tdu::get_current_timestamp<TimePoint>()},
+                     tdu::get_current_timestamp()},
         tdc::Message{1, "someguy", "Who asked!",
-                     tdu::get_current_timestamp<TimePoint>()}};
+                     tdu::get_current_timestamp()}};
 
     for (auto& msg : messages) {
         EXPECT_NO_THROW(msg_db->add_object(msg));
