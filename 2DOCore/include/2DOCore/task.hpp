@@ -259,6 +259,8 @@ class [[nodiscard]] MessageDb {
 
     MessageDb(StringView db_filepath);
 
+    [[nodiscard]] Message get_newest_object() const;
+
     [[nodiscard]] Vector<Message> get_all_objects(const unsigned int task_id) const;
 
     [[nodiscard]] bool is_table_empty() const;

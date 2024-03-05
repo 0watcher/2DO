@@ -40,7 +40,7 @@ class [[nodiscard]] Page : public std::enable_shared_from_this<Page> {
   private:
     std::function<void()> m_content{};
     std::shared_ptr<Page> m_parent = nullptr;
-    const String m_page_name;
+    const String m_page_name{};
     HashMap<String, std::shared_ptr<Page>> m_childs{};
     bool m_menu_event = true;
 

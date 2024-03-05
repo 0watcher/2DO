@@ -159,7 +159,9 @@ std::shared_ptr<Page> App::load_user_update_menu() const {
                     if (!privileges_validation_event(user)) {
                         return;
                     }
-                    user_update_event(UpdateEvent::UsernameUpdate, user);
+                    if (user_update_event(UpdateEvent::UsernameUpdate, user)) {
+                        throw Updated{};  // ugly i know ...
+                    }
                 });
 
             const auto password_update =
@@ -167,7 +169,9 @@ std::shared_ptr<Page> App::load_user_update_menu() const {
                     if (!privileges_validation_event(user)) {
                         return;
                     }
-                    user_update_event(UpdateEvent::PasswordUpdate, user);
+                    if (user_update_event(UpdateEvent::PasswordUpdate, user)) {
+                        throw Updated{};
+                    }
                 });
 
             const auto role_update =
@@ -175,7 +179,9 @@ std::shared_ptr<Page> App::load_user_update_menu() const {
                     if (!privileges_validation_event(user)) {
                         return;
                     }
-                    user_update_event(UpdateEvent::RoleUpdate, user);
+                    if (user_update_event(UpdateEvent::RoleUpdate, user)) {
+                        throw Updated{};
+                    }
                 });
 
             const auto user_deletion =
@@ -183,7 +189,9 @@ std::shared_ptr<Page> App::load_user_update_menu() const {
                     if (!privileges_validation_event(user)) {
                         return;
                     }
-                    user_update_event(UpdateEvent::UserDelete, user);
+                    if (user_update_event(UpdateEvent::UserDelete, user)) {
+                        throw Updated{};
+                    }
                 });
 
             chosen_user->attach(FIRST_OPTION, username_update);
@@ -194,7 +202,10 @@ std::shared_ptr<Page> App::load_user_update_menu() const {
             root_page->attach(std::to_string(++count), chosen_user);
         }
 
-        Menu{root_page, m_printer, m_input_handler}.run(QUIT_OPTION);
+        try {
+            Menu{root_page, m_printer, m_input_handler}.run(QUIT_OPTION);
+        } catch (const Updated) {
+        }
     });
 }
 
@@ -241,7 +252,7 @@ std::shared_ptr<Page> App::load_advanced_menu() const {
     return std::move(advanced);
 }
 
-void App::user_update_event(UpdateEvent kind, tdc::User& user) const {
+bool App::user_update_event(UpdateEvent kind, tdc::User& user) const {
     tdu::clear_term();
     switch (kind) {
         case UpdateEvent::UsernameUpdate: {
@@ -253,6 +264,10 @@ void App::user_update_event(UpdateEvent kind, tdc::User& user) const {
 
             user.set_username(username);
             m_user_db->update_object(user);
+
+            m_printer->msg_print("Db updated successfully!");
+            tdu::sleep(2000);
+            return true;
             break;
         }
 
@@ -265,6 +280,10 @@ void App::user_update_event(UpdateEvent kind, tdc::User& user) const {
 
             user.set_password(password);
             m_user_db->update_object(user);
+
+            m_printer->msg_print("Db updated successfully!");
+            tdu::sleep(2000);
+            return true;
             break;
         }
 
@@ -272,6 +291,10 @@ void App::user_update_event(UpdateEvent kind, tdc::User& user) const {
             const tdc::Role role = role_choosing_event();
             user.set_role(role);
             m_user_db->update_object(user);
+
+            m_printer->msg_print("Db updated successfully!");
+            tdu::sleep(2000);
+            return true;
             break;
         }
 
@@ -280,18 +303,19 @@ void App::user_update_event(UpdateEvent kind, tdc::User& user) const {
             const auto confirmation = m_input_handler->get_input();
             if (confirmation == YES) {
                 m_user_db->delete_object(user.id());
+
+                m_printer->msg_print("Db updated successfully!");
+                tdu::sleep(2000);
+                return true;
             } else if (confirmation == NO) {
-                return;
+                return false;
             } else {
                 invalid_option_event();
-                return;
+                return false;
             }
             break;
         }
     }
-
-    m_printer->msg_print("Db updated successfully!");
-    tdu::sleep(2000);
 };
 
 String App::username_validation_event() const {
@@ -384,7 +408,9 @@ String App::password_validation_event() const {
 tdc::Role App::role_choosing_event() const {
     while (true) {
         tdu::clear_term();
-        m_printer->msg_print("Role:\n[1] Admin\n[2] User\n-> ");
+        m_printer->menu_print(
+            "Role", {{FIRST_OPTION, "Admin"}, {SECOND_OPTION, "User"}});
+
         String str_role = m_input_handler->get_input();
         if (str_role == FIRST_OPTION) {
             return tdc::Role::Admin;

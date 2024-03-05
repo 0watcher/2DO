@@ -1,6 +1,7 @@
 #include "2DOCore/task.hpp"
 
 #include <SQLiteCpp/Statement.h>
+#include <optional>
 
 namespace twodocore {
 TaskDb::TaskDb(StringView db_filepath)
@@ -134,8 +135,24 @@ MessageDb::MessageDb(StringView db_filepath)
     }
 }
 
-Vector<Message> MessageDb::get_all_objects(
-    const unsigned int taks_id) const {
+Message MessageDb::get_newest_object() const {
+    SQL::Statement query{
+        m_db, "SELECT * FROM messages ORDER BY message_id DESC LIMIT 1"};
+
+    std::optional<Message> msg;
+
+    while (query.executeStep()) {
+        msg = Message{(unsigned)query.getColumn(0).getInt(),
+                      (unsigned)query.getColumn(1).getInt(),
+                      query.getColumn(2).getString(),
+                      query.getColumn(3).getString(),
+                      tdu::stotp(query.getColumn(4).getString())};
+    }
+
+    return msg.value();
+}
+
+Vector<Message> MessageDb::get_all_objects(const unsigned int taks_id) const {
     SQL::Statement query{m_db, "SELECT * FROM messages WHERE task_id = ?"};
     query.bind(1, taks_id);
 

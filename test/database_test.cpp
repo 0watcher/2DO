@@ -105,12 +105,9 @@ TEST_F(DbTest, CheckTaskDbFunctionalities) {
 
 TEST_F(DbTest, CheckMessageDbFunctionalities) {
     Array<tdc::Message, 3> messages = {
-        tdc::Message{1, "someguy", "Hello!",
-                     tdu::get_current_timestamp()},
-        tdc::Message{1, "someotherguy", "Hi!",
-                     tdu::get_current_timestamp()},
-        tdc::Message{1, "someguy", "Who asked!",
-                     tdu::get_current_timestamp()}};
+        tdc::Message{1, "someguy", "Hello!", tdu::get_current_timestamp()},
+        tdc::Message{1, "someotherguy", "Hi!", tdu::get_current_timestamp()},
+        tdc::Message{1, "someguy", "Who asked!", tdu::get_current_timestamp()}};
 
     for (auto& msg : messages) {
         EXPECT_NO_THROW(msg_db->add_object(msg));
@@ -122,6 +119,14 @@ TEST_F(DbTest, CheckMessageDbFunctionalities) {
     for (std::size_t i = 0; i < messages.size(); ++i) {
         EXPECT_EQ(messages[i], selected_messages[i]);
     }
+
+    const auto new_msg = tdc::Message{1, "someguy", "newest message",
+                                      tdu::get_current_timestamp()};
+    EXPECT_NO_THROW(msg_db->add_object(new_msg));
+
+    std::optional<tdc::Message> selected_new_msg;
+    EXPECT_NO_THROW(selected_new_msg = msg_db->get_newest_object());
+    EXPECT_EQ(selected_new_msg.value().content(), new_msg.content());
 
     EXPECT_NO_THROW(msg_db->delete_all_by_task_id(1));
     EXPECT_TRUE(msg_db->is_table_empty());

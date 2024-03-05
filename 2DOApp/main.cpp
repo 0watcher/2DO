@@ -62,16 +62,26 @@ class MsgDisplayer : public tdu::IPrinter {
     void menu_print(StringView page_name,
                     const HashMap<String, String>& menu_pages) const override {
         if (!page_name.empty()) {
-            fmt::println("{}", fmt::format(fg(fmt::color::beige), page_name));
+            fmt::println("{}",
+                         fmt::format(fg(fmt::color::lime_green), page_name));
         }
 
+        bool is_some_empty = true;
         for (const auto& page : menu_pages) {
-            fmt::println("[{}] {}",
-                         fmt::format(fg(fmt::color::alice_blue), page.first),
-                         fmt::format(fg(fmt::color::alice_blue), page.second));
+            if (!page.first.empty() && !page.second.empty()) {
+                fmt::println(
+                    "[{}] {}",
+                    fmt::format(fg(fmt::color::blue_violet), page.first),
+                    fmt::format(fg(fmt::color::blue_violet), page.second));
+                is_some_empty = false;
+            }
         }
-        fmt::println("[{}] {}", fmt::format(fg(fmt::color::alice_blue), "0"),
-                     fmt::format(fg(fmt::color::alice_blue), "Back"));
+
+        if(is_some_empty) {
+            fmt::print("\n");
+        }
+        fmt::println("[{}] {}", fmt::format(fg(fmt::color::blue_violet), "0"),
+                     fmt::format(fg(fmt::color::blue_violet), "Back"));
         fmt::print("-> ");
     }
 };

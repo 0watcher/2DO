@@ -3,7 +3,9 @@
 #include <filesystem>
 #include <format>
 #include <fstream>
+#include <mutex>
 #include <sstream>
+#include <thread>
 
 namespace fs = std::filesystem;
 
@@ -148,5 +150,22 @@ std::optional<TimePoint> parse_datetime(const String& datetime_str) {
                      sch::duration_cast<sch::minutes>(sch::days(day - 1)) +
                      sch::duration_cast<sch::minutes>(sch::months(month - 1)) +
                      sch::duration_cast<sch::minutes>(sch::years(year - 1970))};
+}
+
+void fork_tasks(std::function<void()> task1, std::function<void()> task2) {
+    std::mutex mtx;
+
+    std::thread th1([&task1, &mtx]() {
+        std::unique_lock<std::mutex> lock{mtx};
+        task1();
+    });
+
+    std::thread th2([&task2, &mtx]() {
+        std::unique_lock<std::mutex> lock{mtx};
+        task2();
+    });
+
+    th1.join();
+    th2.join();
 }
 }  // namespace twodoutils

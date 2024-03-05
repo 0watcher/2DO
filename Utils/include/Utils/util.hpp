@@ -44,6 +44,8 @@ void wipe_simple_app_env(const String& folder_name);
 [[nodiscard]] std::optional<TimePoint> parse_datetime(
     const String& datetime_str);
 
+void fork_tasks(std::function<void()> task1, std::function<void()> task2);
+
 inline void clear_term() {
 #ifdef _WIN32
     ::system("cls");
