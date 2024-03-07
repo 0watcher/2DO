@@ -35,9 +35,9 @@ void wipe_simple_app_env(const String& folder_name);
 [[nodiscard]] TimePoint get_current_timestamp(
     const unsigned int additional_days = 0);
 
-[[nodiscard]] String tptos(const TimePoint tp);
+[[nodiscard]] String to_string(const TimePoint tp);
 
-[[nodiscard]] TimePoint stotp(const String& tp_str);
+[[nodiscard]] TimePoint to_time_point(const String& tp_str);
 
 [[nodiscard]] String format_datetime(const TimePoint tp);
 

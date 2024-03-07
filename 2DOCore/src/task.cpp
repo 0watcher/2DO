@@ -2,6 +2,7 @@
 
 #include <SQLiteCpp/Statement.h>
 #include <optional>
+#include "Utils/util.hpp"
 
 namespace twodocore {
 TaskDb::TaskDb(StringView db_filepath)
@@ -146,7 +147,7 @@ Message MessageDb::get_newest_object() const {
                       (unsigned)query.getColumn(1).getInt(),
                       query.getColumn(2).getString(),
                       query.getColumn(3).getString(),
-                      tdu::stotp(query.getColumn(4).getString())};
+                      tdu::to_time_point(query.getColumn(4).getString())};
     }
 
     return msg.value();
@@ -158,11 +159,11 @@ Vector<Message> MessageDb::get_all_objects(const unsigned int taks_id) const {
 
     Vector<Message> messages;
     while (query.executeStep()) {
-        messages.push_back(Message{(unsigned)query.getColumn(0).getInt(),
-                                   (unsigned)query.getColumn(1).getInt(),
-                                   query.getColumn(2).getString(),
-                                   query.getColumn(3).getString(),
-                                   tdu::stotp(query.getColumn(4).getString())});
+        messages.push_back(Message{
+            (unsigned)query.getColumn(0).getInt(),
+            (unsigned)query.getColumn(1).getInt(),
+            query.getColumn(2).getString(), query.getColumn(3).getString(),
+            tdu::to_time_point(query.getColumn(4).getString())});
     }
 
     return messages;

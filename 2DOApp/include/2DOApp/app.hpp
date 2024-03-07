@@ -11,7 +11,6 @@
 #include <Utils/result.hpp>
 #include <Utils/type.hpp>
 #include <Utils/util.hpp>
-#include <stdexcept>
 
 namespace tdc = twodocore;
 namespace tdu = twodoutils;
@@ -29,6 +28,8 @@ namespace tdu = twodoutils;
 #define USER_LOGS_FILE_NAME "user-logs.txt"
 
 namespace twodo {
+struct Updated {};
+
 class [[nodiscard]] App {
   public:
     App(App&& other) = default;
@@ -75,11 +76,19 @@ class [[nodiscard]] App {
 
     std::shared_ptr<tdu::IUserInputHandler> m_input_handler = nullptr;
 
-    enum class UpdateEvent {
+    enum class UserUpdateEvent {
         UsernameUpdate,
         PasswordUpdate,
         RoleUpdate,
         UserDelete
+    };
+
+    enum class TaskUpdateEvent {
+        TopicUpdate,
+        ContentUpdate,
+        DeadlineUpdate,
+        ExecutorUpdate,
+        TaskDelete
     };
 
     Menu load_menu();
@@ -122,10 +131,10 @@ class [[nodiscard]] App {
             const auto chosen_task = std::make_shared<Page>([this, &task] {
                 if constexpr (T == tdc::TaskDb::IdType::Executor) {
                     m_printer->msg_print(fmt::format(
-                        "Topic: {}\nContent: {}\nDelegated by: {}\nStart "
+                        "Topic: {}\nContent: {}\nDelegated By: {}\nStart "
                         "Date: "
                         "{}\nDeadline: "
-                        "{}\nStatus: {}\n",
+                        "{}\nStatus: {}\n\n",
                         task.topic(), task.content(),
                         m_user_db->get_object(task.owner_id()).username(),
                         tdu::format_datetime(task.start_date<TimePoint>()),
@@ -136,10 +145,10 @@ class [[nodiscard]] App {
                                            "INCOMPLETE"))));
                 } else {
                     m_printer->msg_print(fmt::format(
-                        "Topic: {}\nContent: {}\nDelegated to: {}\nStart "
+                        "Topic: {}\nContent: {}\nDelegated To: {}\nStart "
                         "Date: "
                         "{}\nDeadline: "
-                        "{}\nStatus: {}\n",
+                        "{}\nStatus: {}\n\n",
                         task.topic(), task.content(),
                         m_user_db->get_object(task.executor_id()).username(),
                         tdu::format_datetime(task.start_date<TimePoint>()),
@@ -152,87 +161,13 @@ class [[nodiscard]] App {
             });
 
             const auto change_status = std::make_shared<Page>(
-                "Mark as complete", false, [this, &task] {
-                    tdu::clear_term();
+                "Mark As Complete", false,
+                [this, &task] { if(task_completion_event(task)) {
+                    throw Updated{};
+                } });
 
-                    m_printer->msg_print("Are you 100% sure ? [y/n]\n");
-                    const auto choice = m_input_handler->get_input();
-
-                    if (choice == "y") {
-                        task.set_is_done(true);
-                        m_task_db->update_object(task);
-
-                        m_printer->msg_print(
-                            "Congrats you've completed the task!");
-                    } else if (choice == "n") {
-                        return;
-                    } else {
-                        invalid_option_event();
-                        return;
-                    }
-                });
-
-            const auto discussion =
-                std::make_shared<Page>("Discussion", false, [this, &task] {
-                    Vector<tdc::Message> messages{};
-                    bool should_close = false;
-
-                    const auto main_chat_loop = [this, &task, &messages,
-                                                 &should_close] {
-                        tdu::clear_term();
-
-                        while (true) {
-                            m_printer->msg_print(fmt::format(
-                                "<{}>: ", m_current_user->username()));
-                            String sended_message =
-                                m_input_handler->get_input();
-                            if (sended_message == "0") {
-                                should_close = true;
-                                break;
-                            }
-
-                            const auto prepared_msg = tdc::Message{
-                                task.id(), m_current_user->username(),
-                                sended_message, tdu::get_current_timestamp()};
-
-                            m_message_db->add_object(prepared_msg);
-                            // m_printer->msg_print(fmt::format(
-                            //     "[{}] <{}>: {}\n",
-                            //     tdu::format_datetime(
-                            //         prepared_msg.timestamp<TimePoint>()),
-                            //     prepared_msg.sender_name(),
-                            //     prepared_msg.content()));
-                        }
-                    };
-
-                    const auto check_for_msg = [this, &messages, &task,
-                                                &should_close] {
-                        while (!should_close) {
-                            const auto new_msg =
-                                m_message_db->get_newest_object();
-
-                            if (messages.empty() ||
-                                (new_msg.message_id() >
-                                 messages.back().message_id())) {
-                                tdu::clear_term();
-
-                                messages =
-                                    m_message_db->get_all_objects(task.id());
-                                for (const auto& msg : messages) {
-                                    m_printer->msg_print(fmt::format(
-                                        "[{}] <{}>: {}\n",
-                                        tdu::format_datetime(
-                                            msg.timestamp<TimePoint>()),
-                                        msg.sender_name(), msg.content()));
-                                }
-                            }
-
-                            tdu::sleep(100);
-                        }
-                    };
-
-                    tdu::fork_tasks(main_chat_loop, check_for_msg);
-                });
+            const auto discussion = std::make_shared<Page>(
+                "Discussion", false, [this, &task] { discussion_event(task); });
 
             if (!task.is_done() &&
                 task.deadline<TimePoint>() > tdu::get_current_timestamp()) {
@@ -244,108 +179,43 @@ class [[nodiscard]] App {
                 const auto edit_task = std::make_shared<Page>("Edit Task");
 
                 const auto edit_topic =
-                    std::make_shared<Page>("Edit topic", false, [this, &task] {
-                        tdu::clear_term();
-
-                        m_printer->msg_print("topic: ");
-                        task.set_topic(m_input_handler->get_input());
-
-                        m_task_db->update_object(task);
-
-                        m_printer->msg_print("Db updated successfully!");
-                        tdu::sleep(2000);
+                    std::make_shared<Page>("Edit Topic", false, [this, &task] {
+                        if (task_update_event(TaskUpdateEvent::TopicUpdate,
+                                              task)) {
+                            throw Updated{};
+                        }
                     });
 
                 const auto edit_content = std::make_shared<Page>(
-                    "Edit content", false, [this, &task] {
-                        tdu::clear_term();
-
-                        m_printer->msg_print("content: ");
-                        task.set_content(m_input_handler->get_input());
-
-                        m_task_db->update_object(task);
-
-                        m_printer->msg_print("Db updated successfully!");
-                        tdu::sleep(2000);
+                    "Edit Content", false, [this, &task] {
+                        if (task_update_event(TaskUpdateEvent::ContentUpdate,
+                                              task)) {
+                            throw Updated{};
+                        }
                     });
 
                 const auto change_deadline = std::make_shared<Page>(
-                    "Change deadline", false, [this, &task] {
-                        TimePoint deadline;
-
-                        while (true) {
-                            tdu::clear_term();
-
-                            m_printer->msg_print("deadline: ");
-                            m_printer->msg_print(
-                                "deadline [YYYY.MM.DD-hh:mm]: ");
-                            if (const auto datetime = tdu::parse_datetime(
-                                    m_input_handler->get_input());
-                                datetime.has_value()) {
-                                deadline = datetime.value();
-                                break;
-                            } else {
-                                invalid_option_event();
-                            }
+                    "Change Deadline", false, [this, &task] {
+                        if (task_update_event(TaskUpdateEvent::DeadlineUpdate,
+                                              task)) {
+                            throw Updated{};
                         }
-
-                        task.set_deadline(deadline);
-                        m_task_db->update_object(task);
-
-                        m_printer->msg_print("Db updated successfully!");
-                        tdu::sleep(2000);
                     });
 
                 const auto change_executor = std::make_shared<Page>(
-                    "Change executor", false, [this, &task] {
-                        const auto users = m_user_db->get_all_objects();
-
-                        while (true) {
-                            tdu::clear_term();
-
-                            m_printer->msg_print("assign executor:\n");
-
-                            for (size_t count = 0; count < users.size();
-                                 ++count) {
-                                m_printer->msg_print(
-                                    fmt::format("[{}] {} <{}>\n", count + 1,
-                                                users[count].username(),
-                                                users[count].role<String>()));
-                            }
-                            m_printer->msg_print("-> ");
-
-                            if (unsigned const int executor_number =
-                                    std::stoi(m_input_handler->get_input());
-                                executor_number > 0 &&
-                                executor_number <= users.size()) {
-                                task.set_executor(
-                                    users[executor_number - 1].id());
-                                m_task_db->update_object(task);
-                                break;
-                            }
-
-                            invalid_option_event();
+                    "Change Executor", false, [this, &task] {
+                        if (task_update_event(TaskUpdateEvent::ExecutorUpdate,
+                                              task)) {
+                            throw Updated{};
                         }
-
-                        m_printer->msg_print("Db updated successfully!");
-                        tdu::sleep(2000);
                     });
 
                 const auto delete_task =
-                    std::make_shared<Page>("Delete task", false, [this, &task] {
-                        m_printer->msg_print("Are you 100% sure ? [y/n]\n");
-                        const auto confirmation = m_input_handler->get_input();
-                        if (confirmation == YES) {
-                            m_task_db->delete_object(task.id());
-                        } else if (confirmation == NO) {
-                            return;
-                        } else {
-                            invalid_option_event();
-                            return;
+                    std::make_shared<Page>("Delete Task", false, [this, &task] {
+                        if (task_update_event(TaskUpdateEvent::TaskDelete,
+                                              task)) {
+                            throw Updated{};
                         }
-
-                        m_printer->msg_print("Db updated successfully!");
-                        tdu::sleep(2000);
                     });
 
                 if (!task.is_done() &&
@@ -363,21 +233,28 @@ class [[nodiscard]] App {
             tasks_page->attach(std::to_string(++count), chosen_task);
         }
 
-        Menu{tasks_page, m_printer, m_input_handler}.run(QUIT_OPTION);
+        try {  // ugliness
+            Menu{tasks_page, m_printer, m_input_handler}.run(QUIT_OPTION);
+        } catch (const Updated) {
+        }
     }
 
-    bool user_update_event(const UpdateEvent kind, tdc::User& user) const;
+    bool user_update_event(const UserUpdateEvent kind, tdc::User& user) const;
+    bool task_update_event(const TaskUpdateEvent kind, tdc::Task& task) const;
+    bool task_completion_event(tdc::Task& task) const;
+    void discussion_event(tdc::Task& task) const;
     String username_validation_event() const;
     String password_validation_event() const;
     tdc::Role role_choosing_event() const;
+    tdc::User executor_choosing_event() const;
+    TimePoint datetime_validation_event(StringView msg) const;
     bool privileges_validation_event() const;
     bool privileges_validation_event(const tdc::User& user) const;
     void invalid_option_event() const;
+    String string_input(StringView msg) const;
 
     std::shared_ptr<tdc::User> get_current_user() const {
         return m_current_user;
     }
 };
-
-struct Updated{};
 }  // namespace twodo

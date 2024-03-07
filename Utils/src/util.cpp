@@ -106,13 +106,13 @@ TimePoint get_current_timestamp(const unsigned int additional_days) {
                                               sch::days{additional_days});
 }
 
-String tptos(const TimePoint tp) {
+String to_string(const TimePoint tp) {
     return std::to_string(
         std::chrono::duration_cast<std::chrono::minutes>(tp.time_since_epoch())
             .count());
 }
 
-TimePoint stotp(const String& tp_str) {
+TimePoint to_time_point(const String& tp_str) {
     return std::chrono::time_point<std::chrono::system_clock,
                                    std::chrono::minutes>(
         std::chrono::minutes(std::stoll(tp_str)));

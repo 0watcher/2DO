@@ -45,8 +45,8 @@ class [[nodiscard]] Task {
         : m_id{id},
           m_topic{topic},
           m_content{content},
-          m_start_date{tdu::stotp(start_date)},
-          m_deadline{tdu::stotp(deadline)},
+          m_start_date{tdu::to_time_point(start_date)},
+          m_deadline{tdu::to_time_point(deadline)},
           m_executor_id{executor_id},
           m_owner_id{owner_id},
           m_is_done{static_cast<bool>(is_done)} {}
@@ -88,7 +88,7 @@ class [[nodiscard]] Task {
                                           T>::type
     start_date() const {
         if constexpr (std::is_same<T, String>::value) {
-            return tdu::tptos(m_start_date);
+            return tdu::to_string(m_start_date);
         } else if constexpr (std::is_same<T, TimePoint>::value) {
             return m_start_date;
         }
@@ -100,7 +100,7 @@ class [[nodiscard]] Task {
                                           T>::type
     deadline() const {
         if constexpr (std::is_same<T, String>::value) {
-            return tdu::tptos(m_deadline);
+            return tdu::to_string(m_deadline);
         } else if constexpr (std::is_same<T, TimePoint>::value) {
             return m_deadline;
         }
@@ -214,7 +214,7 @@ class [[nodiscard]] Message {
         : m_task_id{task_id},
           m_sender_name{sender_name},
           m_content{content},
-          m_timestamp{tdu::stotp(timestamp)} {}
+          m_timestamp{tdu::to_time_point(timestamp)} {}
 
     bool operator==(const Message& other) const {
         return m_message_id == other.m_message_id &&
@@ -234,7 +234,7 @@ class [[nodiscard]] Message {
                                           T>::type
     timestamp() const {
         if constexpr (std::is_same<T, String>::value) {
-            return tdu::tptos(m_timestamp);
+            return tdu::to_string(m_timestamp);
         } else if constexpr (std::is_same<T, TimePoint>::value) {
             return m_timestamp;
         }
@@ -261,7 +261,8 @@ class [[nodiscard]] MessageDb {
 
     [[nodiscard]] Message get_newest_object() const;
 
-    [[nodiscard]] Vector<Message> get_all_objects(const unsigned int task_id) const;
+    [[nodiscard]] Vector<Message> get_all_objects(
+        const unsigned int task_id) const;
 
     [[nodiscard]] bool is_table_empty() const;
 
