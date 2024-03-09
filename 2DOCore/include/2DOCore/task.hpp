@@ -5,6 +5,7 @@
 #include <Utils/result.hpp>
 #include <Utils/type.hpp>
 #include <Utils/util.hpp>
+#include <optional>
 
 namespace tdu = twodoutils;
 namespace SQL = SQLite;
@@ -45,8 +46,8 @@ class [[nodiscard]] Task {
         : m_id{id},
           m_topic{topic},
           m_content{content},
-          m_start_date{tdu::to_time_point(start_date)},
-          m_deadline{tdu::to_time_point(deadline)},
+          m_start_date{tdu::to_time_point(start_date).value()},
+          m_deadline{tdu::to_time_point(deadline).value()},
           m_executor_id{executor_id},
           m_owner_id{owner_id},
           m_is_done{static_cast<bool>(is_done)} {}
@@ -214,7 +215,7 @@ class [[nodiscard]] Message {
         : m_task_id{task_id},
           m_sender_name{sender_name},
           m_content{content},
-          m_timestamp{tdu::to_time_point(timestamp)} {}
+          m_timestamp{tdu::to_time_point(timestamp).value()} {}
 
     bool operator==(const Message& other) const {
         return m_message_id == other.m_message_id &&
@@ -259,7 +260,7 @@ class [[nodiscard]] MessageDb {
 
     MessageDb(StringView db_filepath);
 
-    [[nodiscard]] Message get_newest_object() const;
+    [[nodiscard]] std::optional<Message> get_newest_object() const;
 
     [[nodiscard]] Vector<Message> get_all_objects(
         const unsigned int task_id) const;

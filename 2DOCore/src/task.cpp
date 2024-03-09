@@ -136,21 +136,25 @@ MessageDb::MessageDb(StringView db_filepath)
     }
 }
 
-Message MessageDb::get_newest_object() const {
+std::optional<Message> MessageDb::get_newest_object() const {
     SQL::Statement query{
         m_db, "SELECT * FROM messages ORDER BY message_id DESC LIMIT 1"};
 
-    std::optional<Message> msg;
-
-    while (query.executeStep()) {
-        msg = Message{(unsigned)query.getColumn(0).getInt(),
-                      (unsigned)query.getColumn(1).getInt(),
-                      query.getColumn(2).getString(),
-                      query.getColumn(3).getString(),
-                      tdu::to_time_point(query.getColumn(4).getString())};
+    try {
+        if (!query.executeStep()) {
+            return std::nullopt;
+        }
+    } catch (const std::exception& e) {
+        if (query.hasRow()) {
+            throw e;
+        }
     }
 
-    return msg.value();
+    return Message{(unsigned)query.getColumn(0).getInt(),
+                   (unsigned)query.getColumn(1).getInt(),
+                   query.getColumn(2).getString(),
+                   query.getColumn(3).getString(),
+                   tdu::to_time_point(query.getColumn(4).getString()).value()};
 }
 
 Vector<Message> MessageDb::get_all_objects(const unsigned int taks_id) const {
@@ -163,7 +167,7 @@ Vector<Message> MessageDb::get_all_objects(const unsigned int taks_id) const {
             (unsigned)query.getColumn(0).getInt(),
             (unsigned)query.getColumn(1).getInt(),
             query.getColumn(2).getString(), query.getColumn(3).getString(),
-            tdu::to_time_point(query.getColumn(4).getString())});
+            tdu::to_time_point(query.getColumn(4).getString()).value()});
     }
 
     return messages;

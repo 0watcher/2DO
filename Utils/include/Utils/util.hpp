@@ -37,14 +37,7 @@ void wipe_simple_app_env(const String& folder_name);
 
 [[nodiscard]] String to_string(const TimePoint tp);
 
-[[nodiscard]] TimePoint to_time_point(const String& tp_str);
-
-[[nodiscard]] String format_datetime(const TimePoint tp);
-
-[[nodiscard]] std::optional<TimePoint> parse_datetime(
-    const String& datetime_str);
-
-void fork_tasks(std::function<void()> task1, std::function<void()> task2);
+[[nodiscard]] std::optional<TimePoint> to_time_point(const String& tp_str);
 
 inline void clear_term() {
 #ifdef _WIN32

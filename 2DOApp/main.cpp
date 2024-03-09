@@ -77,7 +77,7 @@ class MsgDisplayer : public tdu::IPrinter {
             }
         }
 
-        if(is_some_empty) {
+        if (is_some_empty) {
             fmt::print("\n");
         }
         fmt::println("[{}] {}", fmt::format(fg(fmt::color::blue_violet), "0"),

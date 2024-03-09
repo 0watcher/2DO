@@ -111,11 +111,11 @@ class [[nodiscard]] App {
                 m_current_user->id());
         }
 
-        const auto tasks_page = std::make_shared<Page>("Tasks", [this, &tasks] {
+        const auto tasks_page = std::make_shared<Page>("Tasks", [&] {
             unsigned int count = 0;
             for (const auto& task : tasks) {
                 m_printer->msg_print(fmt::format(
-                    "[{}] {} ({})",
+                    "[{}] {} ({})\n",
                     fmt::format(fg(fmt::color::blue_violet),
                                 std::to_string(++count)),
                     fmt::format(fg(fmt::color::blue_violet), task.topic()),
@@ -128,7 +128,7 @@ class [[nodiscard]] App {
 
         unsigned int count = 0;
         for (auto& task : tasks) {
-            const auto chosen_task = std::make_shared<Page>([this, &task] {
+            const auto chosen_task = std::make_shared<Page>([&] {
                 if constexpr (T == tdc::TaskDb::IdType::Executor) {
                     m_printer->msg_print(fmt::format(
                         "Topic: {}\nContent: {}\nDelegated By: {}\nStart "
@@ -137,8 +137,8 @@ class [[nodiscard]] App {
                         "{}\nStatus: {}\n\n",
                         task.topic(), task.content(),
                         m_user_db->get_object(task.owner_id()).username(),
-                        tdu::format_datetime(task.start_date<TimePoint>()),
-                        tdu::format_datetime(task.deadline<TimePoint>()),
+                        tdu::to_string(task.start_date<TimePoint>()),
+                        tdu::to_string(task.deadline<TimePoint>()),
                         (task.is_done()
                              ? fmt::format(fmt::fg(fmt::color::green), "DONE")
                              : fmt::format(fmt::fg(fmt::color::red),
@@ -151,8 +151,8 @@ class [[nodiscard]] App {
                         "{}\nStatus: {}\n\n",
                         task.topic(), task.content(),
                         m_user_db->get_object(task.executor_id()).username(),
-                        tdu::format_datetime(task.start_date<TimePoint>()),
-                        tdu::format_datetime(task.deadline<TimePoint>()),
+                        tdu::to_string(task.start_date<TimePoint>()),
+                        tdu::to_string(task.deadline<TimePoint>()),
                         (task.is_done()
                              ? fmt::format(fmt::fg(fmt::color::green), "DONE")
                              : fmt::format(fmt::fg(fmt::color::red),
@@ -160,14 +160,15 @@ class [[nodiscard]] App {
                 }
             });
 
-            const auto change_status = std::make_shared<Page>(
-                "Mark As Complete", false,
-                [this, &task] { if(task_completion_event(task)) {
-                    throw Updated{};
-                } });
+            const auto change_status =
+                std::make_shared<Page>("Mark As Complete", false, [&] {
+                    if (task_completion_event(task)) {
+                        throw Updated{};
+                    }
+                });
 
             const auto discussion = std::make_shared<Page>(
-                "Discussion", false, [this, &task] { discussion_event(task); });
+                "Discussion", false, [&] { discussion_event(task); });
 
             if (!task.is_done() &&
                 task.deadline<TimePoint>() > tdu::get_current_timestamp()) {
@@ -179,31 +180,31 @@ class [[nodiscard]] App {
                 const auto edit_task = std::make_shared<Page>("Edit Task");
 
                 const auto edit_topic =
-                    std::make_shared<Page>("Edit Topic", false, [this, &task] {
+                    std::make_shared<Page>("Edit Topic", false, [&] {
                         if (task_update_event(TaskUpdateEvent::TopicUpdate,
                                               task)) {
                             throw Updated{};
                         }
                     });
 
-                const auto edit_content = std::make_shared<Page>(
-                    "Edit Content", false, [this, &task] {
+                const auto edit_content =
+                    std::make_shared<Page>("Edit Content", false, [&] {
                         if (task_update_event(TaskUpdateEvent::ContentUpdate,
                                               task)) {
                             throw Updated{};
                         }
                     });
 
-                const auto change_deadline = std::make_shared<Page>(
-                    "Change Deadline", false, [this, &task] {
+                const auto change_deadline =
+                    std::make_shared<Page>("Change Deadline", false, [&] {
                         if (task_update_event(TaskUpdateEvent::DeadlineUpdate,
                                               task)) {
                             throw Updated{};
                         }
                     });
 
-                const auto change_executor = std::make_shared<Page>(
-                    "Change Executor", false, [this, &task] {
+                const auto change_executor =
+                    std::make_shared<Page>("Change Executor", false, [&] {
                         if (task_update_event(TaskUpdateEvent::ExecutorUpdate,
                                               task)) {
                             throw Updated{};
@@ -211,7 +212,7 @@ class [[nodiscard]] App {
                     });
 
                 const auto delete_task =
-                    std::make_shared<Page>("Delete Task", false, [this, &task] {
+                    std::make_shared<Page>("Delete Task", false, [&] {
                         if (task_update_event(TaskUpdateEvent::TaskDelete,
                                               task)) {
                             throw Updated{};
@@ -239,10 +240,13 @@ class [[nodiscard]] App {
         }
     }
 
+    bool sing_in();
+    void sing_up() const;
+    bool is_first_user() const;
     bool user_update_event(const UserUpdateEvent kind, tdc::User& user) const;
     bool task_update_event(const TaskUpdateEvent kind, tdc::Task& task) const;
     bool task_completion_event(tdc::Task& task) const;
-    void discussion_event(tdc::Task& task) const;
+    void discussion_event(const tdc::Task& task) const;
     String username_validation_event() const;
     String password_validation_event() const;
     tdc::Role role_choosing_event() const;

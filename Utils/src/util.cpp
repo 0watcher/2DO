@@ -4,6 +4,7 @@
 #include <format>
 #include <fstream>
 #include <mutex>
+#include <optional>
 #include <sstream>
 #include <thread>
 
@@ -22,8 +23,7 @@ NanoSeconds speed_test(const std::function<void()>& test) {
 
 void log_to_file(StringView msg, const String& filepath) {
     std::ofstream file{filepath, std::ios_base::ate};
-    file << "[" << format_datetime(get_current_timestamp()) << "] " << msg
-         << '\n';
+    file << "[" << to_string(get_current_timestamp()) << "] " << msg << '\n';
     file.close();
 }
 
@@ -107,65 +107,15 @@ TimePoint get_current_timestamp(const unsigned int additional_days) {
 }
 
 String to_string(const TimePoint tp) {
-    return std::to_string(
-        std::chrono::duration_cast<std::chrono::minutes>(tp.time_since_epoch())
-            .count());
+    return std::format("{:%Y-%m-%d %H:%M}", tp);
 }
 
-TimePoint to_time_point(const String& tp_str) {
-    return std::chrono::time_point<std::chrono::system_clock,
-                                   std::chrono::minutes>(
-        std::chrono::minutes(std::stoll(tp_str)));
-}
-
-String format_datetime(const TimePoint tp) {
-    return std::format("{:%Y.%m.%d %H:%M}", tp);
-}
-
-std::optional<TimePoint> parse_datetime(const String& datetime_str) {
-    std::istringstream iss{datetime_str};
-
-    unsigned int year, month, day, hours, minutes;
-    char colon, dot, space;
-
-    iss >> year >> dot >> month >> dot >> day >> space >> hours >> colon >>
-        minutes;
-
-    const auto date_evaluation = [year, month, day, hours, minutes] {
-        return year >= 1970 && month >= 1 && month <= 12 && day >= 1 &&
-               day <= 31 && hours >= 0 && hours <= 23 && minutes >= 0 &&
-               minutes <= 59;
-    };
-
-    const auto chars_evaluation = [colon, dot, space] {
-        return colon == ':' && dot == '.' && space == '-';
-    };
-
-    if (!date_evaluation() || !chars_evaluation() || iss.fail() || iss.bad()) {
+std::optional<TimePoint> to_time_point(const String& tp_str) {
+    std::istringstream iss(tp_str);
+    sch::sys_time<sch::minutes> tp;
+    if (!(iss >> std::chrono::parse("%Y-%m-%d %H:%M", tp)).fail())
+        return sch::time_point_cast<sch::minutes>(tp);
+    else
         return std::nullopt;
-    }
-
-    return TimePoint{sch::minutes(minutes - 24) +
-                     sch::duration_cast<sch::minutes>(sch::hours(hours - 5)) +
-                     sch::duration_cast<sch::minutes>(sch::days(day - 1)) +
-                     sch::duration_cast<sch::minutes>(sch::months(month - 1)) +
-                     sch::duration_cast<sch::minutes>(sch::years(year - 1970))};
-}
-
-void fork_tasks(std::function<void()> task1, std::function<void()> task2) {
-    std::mutex mtx;
-
-    std::thread th1([&task1, &mtx]() {
-        std::unique_lock<std::mutex> lock{mtx};
-        task1();
-    });
-
-    std::thread th2([&task2, &mtx]() {
-        std::unique_lock<std::mutex> lock{mtx};
-        task2();
-    });
-
-    th1.join();
-    th2.join();
 }
 }  // namespace twodoutils
