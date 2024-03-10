@@ -1,8 +1,8 @@
+#include <gtest/gtest.h>
+
 #include <Utils/result.hpp>
 #include <Utils/type.hpp>
 #include "Utils/util.hpp"
-
-#include <gtest/gtest.h>
 
 namespace tdl = twodoutils;
 
@@ -33,7 +33,7 @@ TEST_F(ResultTest, SpeedTest) {
     const auto exception_exec_time = twodoutils::speed_test([this]() {
         try {
             auto result = Exception_divide(10, 0);
-        } catch (const ResultTest::Error& e) { 
+        } catch (const ResultTest::Error& e) {
         }
     });
 

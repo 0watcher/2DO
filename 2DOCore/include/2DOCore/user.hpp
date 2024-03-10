@@ -8,7 +8,6 @@
 #include <Utils/result.hpp>
 #include <Utils/type.hpp>
 #include <Utils/util.hpp>
-#include "SQLiteCpp/Statement.h"
 
 namespace tdu = twodoutils;
 namespace SQL = SQLite;

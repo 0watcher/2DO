@@ -4,7 +4,6 @@
 #include <functional>
 #include <filesystem>
 #include <optional>
-#include <sstream>
 #include <thread>
 
 #ifdef _WIN32

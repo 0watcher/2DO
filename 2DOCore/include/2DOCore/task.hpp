@@ -2,11 +2,12 @@
 
 #include <SQLiteCpp/Database.h>
 
+#include <filesystem>
+#include <optional>
+
 #include <Utils/result.hpp>
 #include <Utils/type.hpp>
 #include <Utils/util.hpp>
-#include <filesystem>
-#include <optional>
 
 namespace tdu = twodoutils;
 namespace SQL = SQLite;

@@ -1,8 +1,9 @@
+#include <memory>
+
 #include <gtest/gtest.h>
 
 #include <2DOCore/user.hpp>
 #include <Utils/type.hpp>
-#include <memory>
 
 namespace tdc = twodocore;
 

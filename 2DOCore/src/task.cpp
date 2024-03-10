@@ -1,8 +1,6 @@
 #include "2DOCore/task.hpp"
 
 #include <SQLiteCpp/Statement.h>
-#include <optional>
-#include "Utils/util.hpp"
 
 namespace twodocore {
 TaskDb::TaskDb(const fs::path& db_filepath)
