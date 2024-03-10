@@ -11,6 +11,7 @@
 #include <Utils/result.hpp>
 #include <Utils/type.hpp>
 #include <Utils/util.hpp>
+#include <optional>
 
 namespace tdc = twodocore;
 namespace tdu = twodoutils;
@@ -29,6 +30,7 @@ namespace tdu = twodoutils;
 
 namespace twodo {
 struct Updated {};
+struct Wiped {};
 
 class [[nodiscard]] App {
   public:
@@ -59,21 +61,14 @@ class [[nodiscard]] App {
   private:
     inline static std::shared_ptr<App> instance = nullptr;
 
-    std::shared_ptr<tdc::User> m_current_user = nullptr;
-
-    std::shared_ptr<tdc::UserDb> m_user_db =
-        std::make_shared<tdc::UserDb>(DB_NAME);
-
-    std::shared_ptr<tdc::TaskDb> m_task_db =
-        std::make_shared<tdc::TaskDb>(DB_NAME);
-
-    std::shared_ptr<tdc::MessageDb> m_message_db =
-        std::make_shared<tdc::MessageDb>(DB_NAME);
-
-    tdc::AuthenticationManager m_auth_manager{m_user_db};
+    std::optional<Menu> m_menu{};
+    std::optional<tdc::User> m_current_user{};
+    const tdc::UserDb m_user_db{DB_NAME};
+    const tdc::TaskDb m_task_db{DB_NAME};
+    const tdc::MessageDb m_message_db{DB_NAME};
+    const tdc::AuthenticationManager m_auth_manager{m_user_db};
 
     std::shared_ptr<tdu::IPrinter> m_printer = nullptr;
-
     std::shared_ptr<tdu::IUserInputHandler> m_input_handler = nullptr;
 
     enum class UserUpdateEvent {
@@ -94,9 +89,9 @@ class [[nodiscard]] App {
     Menu load_menu();
     std::shared_ptr<Page> load_tasks_menu() const;
     std::shared_ptr<Page> load_create_tasks_menu() const;
-    std::shared_ptr<Page> load_settings_menu() const;
-    std::shared_ptr<Page> load_user_manager_menu() const;
-    std::shared_ptr<Page> load_user_update_menu() const;
+    std::shared_ptr<Page> load_settings_menu();
+    std::shared_ptr<Page> load_user_manager_menu();
+    std::shared_ptr<Page> load_user_update_menu();
     std::shared_ptr<Page> load_new_user_menu() const;
     std::shared_ptr<Page> load_advanced_menu() const;
 
@@ -104,10 +99,10 @@ class [[nodiscard]] App {
     void load_update_tasks_menu() const {
         Vector<tdc::Task> tasks;
         if constexpr (T == tdc::TaskDb::IdType::Executor) {
-            tasks = m_task_db->get_all_objects<tdc::TaskDb::IdType::Executor>(
+            tasks = m_task_db.get_all_objects<tdc::TaskDb::IdType::Executor>(
                 m_current_user->id());
         } else {
-            tasks = m_task_db->get_all_objects<tdc::TaskDb::IdType::Owner>(
+            tasks = m_task_db.get_all_objects<tdc::TaskDb::IdType::Owner>(
                 m_current_user->id());
         }
 
@@ -136,7 +131,7 @@ class [[nodiscard]] App {
                         "{}\nDeadline: "
                         "{}\nStatus: {}\n\n",
                         task.topic(), task.content(),
-                        m_user_db->get_object(task.owner_id()).username(),
+                        m_user_db.get_object(task.owner_id()).username(),
                         tdu::to_string(task.start_date<TimePoint>()),
                         tdu::to_string(task.deadline<TimePoint>()),
                         (task.is_done()
@@ -150,7 +145,7 @@ class [[nodiscard]] App {
                         "{}\nDeadline: "
                         "{}\nStatus: {}\n\n",
                         task.topic(), task.content(),
-                        m_user_db->get_object(task.executor_id()).username(),
+                        m_user_db.get_object(task.executor_id()).username(),
                         tdu::to_string(task.start_date<TimePoint>()),
                         tdu::to_string(task.deadline<TimePoint>()),
                         (task.is_done()
@@ -243,7 +238,8 @@ class [[nodiscard]] App {
     bool sing_in();
     void sing_up() const;
     bool is_first_user() const;
-    bool user_update_event(const UserUpdateEvent kind, tdc::User& user) const;
+    bool user_update_event(const UserUpdateEvent kind, tdc::User& user);
+    void update_current_user(const tdc::User& user);
     bool task_update_event(const TaskUpdateEvent kind, tdc::Task& task) const;
     bool task_completion_event(tdc::Task& task) const;
     void discussion_event(const tdc::Task& task) const;
@@ -256,9 +252,5 @@ class [[nodiscard]] App {
     bool privileges_validation_event(const tdc::User& user) const;
     void invalid_option_event() const;
     String string_input(StringView msg) const;
-
-    std::shared_ptr<tdc::User> get_current_user() const {
-        return m_current_user;
-    }
 };
 }  // namespace twodo

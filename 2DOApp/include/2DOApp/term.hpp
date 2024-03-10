@@ -88,6 +88,19 @@ class [[nodiscard]] Menu {
         }
     }
 
+    void back_to(const String& page_name) {
+        std::shared_ptr<Page> currentPage = m_current_page;
+
+        while (currentPage) {
+            if (currentPage->m_page_name == page_name) {
+                m_current_page = currentPage;
+                break;
+            }
+            
+            currentPage = currentPage->m_parent;
+        }
+    }
+
   private:
     std::shared_ptr<Page> m_current_page;
     std::shared_ptr<tdu::IPrinter> m_printer;

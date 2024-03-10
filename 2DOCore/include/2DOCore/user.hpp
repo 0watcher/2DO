@@ -121,11 +121,11 @@ enum class AuthErr {
 class [[nodiscard]] AuthenticationManager {
   public:
     AuthenticationManager(AuthenticationManager&& other) = default;
-    AuthenticationManager& operator=(AuthenticationManager&& other) = default;
-    AuthenticationManager(const AuthenticationManager&) = delete;
+    AuthenticationManager& operator=(AuthenticationManager&& other) = delete;
+    AuthenticationManager(const AuthenticationManager&) = default;
     AuthenticationManager& operator=(const AuthenticationManager&) = delete;
 
-    AuthenticationManager(std::shared_ptr<UserDb> user_db)
+    AuthenticationManager(const UserDb& user_db)
         : m_user_db{user_db} {}
 
     [[nodiscard]] tdu::Result<void, AuthErr> username_validation(
@@ -134,7 +134,7 @@ class [[nodiscard]] AuthenticationManager {
         const String& password) const;
 
   private:
-    std::shared_ptr<UserDb> m_user_db;
+    const UserDb& m_user_db;
 
     [[nodiscard]] bool is_in_db(const String& username) const;
 };

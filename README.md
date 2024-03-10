@@ -9,20 +9,16 @@
 </div>
 
 ## About the project
-
 2DO is a simple old-school todo list with some additional features for start-up's with only one PC and no connection to the internet.
 
 ## Dependencies
-- C++20 <
+- C++20
 - CMake
 - SQLiteCpp
 - fmt
 - googletest
   
-## How to build this
-
-After cloning this repo:
-
+## Building
 ```
 cd 2DO
 git submodule update --recursive

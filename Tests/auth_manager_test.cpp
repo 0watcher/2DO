@@ -2,14 +2,13 @@
 
 #include <2DOCore/user.hpp>
 #include <Utils/type.hpp>
-#include <memory>
 
 namespace tdc = twodocore;
 
 constexpr StringView TEST_DB_PATH = ":memory:";
 
 TEST(AuthTest, CheckAuthManagerFunctionalities) {
-    const auto udb = std::make_shared<tdc::UserDb>(TEST_DB_PATH);
+    tdc::UserDb udb{TEST_DB_PATH};
     const tdc::AuthenticationManager am{udb};
 
     EXPECT_FALSE(am.username_validation(""));

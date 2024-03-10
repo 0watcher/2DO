@@ -188,6 +188,6 @@ AuthenticationManager::password_validation(const String& password) const {
 
 bool AuthenticationManager::is_in_db(
     const String& username) const {
-    return (m_user_db->find_object_by_unique_column(username)) ? true : false;
+    return (m_user_db.find_object_by_unique_column(username)) ? true : false;
 };
 }  // namespace twodocore
