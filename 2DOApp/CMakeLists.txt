@@ -6,7 +6,6 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 file(GLOB SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
-list(REMOVE_ITEM SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp")
 add_library(${PROJECT_NAME}  ${SOURCES})
 add_library(2DOApp::2DOApp ALIAS ${PROJECT_NAME})
 target_include_directories(${PROJECT_NAME}

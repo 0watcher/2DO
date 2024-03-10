@@ -1,17 +1,17 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 
 #include <fmt/color.h>
 #include <fmt/core.h>
 
-#include <2DOApp/term.hpp>
 #include <2DOCore/task.hpp>
+#include <2DOCore/term.hpp>
 #include <2DOCore/user.hpp>
 #include <Utils/result.hpp>
 #include <Utils/type.hpp>
 #include <Utils/util.hpp>
-#include <optional>
 
 namespace tdc = twodocore;
 namespace tdu = twodoutils;
@@ -24,9 +24,10 @@ namespace tdu = twodoutils;
 #define FIFTH_OPTION "5"
 #define YES "y"
 #define NO "n"
-#define DB_NAME ":memory:"
-#define ERR_LOGS_FILE_NAME "big-error-logs.txt"
-#define USER_LOGS_FILE_NAME "user-logs.txt"
+#define ENV_FOLDER_NAME "2DO"
+#define DB_NAME "2do_db.db3"
+#define ERR_LOGS_FILE_NAME "big_error_logs.txt"
+#define USER_LOGS_FILE_NAME "user_logs.txt"
 
 namespace twodo {
 struct Updated {};
@@ -39,12 +40,13 @@ class [[nodiscard]] App {
     App(const App&) = delete;
     App& operator=(const App&) = delete;
 
-    explicit App() = default;
+    App();
 
     static std::shared_ptr<App> getInstance() {
         if (!instance) {
             instance = std::make_shared<App>();
         }
+
         return instance;
     }
 
@@ -61,12 +63,11 @@ class [[nodiscard]] App {
   private:
     inline static std::shared_ptr<App> instance = nullptr;
 
-    std::optional<Menu> m_menu{};
     std::optional<tdc::User> m_current_user{};
-    const tdc::UserDb m_user_db{DB_NAME};
-    const tdc::TaskDb m_task_db{DB_NAME};
-    const tdc::MessageDb m_message_db{DB_NAME};
-    const tdc::AuthenticationManager m_auth_manager{m_user_db};
+    std::shared_ptr<tdc::UserDb> m_user_db = nullptr;
+    std::optional<tdc::TaskDb> m_task_db{};
+    std::optional<tdc::MessageDb> m_message_db{};
+    std::optional<tdc::AuthenticationManager> m_auth_manager{};
 
     std::shared_ptr<tdu::IPrinter> m_printer = nullptr;
     std::shared_ptr<tdu::IUserInputHandler> m_input_handler = nullptr;
@@ -86,27 +87,27 @@ class [[nodiscard]] App {
         TaskDelete
     };
 
-    Menu load_menu();
-    std::shared_ptr<Page> load_tasks_menu() const;
-    std::shared_ptr<Page> load_create_tasks_menu() const;
-    std::shared_ptr<Page> load_settings_menu();
-    std::shared_ptr<Page> load_user_manager_menu();
-    std::shared_ptr<Page> load_user_update_menu();
-    std::shared_ptr<Page> load_new_user_menu() const;
-    std::shared_ptr<Page> load_advanced_menu() const;
+    tdc::Menu load_menu();
+    std::shared_ptr<tdc::Page> load_tasks_menu() const;
+    std::shared_ptr<tdc::Page> load_create_tasks_menu() const;
+    std::shared_ptr<tdc::Page> load_settings_menu();
+    std::shared_ptr<tdc::Page> load_user_manager_menu();
+    std::shared_ptr<tdc::Page> load_user_update_menu();
+    std::shared_ptr<tdc::Page> load_new_user_menu() const;
+    std::shared_ptr<tdc::Page> load_advanced_menu() const;
 
     template <tdc::TaskDb::IdType T>
     void load_update_tasks_menu() const {
         Vector<tdc::Task> tasks;
         if constexpr (T == tdc::TaskDb::IdType::Executor) {
-            tasks = m_task_db.get_all_objects<tdc::TaskDb::IdType::Executor>(
+            tasks = m_task_db->get_all_objects<tdc::TaskDb::IdType::Executor>(
                 m_current_user->id());
         } else {
-            tasks = m_task_db.get_all_objects<tdc::TaskDb::IdType::Owner>(
+            tasks = m_task_db->get_all_objects<tdc::TaskDb::IdType::Owner>(
                 m_current_user->id());
         }
 
-        const auto tasks_page = std::make_shared<Page>("Tasks", [&] {
+        const auto tasks_page = std::make_shared<tdc::Page>("Tasks", [&] {
             unsigned int count = 0;
             for (const auto& task : tasks) {
                 m_printer->msg_print(fmt::format(
@@ -123,7 +124,7 @@ class [[nodiscard]] App {
 
         unsigned int count = 0;
         for (auto& task : tasks) {
-            const auto chosen_task = std::make_shared<Page>([&] {
+            const auto chosen_task = std::make_shared<tdc::Page>([&] {
                 if constexpr (T == tdc::TaskDb::IdType::Executor) {
                     m_printer->msg_print(fmt::format(
                         "Topic: {}\nContent: {}\nDelegated By: {}\nStart "
@@ -131,7 +132,7 @@ class [[nodiscard]] App {
                         "{}\nDeadline: "
                         "{}\nStatus: {}\n\n",
                         task.topic(), task.content(),
-                        m_user_db.get_object(task.owner_id()).username(),
+                        m_user_db->get_object(task.owner_id()).username(),
                         tdu::to_string(task.start_date<TimePoint>()),
                         tdu::to_string(task.deadline<TimePoint>()),
                         (task.is_done()
@@ -145,7 +146,7 @@ class [[nodiscard]] App {
                         "{}\nDeadline: "
                         "{}\nStatus: {}\n\n",
                         task.topic(), task.content(),
-                        m_user_db.get_object(task.executor_id()).username(),
+                        m_user_db->get_object(task.executor_id()).username(),
                         tdu::to_string(task.start_date<TimePoint>()),
                         tdu::to_string(task.deadline<TimePoint>()),
                         (task.is_done()
@@ -156,13 +157,13 @@ class [[nodiscard]] App {
             });
 
             const auto change_status =
-                std::make_shared<Page>("Mark As Complete", false, [&] {
+                std::make_shared<tdc::Page>("Mark As Complete", false, [&] {
                     if (task_completion_event(task)) {
                         throw Updated{};
                     }
                 });
 
-            const auto discussion = std::make_shared<Page>(
+            const auto discussion = std::make_shared<tdc::Page>(
                 "Discussion", false, [&] { discussion_event(task); });
 
             if (!task.is_done() &&
@@ -172,10 +173,10 @@ class [[nodiscard]] App {
             }
 
             if constexpr (T == tdc::TaskDb::IdType::Owner) {
-                const auto edit_task = std::make_shared<Page>("Edit Task");
+                const auto edit_task = std::make_shared<tdc::Page>("Edit Task");
 
                 const auto edit_topic =
-                    std::make_shared<Page>("Edit Topic", false, [&] {
+                    std::make_shared<tdc::Page>("Edit Topic", false, [&] {
                         if (task_update_event(TaskUpdateEvent::TopicUpdate,
                                               task)) {
                             throw Updated{};
@@ -183,7 +184,7 @@ class [[nodiscard]] App {
                     });
 
                 const auto edit_content =
-                    std::make_shared<Page>("Edit Content", false, [&] {
+                    std::make_shared<tdc::Page>("Edit Content", false, [&] {
                         if (task_update_event(TaskUpdateEvent::ContentUpdate,
                                               task)) {
                             throw Updated{};
@@ -191,7 +192,7 @@ class [[nodiscard]] App {
                     });
 
                 const auto change_deadline =
-                    std::make_shared<Page>("Change Deadline", false, [&] {
+                    std::make_shared<tdc::Page>("Change Deadline", false, [&] {
                         if (task_update_event(TaskUpdateEvent::DeadlineUpdate,
                                               task)) {
                             throw Updated{};
@@ -199,7 +200,7 @@ class [[nodiscard]] App {
                     });
 
                 const auto change_executor =
-                    std::make_shared<Page>("Change Executor", false, [&] {
+                    std::make_shared<tdc::Page>("Change Executor", false, [&] {
                         if (task_update_event(TaskUpdateEvent::ExecutorUpdate,
                                               task)) {
                             throw Updated{};
@@ -207,7 +208,7 @@ class [[nodiscard]] App {
                     });
 
                 const auto delete_task =
-                    std::make_shared<Page>("Delete Task", false, [&] {
+                    std::make_shared<tdc::Page>("Delete Task", false, [&] {
                         if (task_update_event(TaskUpdateEvent::TaskDelete,
                                               task)) {
                             throw Updated{};
@@ -230,7 +231,7 @@ class [[nodiscard]] App {
         }
 
         try {  // ugliness
-            Menu{tasks_page, m_printer, m_input_handler}.run(QUIT_OPTION);
+            tdc::Menu{tasks_page, m_printer, m_input_handler}.run(QUIT_OPTION);
         } catch (const Updated) {
         }
     }

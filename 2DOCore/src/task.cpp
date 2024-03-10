@@ -5,9 +5,9 @@
 #include "Utils/util.hpp"
 
 namespace twodocore {
-TaskDb::TaskDb(StringView db_filepath)
-    : m_db{db_filepath, SQL::OPEN_READWRITE | SQL::OPEN_CREATE} {
-    if (!is_table_empty()) {
+TaskDb::TaskDb(const fs::path& db_filepath)
+    : m_db{db_filepath, SQL::OPEN_READWRITE} {
+    if (!m_db.tableExists("tasks")) {
         SQL::Statement query{
             m_db,
             "CREATE TABLE IF NOT EXISTS tasks ("
@@ -44,7 +44,18 @@ Task TaskDb::get_object(const unsigned int id) const {
 }
 
 bool TaskDb::is_table_empty() const {
-    return m_db.tableExists("tasks");
+    int count = 0;
+
+    try {
+        SQLite::Statement query(m_db, "SELECT COUNT(*) FROM tasks");
+        if (query.executeStep()) {
+            count = query.getColumn(0).getInt();
+        }
+    } catch (SQLite::Exception& e) {
+        return true;
+    }
+
+    return count == 0;
 }
 
 void TaskDb::add_object(Task& task) const {
@@ -118,9 +129,9 @@ void TaskDb::delete_object(const unsigned int id) const {
     query.exec();
 }
 
-MessageDb::MessageDb(StringView db_filepath)
-    : m_db{db_filepath, SQL::OPEN_READWRITE | SQL::OPEN_CREATE} {
-    if (!is_table_empty()) {
+MessageDb::MessageDb(const fs::path& db_filepath)
+    : m_db{db_filepath, SQL::OPEN_READWRITE} {
+    if (!m_db.tableExists("messages")) {
         SQL::Statement query{
             m_db,
             "CREATE TABLE IF NOT EXISTS messages ("
@@ -174,7 +185,18 @@ Vector<Message> MessageDb::get_all_objects(const unsigned int taks_id) const {
 };
 
 bool MessageDb::is_table_empty() const {
-    return m_db.tableExists("messages");
+    int count = 0;
+
+    try {
+        SQLite::Statement query(m_db, "SELECT COUNT(*) FROM messages");
+        if (query.executeStep()) {
+            count = query.getColumn(0).getInt();
+        }
+    } catch (SQLite::Exception& e) {
+        return true;
+    }
+
+    return count == 0;
 }
 
 void MessageDb::add_object(Message& message) const {

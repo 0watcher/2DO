@@ -14,7 +14,6 @@ target_link_libraries(${PROJECT_NAME}_ut PRIVATE
     2DOApp
     GTest::gtest
     GTest::gtest_main
-    gmock
 )
 
 gtest_discover_tests(${PROJECT_NAME}_ut WORKING_DIRECTORY ${CMAKE_BINARY_DIR})

@@ -1,6 +1,9 @@
 #include "2DOCore/user.hpp"
 
+#include <filesystem>
 #include <regex>
+#include "SQLiteCpp/Database.h"
+#include "SQLiteCpp/Statement.h"
 
 namespace twodocore {
 String User::rtos(const Role role) const {
@@ -29,9 +32,9 @@ Role User::stor(const String& role_str) const {
     }
 }
 
-UserDb::UserDb(StringView db_filepath)
-    : m_db{db_filepath, SQL::OPEN_READWRITE | SQL::OPEN_CREATE} {
-    if (!is_table_empty()) {
+UserDb::UserDb(const fs::path& db_filepath)
+    : m_db{db_filepath, SQL::OPEN_READWRITE} {
+    if (!m_db.tableExists("users")) {
         SQL::Statement query{
             m_db,
             "CREATE TABLE IF NOT EXISTS users ("
@@ -92,7 +95,18 @@ Vector<User> UserDb::get_all_objects() const {
 }
 
 bool UserDb::is_table_empty() const {
-    return m_db.tableExists("users");
+    int count = 0;
+
+    try {
+        SQLite::Statement query(m_db, "SELECT COUNT(*) FROM users");
+        if (query.executeStep()) {
+            count = query.getColumn(0).getInt();
+        }
+    } catch (SQLite::Exception& e) {
+        return true;
+    }
+
+    return count == 0;
 }
 
 void UserDb::add_object(User& user) {
@@ -146,8 +160,8 @@ void UserDb::delete_object(const unsigned int id) const {
     query.exec();
 }
 
-tdu::Result<void, AuthErr>
-AuthenticationManager::username_validation(const String& username) const {
+tdu::Result<void, AuthErr> AuthenticationManager::username_validation(
+    const String& username) const {
     if (username.length() <= 0) {
         return tdu::Err(AuthErr::InvalidNameLength);
     }
@@ -159,8 +173,8 @@ AuthenticationManager::username_validation(const String& username) const {
     return tdu::Ok();
 };
 
-tdu::Result<void, AuthErr>
-AuthenticationManager::password_validation(const String& password) const {
+tdu::Result<void, AuthErr> AuthenticationManager::password_validation(
+    const String& password) const {
     const std::regex upper_case_expression{"[A-Z]+"};
     const std::regex lower_case_expression{"[a-z]+"};
     const std::regex number_expression{"[0-9]+"};
@@ -186,8 +200,16 @@ AuthenticationManager::password_validation(const String& password) const {
     return tdu::Ok();
 };
 
-bool AuthenticationManager::is_in_db(
-    const String& username) const {
-    return (m_user_db.find_object_by_unique_column(username)) ? true : false;
+bool AuthenticationManager::is_in_db(const String& username) const {
+    return (m_user_db->find_object_by_unique_column(username)) ? true : false;
 };
+
+void clear_all_db_data(const fs::path& filepath,
+                       const Vector<String>& table_names) {
+    SQLite::Database db{filepath, SQL::OPEN_READWRITE};
+
+    for (const auto& table_name : table_names) {
+        db.exec("DELETE FROM " + table_name);
+    }
+}
 }  // namespace twodocore

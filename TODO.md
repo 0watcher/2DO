@@ -1,3 +1,3 @@
 ## TODO
 - fix discussion chat
-- overall cleaning
+- overall cleaning (explicit where possible)

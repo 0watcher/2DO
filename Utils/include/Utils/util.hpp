@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <functional>
+#include <filesystem>
 #include <optional>
 #include <sstream>
 #include <thread>
@@ -14,6 +15,8 @@
 
 #include <Utils/type.hpp>
 
+namespace fs = std::filesystem;
+
 namespace sch = std::chrono;
 
 using TimePoint = sch::time_point<sch::system_clock, sch::minutes>;
@@ -23,12 +26,9 @@ using NanoSeconds = sch::nanoseconds;
 namespace twodoutils {
 [[nodiscard]] NanoSeconds speed_test(const std::function<void()>& test);
 
-void log_to_file(StringView msg, const String& filepath);
+void log_to_file(StringView msg, const fs::path& filepath);
 
-void create_simple_app_env(const String& folder_name,
-                           const Vector<String>& files);
-
-void wipe_simple_app_env(const String& folder_name);
+fs::path create_app_env(const String& folder_name, const Vector<String>& files);
 
 [[nodiscard]] String hash(const String& str);
 

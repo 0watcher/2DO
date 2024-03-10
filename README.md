@@ -12,7 +12,7 @@
 2DO is a simple old-school todo list with some additional features for start-up's with only one PC and no connection to the internet.
 
 ## Dependencies
-- C++20
+- clang with C++20
 - CMake
 - SQLiteCpp
 - fmt

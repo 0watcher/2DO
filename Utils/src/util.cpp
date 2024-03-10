@@ -3,10 +3,8 @@
 #include <filesystem>
 #include <format>
 #include <fstream>
-#include <mutex>
 #include <optional>
 #include <sstream>
-#include <thread>
 
 namespace fs = std::filesystem;
 
@@ -21,68 +19,39 @@ NanoSeconds speed_test(const std::function<void()>& test) {
     return std::chrono::duration_cast<NanoSeconds>(end - start);
 }
 
-void log_to_file(StringView msg, const String& filepath) {
-    std::ofstream file{filepath, std::ios_base::ate};
+void log_to_file(StringView msg, const fs::path& filepath) {
+    std::ofstream file{fs::current_path().root_path() / filepath,
+                       std::ios_base::app};
     file << "[" << to_string(get_current_timestamp()) << "] " << msg << '\n';
     file.close();
 }
 
-namespace {
-std::optional<String> get_base_directory() {
-#ifdef _WIN32
-    const auto home = fs::path(getenv("USERPROFILE"));
-#else
-    const auto home = fs::path(getenv("HOME"));
-#endif
-
-    if (!home.empty()) {
-        return (home / ".config").string();
-    } else {
-        return std::nullopt;
-    }
-}
-}  // namespace
-
-void create_simple_app_env(const String& folder_name,
-                           const Vector<String>& files) {
-    const auto base_directory = get_base_directory();
-
-    if (!base_directory) {
-        throw std::runtime_error("Unable to determine the base directory.");
-    }
-
-    const fs::path folder_path = fs::path(*base_directory) / folder_name;
+fs::path create_app_env(const String& folder_name,
+                        const Vector<String>& files) {
+    fs::path folder_path = fs::current_path().root_path() / folder_name;
 
     try {
-        fs::create_directories(folder_path);
+        if (!fs::exists(folder_path)) {
+            fs::create_directory(folder_path);
+        }
     } catch (const std::exception& e) {
         throw std::runtime_error("Unable to create app base folder.");
     }
 
     for (const auto& file_name : files) {
         const fs::path file_path = folder_path / file_name;
-        std::ofstream file{file_path};
+        if (!fs::exists(file_path)) {
+            std::ofstream file{file_path};
 
-        if (!file.is_open()) {
-            throw std::runtime_error("Unable to create env app file.");
+            if (!file.is_open()) {
+                throw std::runtime_error("Unable to create env app file.");
+            }
+
+            file.close();
         }
     }
-}
 
-void wipe_simple_app_env(const String& folder_name) {
-    const auto base_directory = get_base_directory();
-
-    if (!base_directory) {
-        throw std::runtime_error("Unable to determine the base directory.");
-    }
-
-    const fs::path folder_path = fs::path(*base_directory) / folder_name;
-
-    try {
-        fs::remove_all(folder_path);
-    } catch (const std::exception& e) {
-        throw std::runtime_error("Failure wiping env app data.");
-    }
+    return folder_path;
 }
 
 String hash(const String& str) {

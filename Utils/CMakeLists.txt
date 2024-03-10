@@ -11,8 +11,3 @@ add_library(2DOUtils::2DOUtils ALIAS ${PROJECT_NAME})
 target_include_directories(${PROJECT_NAME}
     PUBLIC ${PROJECT_SOURCE_DIR}/include
 )
-
-add_subdirectory(${CMAKE_SOURCE_DIR}/thirdparty/SQLiteCpp SQLiteCpp)
-target_link_libraries(2DOUtils
-  SQLiteCpp
-)

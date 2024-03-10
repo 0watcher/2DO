@@ -1,5 +1,6 @@
 #pragma once
 
+#include <filesystem>
 #include <optional>
 
 #include <SQLiteCpp/Database.h>
@@ -7,6 +8,7 @@
 #include <Utils/result.hpp>
 #include <Utils/type.hpp>
 #include <Utils/util.hpp>
+#include "SQLiteCpp/Statement.h"
 
 namespace tdu = twodoutils;
 namespace SQL = SQLite;
@@ -85,7 +87,7 @@ class [[nodiscard]] UserDb {
     UserDb(UserDb&& other) = default;
     UserDb& operator=(UserDb&& other) = default;
 
-    UserDb(StringView db_filepath);
+    UserDb(const fs::path& db_filepath);
 
     [[nodiscard]] User get_object(const unsigned int id) const;
 
@@ -121,11 +123,11 @@ enum class AuthErr {
 class [[nodiscard]] AuthenticationManager {
   public:
     AuthenticationManager(AuthenticationManager&& other) = default;
-    AuthenticationManager& operator=(AuthenticationManager&& other) = delete;
-    AuthenticationManager(const AuthenticationManager&) = default;
+    AuthenticationManager& operator=(AuthenticationManager&& other) = default;
+    AuthenticationManager(const AuthenticationManager&) = delete;
     AuthenticationManager& operator=(const AuthenticationManager&) = delete;
 
-    AuthenticationManager(const UserDb& user_db)
+    AuthenticationManager(std::shared_ptr<UserDb> user_db)
         : m_user_db{user_db} {}
 
     [[nodiscard]] tdu::Result<void, AuthErr> username_validation(
@@ -134,8 +136,11 @@ class [[nodiscard]] AuthenticationManager {
         const String& password) const;
 
   private:
-    const UserDb& m_user_db;
+    std::shared_ptr<UserDb> m_user_db;
 
     [[nodiscard]] bool is_in_db(const String& username) const;
 };
+
+void clear_all_db_data(const fs::path& filepath,
+                    const Vector<String>& table_names);
 }  // namespace twodocore

@@ -5,6 +5,7 @@
 #include <Utils/result.hpp>
 #include <Utils/type.hpp>
 #include <Utils/util.hpp>
+#include <filesystem>
 #include <optional>
 
 namespace tdu = twodoutils;
@@ -136,7 +137,7 @@ class [[nodiscard]] TaskDb {
     TaskDb(TaskDb&& other) = default;
     TaskDb& operator=(TaskDb&& other) = default;
 
-    TaskDb(StringView db_filepath);
+    TaskDb(const fs::path& db_filepath);
 
     [[nodiscard]] Task get_object(const unsigned int id) const;
 
@@ -258,7 +259,7 @@ class [[nodiscard]] MessageDb {
     MessageDb(MessageDb&& other) = default;
     MessageDb& operator=(MessageDb&& other) = default;
 
-    MessageDb(StringView db_filepath);
+    MessageDb(const fs::path& db_filepath);
 
     [[nodiscard]] std::optional<Message> get_newest_object() const;
 

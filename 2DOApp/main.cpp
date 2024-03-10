@@ -1,4 +1,5 @@
 #include <conio.h>
+#include <filesystem>
 #include <iostream>
 #include <memory>
 
@@ -93,7 +94,7 @@ int main() {
                                std::make_shared<UserInput>())
             ->run();
     } catch (const std::runtime_error& e) {
-        tdu::log_to_file(e.what(), ERR_LOGS_FILE_NAME);
-        fmt::print(stderr, "{}", std::move(e.what()));
+        tdu::log_to_file(e.what(), fs::current_path().root_path() / ENV_FOLDER_NAME / ERR_LOGS_FILE_NAME);
+        fmt::print(stderr, "Error: {}", std::move(e.what()));
     }
 }
