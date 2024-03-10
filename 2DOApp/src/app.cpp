@@ -3,9 +3,6 @@
 #include <filesystem>
 #include <memory>
 #include <thread>
-#include "2DOCore/task.hpp"
-#include "2DOCore/user.hpp"
-#include "Utils/util.hpp"
 
 #include <fmt/color.h>
 #include <fmt/core.h>
@@ -401,18 +398,17 @@ void App::discussion_event(const tdc::Task& task) const {
                         tdu::to_string(message.timestamp<TimePoint>()),
                         message.sender_name(), message.content()));
                 }
+
+                m_printer->msg_print(
+                    fmt::format("<{}>: ", m_current_user->username()));
             }
+
             tdu::sleep(100);
         }
     };
 
     auto send_msg = [&]() {
         while (!should_close) {
-            tdu::clear_term();
-
-            m_printer->msg_print(
-                fmt::format("<{}>: ", m_current_user->username()));
-
             std::string sent_message = m_input_handler->get_input();
             if (sent_message == "0") {
                 should_close = true;

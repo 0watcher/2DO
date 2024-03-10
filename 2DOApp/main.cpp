@@ -1,4 +1,7 @@
+#ifdef _WIN32
 #include <conio.h>
+#endif
+
 #include <filesystem>
 #include <iostream>
 #include <memory>
@@ -9,7 +12,6 @@
 #include <2DOApp/app.hpp>
 #include <Utils/type.hpp>
 #include <Utils/util.hpp>
-#include <string>
 
 namespace td = twodo;
 namespace tdu = twodoutils;
@@ -26,16 +28,12 @@ class UserInput : public tdu::IUserInputHandler {
     }
 
     String get_secret() const override {
+#ifdef _WIN32
         String secret;
 
         char ch;
 
-#ifdef _WIN32
         while ((ch = _getch()) != '\r') {
-#else
-        while ((ch = _getch()) != '\n') {
-
-#endif
             if (ch == '\b') {
                 if (!secret.empty()) {
                     fmt::print("\b \b");
@@ -49,6 +47,9 @@ class UserInput : public tdu::IUserInputHandler {
         }
 
         return secret;
+#else
+        get_input();
+#endif
     }
 };
 
@@ -94,7 +95,8 @@ int main() {
                                std::make_shared<UserInput>())
             ->run();
     } catch (const std::runtime_error& e) {
-        tdu::log_to_file(e.what(), fs::current_path().root_path() / ENV_FOLDER_NAME / ERR_LOGS_FILE_NAME);
+        tdu::log_to_file(e.what(), fs::current_path().root_path() /
+                                       ENV_FOLDER_NAME / ERR_LOGS_FILE_NAME);
         fmt::print(stderr, "Error: {}", std::move(e.what()));
     }
 }
