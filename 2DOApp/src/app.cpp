@@ -605,12 +605,11 @@ String App::string_input(StringView msg) const {
 
 bool App::sing_in() {
     tdu::clear_term();
-    m_printer->msg_print("\nSing In");
-    tdu::sleep(2000);
 
     while (true) {
         tdu::clear_term();
 
+        m_printer->msg_print("Sing in");
         m_printer->msg_print("Username: ");
         const auto username = m_input_handler->get_input();
         if (username == "0") {
@@ -622,6 +621,7 @@ bool App::sing_in() {
             while (true) {
                 tdu::clear_term();
 
+                m_printer->msg_print("Sing in");
                 m_printer->msg_print("Password: ");
                 if (const auto password = m_input_handler->get_secret();
                     tdu::hash(password) == user.value().password()) {
@@ -654,9 +654,8 @@ bool App::sing_in() {
 
 void App::sing_up() const {
     tdu::clear_term();
-    m_printer->msg_print("Sing Up");
-    tdu::sleep(2000);
 
+    m_printer->msg_print("Sing Up");
     const String username = username_validation_event();
     const String password = password_validation_event();
 
