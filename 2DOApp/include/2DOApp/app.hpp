@@ -166,8 +166,7 @@ class [[nodiscard]] App {
             const auto discussion = std::make_shared<tdc::Page>(
                 "Discussion", false, [&] { discussion_event(task); });
 
-            if (!task.is_done() &&
-                task.deadline<TimePoint>() > tdu::get_current_timestamp()) {
+            if (is_task_accessible(task)) {
                 chosen_task->attach(FIRST_OPTION, change_status);
                 chosen_task->attach(SECOND_OPTION, discussion);
             }
@@ -215,8 +214,7 @@ class [[nodiscard]] App {
                         }
                     });
 
-                if (!task.is_done() &&
-                    task.deadline<TimePoint>() > tdu::get_current_timestamp()) {
+                if (is_task_accessible(task)) {
                     chosen_task->attach(THIRD_OPTION, edit_task);
                 }
 
@@ -239,6 +237,7 @@ class [[nodiscard]] App {
     bool sing_in();
     void sing_up() const;
     bool is_first_user() const;
+    bool is_task_accessible(const tdc::Task& task) const;
     bool user_update_event(const UserUpdateEvent kind, tdc::User& user);
     void update_current_user(const tdc::User& user);
     bool task_update_event(const TaskUpdateEvent kind, tdc::Task& task) const;

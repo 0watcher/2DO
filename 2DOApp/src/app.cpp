@@ -4,6 +4,8 @@
 #include <memory>
 #include <thread>
 
+#include "Utils/util.hpp"
+
 #include <fmt/color.h>
 #include <fmt/core.h>
 
@@ -33,7 +35,8 @@ void App::run() {
 }
 
 tdc::Menu App::load_menu() {
-    const auto main = std::make_shared<tdc::Page>("2DO");
+    const auto main = std::make_shared<tdc::Page>(
+        fmt::format("2DO [{}]", m_current_user->username()));
 
     main->attach(FIRST_OPTION, load_tasks_menu());
     main->attach(SECOND_OPTION, load_settings_menu());
@@ -609,7 +612,6 @@ bool App::sing_in() {
     while (true) {
         tdu::clear_term();
 
-        m_printer->msg_print("Sing in");
         m_printer->msg_print("Username: ");
         const auto username = m_input_handler->get_input();
         if (username == "0") {
@@ -621,19 +623,14 @@ bool App::sing_in() {
             while (true) {
                 tdu::clear_term();
 
-                m_printer->msg_print("Sing in");
                 m_printer->msg_print("Password: ");
                 if (const auto password = m_input_handler->get_secret();
                     tdu::hash(password) == user.value().password()) {
                     m_current_user = user.value();
 
-                    tdu::log_to_file(
-                        fmt::format(
-                            "[{}] {}",
-                            tdu::to_string(tdu::get_current_timestamp()),
-                            user.value().username()),
-                        fs::current_path().root_path() / ENV_FOLDER_NAME /
-                            USER_LOGS_FILE_NAME);
+                    tdu::log_to_file(fmt::format("{}", user.value().username()),
+                                     fs::current_path().root_path() /
+                                         ENV_FOLDER_NAME / USER_LOGS_FILE_NAME);
 
                     m_printer->msg_print("\nSuccessfully logged in!");
                     tdu::sleep(2000);
@@ -655,7 +652,10 @@ bool App::sing_in() {
 void App::sing_up() const {
     tdu::clear_term();
 
-    m_printer->msg_print("Sing Up");
+    m_printer->msg_print("First Sing Up");
+    tdu::sleep(2000);
+    tdu::clear_term();
+
     const String username = username_validation_event();
     const String password = password_validation_event();
 
@@ -671,5 +671,11 @@ void App::sing_up() const {
 
 bool App::is_first_user() const {
     return m_user_db->is_table_empty();
+}
+
+bool App::is_task_accessible(const tdc::Task& task) const {
+    return !task.is_done() &&
+               task.deadline<TimePoint>() > tdu::get_current_timestamp() ||
+           m_current_user->id() == task.owner_id();
 }
 }  // namespace twodo

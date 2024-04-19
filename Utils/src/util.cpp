@@ -1,5 +1,6 @@
 #include "Utils/util.hpp"
 
+#include <chrono>
 #include <format>
 #include <fstream>
 
@@ -68,8 +69,22 @@ String hash(const String& str) {
 }
 
 TimePoint get_current_timestamp(const unsigned int additional_days) {
-    return sch::time_point_cast<sch::minutes>(sch::system_clock::now() +
-                                              sch::days{additional_days});
+    auto current_time = sch::system_clock::now();
+    auto current_zone = std::chrono::current_zone();
+    auto info = current_zone->get_info(current_time);
+
+    auto total_offset_minutes =
+        std::chrono::duration_cast<std::chrono::minutes>(
+            info.offset + sch::days(additional_days))
+            .count();
+
+    auto current_time_minutes =
+        sch::time_point_cast<sch::minutes>(current_time);
+
+    auto future_time =
+        current_time_minutes + sch::minutes(total_offset_minutes);
+
+    return future_time;
 }
 
 String to_string(const TimePoint tp) {
