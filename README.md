@@ -8,12 +8,7 @@
 
 </div>
 
-<div align="center">
-  <video width="640" height="360" controls>
-    <source src="./Resource/app-presentation.mp4" type="video/mp4">
-    Your browser does not support the video tag.
-  </video>
-</div>
+https://github.com/0watcher/2DO/assets/72736082/c3982d93-52e4-4753-959a-20a6b8baae7f
 
 ## About the project
 Yet another simple old-school to-do list as single-executable with some additional features for companies with only one PC and no connection to the internet.
